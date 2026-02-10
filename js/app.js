@@ -53,19 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadBerandaScripts() {
 
     const scripts = [
-      { selector: '.hero-slider', src: 'js/beranda/slider.js' },
-      { selector: '.berita-terbaru', src: 'js/beranda/terbaru.js' },
-      { selector: '.populer', src: 'js/beranda/populer.js' },
-      { selector: '.olahraga', src: 'js/beranda/olahraga.js' },
-      { selector: '.ekonomi', src: 'js/beranda/ekonomi.js' },
-      { selector: '.teknologi', src: 'js/beranda/teknologi.js' },
-      { selector: '.hiburan', src: 'js/beranda/hiburan.js' },
-      { selector: '.hukum', src: 'js/beranda/hukum.js' },
-      { selector: '.humaniora', src: 'js/beranda/humaniora.js' },
-      { selector: '.opini', src: 'js/beranda/opini.js' },
-      { selector: '.prestasi-terbaru', src: 'js/beranda/gaya.hidup.utama.js' },
-      { selector: '.prestasi-lanjutan', src: 'js/beranda/gaya.hidup.lanjutan.js' },
-      { selector: '.tickerText', src: 'js/beranda/treding.js' }
+      { selector: '.hero-slider', src: 'https://tipalsyahh.github.io/js/beranda/slider.js' },
+      { selector: '.berita-terbaru', src: 'https://tipalsyahh.github.io/js/beranda/terbaru.js' },
+      { selector: '.populer', src: 'https://tipalsyahh.github.io/js/beranda/populer.js' },
+      { selector: '.olahraga', src: 'https://tipalsyahh.github.io/js/beranda/olahraga.js' },
+      { selector: '.ekonomi', src: 'https://tipalsyahh.github.io/js/beranda/ekonomi.js' },
+      { selector: '.teknologi', src: 'https://tipalsyahh.github.io/js/beranda/teknologi.js' },
+      { selector: '.hiburan', src: 'https://tipalsyahh.github.io/js/beranda/hiburan.js' },
+      { selector: '.hukum', src: 'https://tipalsyahh.github.io/js/beranda/hukum.js' },
+      { selector: '.humaniora', src: 'https://tipalsyahh.github.io/js/beranda/humaniora.js' },
+      { selector: '.opini', src: 'https://tipalsyahh.github.io/js/beranda/opini.js' },
+      { selector: '.prestasi-terbaru', src: 'https://tipalsyahh.github.io/js/beranda/gaya.hidup.utama.js' },
+      { selector: '.prestasi-lanjutan', src: 'https://tipalsyahh.github.io/js/beranda/gaya.hidup.lanjutan.js' },
+      { selector: '.tickerText', src: 'https://tipalsyahh.github.io/js/beranda/treding.js' }
     ];
 
     scripts.forEach(item => {
@@ -114,3 +114,4 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
+
