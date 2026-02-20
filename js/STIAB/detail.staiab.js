@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 🔥 Ambil kategori & slug judul dari URL
   const query = decodeURIComponent(window.location.search.replace('?', ''));
-  const [kategoriSlug, slug] = query.split('|');
+  const [kategoriSlug, slug] = query.split('/');
 
   if (!slug) {
     berita.innerHTML = '<p>Berita tidak ditemukan</p>';
