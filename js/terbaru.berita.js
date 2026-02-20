@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ===============================
-  // GAMBAR (ASYNC CEPAT)
+  // GAMBAR HD (ASYNC CEPAT)
   // ===============================
   async function getMedia(mediaId) {
     if (!mediaId) return 'image/ai.jpg';
@@ -56,11 +56,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!res.ok) throw 0;
 
       const data = await res.json();
+
+      // ✅ PRIORITAS HD / FULL SIZE
       return (mediaCache[mediaId] =
+        data.media_details?.sizes?.full?.source_url ||
+        data.media_details?.sizes?.large?.source_url ||
         data.media_details?.sizes?.medium?.source_url ||
         data.source_url ||
         'image/ai.jpg'
       );
+
     } catch {
       return 'image/ai.jpg';
     }

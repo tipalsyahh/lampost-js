@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let hasMore = true;
   let kategoriId = null;
 
-  const catCache = {};
   const mediaCache = {};
   const editorCache = {};
 
@@ -23,55 +22,49 @@ document.addEventListener('DOMContentLoaded', () => {
            `${d.getFullYear()}`;
   };
 
+  // =====================
+  // GET KATEGORI OPINI SEKALI
+  // =====================
   (async () => {
     try {
       const res = await fetch(
         'https://lampost.co/wp-json/wp/v2/categories?slug=opini'
       );
-      if (!res.ok) throw new Error();
-
       const data = await res.json();
-      if (!data.length) throw new Error();
-
-      kategoriId = data[0].id;
+      kategoriId = data?.[0]?.id;
       loadPosts();
-
     } catch {
       container.innerHTML = '<p>Kategori opini tidak tersedia</p>';
     }
   })();
 
-  async function getCategory(catId) {
-    if (!catId) return { name: 'Opini', slug: 'opini' };
-    if (catCache[catId]) return catCache[catId];
-
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/categories/${catId}`
-    );
-    const data = await res.json();
-
-    return (catCache[catId] = {
-      name: data.name,
-      slug: data.slug
-    });
-  }
-
+  // =====================
+  // GAMBAR FULL HD
+  // =====================
   async function getMedia(mediaId) {
     if (!mediaId) return 'image/ai.jpg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
-    );
-    const data = await res.json();
+    try {
+      const res = await fetch(
+        `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
+      );
+      const data = await res.json();
 
-    return (mediaCache[mediaId] =
-      data.media_details?.sizes?.medium?.source_url ||
-      data.source_url ||
-      'image/ai.jpg'
-    );
+      return (mediaCache[mediaId] =
+        data.media_details?.sizes?.full?.source_url ||
+        data.media_details?.sizes?.large?.source_url ||
+        data.source_url ||
+        'image/ai.jpg'
+      );
+    } catch {
+      return 'image/ai.jpg';
+    }
   }
 
+  // =====================
+  // EDITOR (PERSIS ASLI)
+  // =====================
   async function getEditor(post) {
     let editor = 'Redaksi';
     const termLink = post._links?.['wp:term']?.[2]?.href;
@@ -90,7 +83,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return editor;
   }
 
+  // =====================
+  // LOAD POSTS
+  // =====================
   async function loadPosts() {
+
     if (isLoading || !hasMore || page > MAX_PAGE) {
       loadMoreBtn.style.display = 'none';
       return;
@@ -101,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMoreBtn.textContent = 'Loading...';
 
     try {
+
       const res = await fetch(
         `https://lampost.co/wp-json/wp/v2/posts` +
         `?categories=${kategoriId}&per_page=${PER_PAGE}&page=${page}` +
@@ -113,67 +111,63 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let posts = await res.json();
+      const posts = await res.json();
       if (!posts.length) {
         hasMore = false;
         loadMoreBtn.style.display = 'none';
         return;
       }
 
-      posts = posts.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
       const htmlArr = [];
 
-      await Promise.all(
-        posts.map(async post => {
+      posts.forEach(post => {
 
-          const judul = post.title.rendered;
-          const slug = post.slug;
-          const tanggal = formatTanggal(post.date);
+        const id = `post-${post.id}`;
+        const judul = post.title.rendered;
+        const slug = post.slug;
+        const tanggal = formatTanggal(post.date);
 
-          const catId = post.categories?.[0];
-          const { name: kategori, slug: kategoriSlug } =
-            await getCategory(catId);
+        let deskripsi =
+          post.excerpt?.rendered?.replace(/<[^>]+>/g, '').trim() || '';
 
-          const gambar = await getMedia(post.featured_media);
+        if (deskripsi.length > 150) {
+          deskripsi = deskripsi.slice(0, 150) + '...';
+        }
+
+        htmlArr.push(`
+          <a href="../halaman.html?opini/${slug}" class="item-info" id="${id}">
+            <img src="image/ai.jpg" class="img-microweb" loading="lazy">
+            <div class="berita-microweb">
+              <p class="judul">${judul}</p>
+              <p class="kategori">Opini</p>
+              <div class="info-microweb">
+                <p class="editor">By ...</p>
+                <p class="tanggal">${tanggal}</p>
+              </div>
+              <p class="deskripsi">${deskripsi}</p>
+            </div>
+          </a>
+        `);
+
+        // LOAD GAMBAR + EDITOR ASYNC
+        (async () => {
+          const img = await getMedia(post.featured_media);
           const editor = await getEditor(post);
 
-          let deskripsi =
-            post.excerpt?.rendered
-              ?.replace(/<[^>]+>/g, '')
-              ?.trim() || '';
+          const el = document.getElementById(id);
+          if (!el) return;
 
-          if (deskripsi.length > 150) {
-            deskripsi = deskripsi.slice(0, 150) + '...';
-          }
+          el.querySelector('img').src = img;
+          el.querySelector('.editor').textContent = `By ${editor}`;
+        })();
 
-          const link = `../halaman.html?${kategoriSlug}/${slug}`;
-
-          htmlArr.push(`
-            <a href="${link}" class="item-info">
-              <img src="${gambar}" alt="${judul}" class="img-microweb" loading="lazy">
-              <div class="berita-microweb">
-                <p class="judul">${judul}</p>
-                <p class="kategori">${kategori}</p>
-                <div class="info-microweb">
-                  <p class="editor">By ${editor}</p>
-                  <p class="tanggal">${tanggal}</p>
-                </div>
-                <p class="deskripsi">${deskripsi}</p>
-              </div>
-            </a>
-          `);
-
-        })
-      );
+      });
 
       container.insertAdjacentHTML('beforeend', htmlArr.join(''));
       page++;
 
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
     } finally {
       isLoading = false;
       loadMoreBtn.disabled = false;
