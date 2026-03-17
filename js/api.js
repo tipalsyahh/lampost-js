@@ -108,9 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const gambar = await getMedia(post.featured_media);
 
         const id = `post-${post.id}`;
-       const link = `/berita/${post.slug}`;
+        const link = `/berita/${post.slug}`;
 
-        // 🔥 TAMPILKAN LANGSUNG (TANPA MENUNGGU DATA LAIN)
         htmlArr.push(`
           <a href="${link}" class="item-berita" id="${id}">
             <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
@@ -125,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
         `);
 
-        // ⏳ DATA PELENGKAP MENYUSUL (NON-BLOCKING)
         (async () => {
           const catId = post.categories?.[0];
           const { name: kategori } = await getCategory(catId);
@@ -153,8 +151,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🚀 LOAD LANGSUNG SAAT HALAMAN SIAP
   loadPosts();
   loadMoreBtn.addEventListener('click', loadPosts);
+
+  document.addEventListener('click', function(e) {
+    const linkEl = e.target.closest('.item-berita');
+    if (!linkEl) return;
+
+    e.preventDefault();
+
+    const href = linkEl.getAttribute('href');
+    const isLocal = window.location.protocol === 'file:';
+
+    if (isLocal) {
+      const clean = href.replace(/^\/+/, '');
+      window.location.href = `halaman.html?${clean}`;
+    } else {
+      window.location.href = href;
+    }
+  });
 
 });
