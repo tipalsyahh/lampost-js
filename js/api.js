@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gambar = await getMedia(post.featured_media);
 
         const id = `post-${post.id}`;
-        const link = `halaman.html?berita/${post.slug}`;
+       const link = `/berita/${post.slug}`;
 
         // 🔥 TAMPILKAN LANGSUNG (TANPA MENUNGGU DATA LAIN)
         htmlArr.push(`
