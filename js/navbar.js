@@ -20,3 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 });
+
+document.querySelectorAll('.navbar-sub ul li').forEach(item => {
+    item.addEventListener('click', function(e) {
+
+        if (window.innerWidth < 1024) {
+
+            if (!this.classList.contains('active')) {
+                e.preventDefault();
+
+                document.querySelectorAll('.navbar-sub ul li')
+                    .forEach(i => i.classList.remove('active'));
+
+                this.classList.add('active');
+            }
+        }
+
+    });
+});
