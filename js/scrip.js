@@ -4,7 +4,7 @@ const detailTitle = document.querySelector('.detail-title');
 const detailContent = document.querySelector('.detail-content');
 const detailAction = document.querySelector('.detail-action');
 const path = window.location.pathname;
-window.location.href = "/lampost/halaman.html?" + path.substring(1);
+window.location.href = "https://tipalsyahh.github.io/lampost/halaman.html?" + path.substring(1);
 
 /* ===============================
    FUNGSI RENDER DETAIL
