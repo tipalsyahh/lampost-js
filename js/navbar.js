@@ -36,10 +36,19 @@ items.forEach(li => {
 
             const rect = link.getBoundingClientRect();
 
+            let left = rect.left;
+            let top = rect.bottom;
+
+            const menuWidth = 200;
+            const screenWidth = window.innerWidth;
+
+            if (left + menuWidth > screenWidth) {
+                left = screenWidth - menuWidth - 10;
+            }
+
             menu.style.position = 'fixed';
-            menu.style.top = rect.bottom + 'px';
-            menu.style.left = rect.left + 'px';
-            menu.style.display = 'flex';
+            menu.style.top = top + 'px';
+            menu.style.left = left + 'px';
 
             menu.classList.add('open');
         }
@@ -49,16 +58,23 @@ items.forEach(li => {
 document.addEventListener('click', function (e) {
     if (!e.target.closest('.navbar-sub') && !e.target.closest('.sub-menu')) {
         document.querySelectorAll('.sub-menu').forEach(m => {
-            m.style.display = 'none';
             m.classList.remove('open');
+            m.style.display = 'none';
         });
     }
 });
 
 window.addEventListener('scroll', () => {
     document.querySelectorAll('.sub-menu').forEach(m => {
-        m.style.display = 'none';
         m.classList.remove('open');
+        m.style.display = 'none';
+    });
+});
+
+window.addEventListener('resize', () => {
+    document.querySelectorAll('.sub-menu').forEach(m => {
+        m.classList.remove('open');
+        m.style.display = 'none';
     });
 });
 
