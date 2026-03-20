@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
 const items = document.querySelectorAll('.navbar-sub ul li.has-sub');
 
 items.forEach(li => {
@@ -32,23 +34,35 @@ items.forEach(li => {
 
         if (!isOpen) {
 
-            document.body.appendChild(menu);
-
             const rect = link.getBoundingClientRect();
 
-            let left = rect.left;
-            let top = rect.bottom;
+            if (isIOS) {
 
-            const menuWidth = 200;
-            const screenWidth = window.innerWidth;
+                document.body.appendChild(menu);
 
-            if (left + menuWidth > screenWidth) {
-                left = screenWidth - menuWidth - 10;
+                let left = rect.left;
+                let top = rect.bottom;
+
+                const menuWidth = 200;
+                const screenWidth = window.innerWidth;
+
+                if (left + menuWidth > screenWidth) {
+                    left = screenWidth - menuWidth - 10;
+                }
+
+                menu.style.position = 'fixed';
+                menu.style.top = top + 'px';
+                menu.style.left = left + 'px';
+
+            } else {
+
+                li.appendChild(menu);
+
+                menu.style.position = 'absolute';
+                menu.style.top = '100%';
+                menu.style.left = '0';
+
             }
-
-            menu.style.position = 'fixed';
-            menu.style.top = top + 'px';
-            menu.style.left = left + 'px';
 
             menu.classList.add('open');
         }
