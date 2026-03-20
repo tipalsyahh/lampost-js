@@ -8,13 +8,24 @@ function getText() {
   if (!beritaEl) return "";
 
   let text = "";
+
   Array.from(beritaEl.childNodes).forEach(node => {
     if (
       node.nodeType === Node.ELEMENT_NODE &&
-      (node.classList.contains("home") || node.classList.contains("load-more"))
+      (
+        node.classList.contains("home") ||
+        node.classList.contains("load-more") ||
+        node.id === "aiTags"
+      )
     ) return;
 
-    text += node.innerText || node.textContent || "";
+    let content = node.innerText || node.textContent || "";
+
+    if (content.includes("BERITA LAINNYA")) {
+      content = content.replace("BERITA LAINNYA", "");
+    }
+
+    text += content;
   });
 
   return text.trim();
@@ -57,22 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
   isMuted = true;
   stopVoice();
 
-  if (btn) {
-    btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
-  }
+  btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
 
   btn.addEventListener("click", () => {
     if (isMuted) {
       isMuted = false;
-      if (btn) {
-        btn.innerHTML = '<i class="bi bi-volume-up"></i>';
-      }
+      btn.innerHTML = '<i class="bi bi-volume-up"></i>';
       playVoice();
     } else {
       isMuted = true;
-      if (btn) {
-        btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
-      }
+      btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
       stopVoice();
     }
   });
