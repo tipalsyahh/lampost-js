@@ -12,9 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let hasMore = true;
 
   const API_POSTS =
-    'https://lampost.co/wp-json/wp/v2/posts?orderby=date&order=desc';
+    'https://lampost.co/wp-json/wp/v2/posts?_embed&orderby=date&order=desc';
 
-  const catCache = {};
   const mediaCache = {};
   const termCache = {};
 
@@ -22,21 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const d = new Date(dateString);
     return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
   };
-
-  async function getCategory(catId) {
-    if (!catId) return { name: 'Berita', slug: 'berita' };
-    if (catCache[catId]) return catCache[catId];
-
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/categories/${catId}`
-    );
-    const data = await res.json();
-
-    return (catCache[catId] = {
-      name: data.name,
-      slug: data.slug
-    });
-  }
 
   async function getMedia(mediaId) {
     if (!mediaId) return 'image/default.jpg';
@@ -107,16 +91,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const tanggal = formatTanggal(post.date);
         const gambar = await getMedia(post.featured_media);
 
+        const kategori =
+          post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Berita';
+
         const id = `post-${post.id}`;
         const link = `halaman.html?berita/${post.slug}`;
 
-        // 🔥 TAMPILKAN LANGSUNG (TANPA MENUNGGU DATA LAIN)
         htmlArr.push(`
           <a href="${link}" class="item-berita" id="${id}">
             <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
             <div class="info-berita">
               <p class="judul">${judul}</p>
-              <p class="kategori">...</p>
+              <p class="kategori">${kategori}</p>
               <div class="detail-info">
                 <p class="editor">By ...</p>
                 <p class="tanggal">${tanggal}</p>
@@ -125,16 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
         `);
 
-        // ⏳ DATA PELENGKAP MENYUSUL (NON-BLOCKING)
         (async () => {
-          const catId = post.categories?.[0];
-          const { name: kategori } = await getCategory(catId);
           const editor = await getEditor(post);
-
           const el = document.getElementById(id);
           if (!el) return;
-
-          el.querySelector('.kategori').textContent = kategori;
           el.querySelector('.editor').textContent = `By ${editor}`;
         })();
 
@@ -153,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🚀 LOAD LANGSUNG SAAT HALAMAN SIAP
   loadPosts();
   loadMoreBtn.addEventListener('click', loadPosts);
 
