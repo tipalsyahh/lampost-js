@@ -1,139 +1,114 @@
-document.addEventListener('DOMContentLoaded', () => {
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
 
-  const container = document.querySelector('.info');
-  const loadMoreBtn = document.getElementById('loadMore');
-  if (!container || !loadMoreBtn) return;
+    const container = document.querySelector('.sport');
+    if (!container) return;
 
-  const PER_PAGE = 15;
-  const MAX_PAGE = 10;
-
-  let page = 1;
-  let isLoading = false;
-  let hasMore = true;
-
-  const API_POSTS =
-    'https://lampost.co/wp-json/wp/v2/posts?_embed&orderby=date&order=desc';
-
-  const mediaCache = {};
-  const termCache = {};
-
-  const formatTanggal = dateString => {
-    const d = new Date(dateString);
-    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-  };
-
-  async function getMedia(mediaId) {
-    if (!mediaId) return 'image/default.jpg';
-    if (mediaCache[mediaId]) return mediaCache[mediaId];
-
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
-    );
-    const data = await res.json();
-
-    return (mediaCache[mediaId] =
-      data.media_details?.sizes?.medium?.source_url ||
-      data.source_url ||
-      'image/default.jpg'
-    );
-  }
-
-  async function getEditor(post) {
-    let editor = 'Redaksi';
-
-    const termLink = post._links?.['wp:term']?.[2]?.href;
-    if (!termLink) return editor;
-
-    if (termCache[termLink]) return termCache[termLink];
+    const TERM_CACHE = {};
+    const MEDIA_CACHE = {};
 
     try {
-      const res = await fetch(termLink);
-      if (res.ok) {
-        const data = await res.json();
-        editor = data?.[0]?.name || editor;
-        termCache[termLink] = editor;
-      }
-    } catch (_) {}
+        const catRes = await fetch(
+            'https://lampost.co/wp-json/wp/v2/categories?slug=olahraga'
+        );
+        if (!catRes.ok) throw new Error('Gagal ambil kategori');
 
-    return editor;
-  }
+        const catData = await catRes.json();
+        if (!catData.length) {
+            container.insertAdjacentHTML(
+                'beforeend',
+                '<p>Kategori tidak ditemukan</p>'
+            );
+            return;
+        }
 
-  async function loadPosts() {
-    if (isLoading || !hasMore || page > MAX_PAGE) {
-      loadMoreBtn.style.display = 'none';
-      return;
-    }
+        const categoryId = catData[0].id;
 
-    isLoading = true;
-    loadMoreBtn.disabled = true;
-    loadMoreBtn.textContent = 'Loading...';
+        const res = await fetch(
+            `https://lampost.co/wp-json/wp/v2/posts?categories_exclude=${categoryId}&per_page=3&orderby=date&order=desc`
+        );
+        if (!res.ok) throw new Error('Gagal ambil berita');
 
-    try {
-      const res = await fetch(
-        `${API_POSTS}&per_page=${PER_PAGE}&page=${page}`
-      );
-      if (!res.ok) throw new Error('Fetch error');
+        const posts = await res.json();
+        if (!posts.length) return;
 
-      let posts = await res.json();
-      if (page === 1) posts.shift();
+        const htmlArr = [];
 
-      if (!posts.length) {
-        hasMore = false;
-        loadMoreBtn.style.display = 'none';
-        return;
-      }
+        for (const post of posts) {
 
-      const htmlArr = [];
+            const judul = post.title.rendered;
+            const link = `halaman.html?berita/${post.slug}`;
 
-      const promises = posts.map(async post => {
+            const tanggal = new Date(post.date).toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
 
-        const judul = post.title.rendered;
-        const tanggal = formatTanggal(post.date);
-        const gambar = await getMedia(post.featured_media);
+            let editor = 'Redaksi';
 
-        const kategori =
-          post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Berita';
+            const termLink = post._links?.['wp:term']?.[2]?.href;
+            if (termLink) {
+                if (TERM_CACHE[termLink]) {
+                    editor = TERM_CACHE[termLink];
+                } else {
+                    try {
+                        const termRes = await fetch(termLink);
+                        if (termRes.ok) {
+                            const termData = await termRes.json();
+                            editor = termData?.[0]?.name || editor;
+                            TERM_CACHE[termLink] = editor;
+                        }
+                    } catch (_) {}
+                }
+            }
 
-        const id = `post-${post.id}`;
-        const link = `halaman.html?berita/${post.slug}`;
+            let gambar = 'image/ai.jpg';
 
-        htmlArr.push(`
-          <a href="${link}" class="item-berita" id="${id}">
-            <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
-            <div class="info-berita">
-              <p class="judul">${judul}</p>
-              <p class="kategori">${kategori}</p>
-              <div class="detail-info">
-                <p class="editor">By ...</p>
-                <p class="tanggal">${tanggal}</p>
-              </div>
-            </div>
-          </a>
-        `);
+            if (post.featured_media) {
+                if (MEDIA_CACHE[post.featured_media]) {
+                    gambar = MEDIA_CACHE[post.featured_media];
+                } else {
+                    try {
+                        const mediaRes = await fetch(
+                            `https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`
+                        );
+                        if (mediaRes.ok) {
+                            const media = await mediaRes.json();
+                            gambar =
+                                media.media_details?.sizes?.medium?.source_url ||
+                                media.source_url ||
+                                gambar;
 
-        (async () => {
-          const editor = await getEditor(post);
-          const el = document.getElementById(id);
-          if (!el) return;
-          el.querySelector('.editor').textContent = `By ${editor}`;
-        })();
+                            MEDIA_CACHE[post.featured_media] = gambar;
+                        }
+                    } catch (_) {}
+                }
+            }
 
-      });
+            htmlArr.push(`
+                <a href="${link}" class="item-berita">
+                    <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
+                    <div class="info-berita">
+                        <p class="judul">${judul}</p>
+                        <div class="detail-info">
+                            <p class="editor">By ${editor}</p>
+                            <p class="tanggal">${tanggal}</p>
+                        </div>
+                    </div>
+                </a>
+            `);
+        }
 
-      await Promise.all(promises);
-      container.insertAdjacentHTML('beforeend', htmlArr.join(''));
-      page++;
+        container.insertAdjacentHTML('beforeend', htmlArr.join(''));
 
     } catch (err) {
-      console.error(err);
-    } finally {
-      isLoading = false;
-      loadMoreBtn.disabled = false;
-      loadMoreBtn.textContent = 'Load More';
+        console.error(err);
+        container.insertAdjacentHTML(
+            'beforeend',
+            '<p>Gagal memuat berita</p>'
+        );
     }
-  }
-
-  loadPosts();
-  loadMoreBtn.addEventListener('click', loadPosts);
 
 });
+</script>
