@@ -11,36 +11,55 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-document.querySelectorAll('.navbar-sub ul li.has-sub').forEach(li => {
-    const items = document.querySelectorAll('.navbar-sub ul li.has-sub');
+document.addEventListener('DOMContentLoaded', () => {
 
-    items.forEach(li => {
-        const link = li.querySelector('a');
-        const menu = li.querySelector('.sub-menu');
+const items = document.querySelectorAll('.navbar-sub ul li.has-sub');
 
-        link.addEventListener('click', function (e) {
-            e.preventDefault();
+items.forEach(li => {
+    const link = li.querySelector('a');
+    const menu = li.querySelector('.sub-menu');
 
-            const isActive = menu.style.display === 'flex';
+    link.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-            document.querySelectorAll('.sub-menu').forEach(m => {
-                m.style.display = 'none';
-            });
+        const isOpen = menu.classList.contains('open');
 
-            if (!isActive) {
-                const rect = link.getBoundingClientRect();
-                menu.style.top = rect.bottom + 'px';
-                menu.style.left = rect.left + 'px';
-                menu.style.display = 'flex';
-            }
+        document.querySelectorAll('.sub-menu').forEach(m => {
+            m.classList.remove('open');
+            m.style.display = 'none';
         });
-    });
 
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('.navbar-sub')) {
-            document.querySelectorAll('.sub-menu').forEach(m => {
-                m.style.display = 'none';
-            });
+        if (!isOpen) {
+
+            document.body.appendChild(menu);
+
+            const rect = link.getBoundingClientRect();
+
+            menu.style.position = 'fixed';
+            menu.style.top = rect.bottom + 'px';
+            menu.style.left = rect.left + 'px';
+            menu.style.display = 'flex';
+
+            menu.classList.add('open');
         }
     });
+});
+
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.navbar-sub') && !e.target.closest('.sub-menu')) {
+        document.querySelectorAll('.sub-menu').forEach(m => {
+            m.style.display = 'none';
+            m.classList.remove('open');
+        });
+    }
+});
+
+window.addEventListener('scroll', () => {
+    document.querySelectorAll('.sub-menu').forEach(m => {
+        m.style.display = 'none';
+        m.classList.remove('open');
+    });
+});
+
 });
