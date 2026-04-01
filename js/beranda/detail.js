@@ -114,7 +114,7 @@ fetch(termLink)
 if(!editors.length){
 editorEl.innerText='by Redaksi';
 }else if(editors.length===1){
-editorEl.innerText=`by ${editors[0].name}`;
+editorEl.innerText=` ${editors[0].name}`;
 }else{
 const last=editors.pop().name;
 editorEl.innerText=`by ${editors.map(e=>e.name).join(', ')}, and ${last}`;
