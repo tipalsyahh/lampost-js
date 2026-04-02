@@ -1,28 +1,30 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     const btn = document.getElementById("backToTop");
-
-    if (!btn) {
-        console.log("Tombol tidak ditemukan");
-        return;
-    }
-
-    console.log("Tombol ketemu");
+    if (!btn) return;
 
     btn.style.display = "none";
 
-    window.onscroll = function () {
-        if (document.documentElement.scrollTop > 200 || document.body.scrollTop > 200) {
+    function toggleButton() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+        if (scrollTop > 200) {
             btn.style.display = "block";
         } else {
             btn.style.display = "none";
         }
-    };
+    }
 
-    btn.onclick = function () {
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-    };
+    window.addEventListener("scroll", toggleButton);
+
+    toggleButton(); // cek awal
+
+    btn.addEventListener("click", function () {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
 
 });
 
