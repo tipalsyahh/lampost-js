@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
             <div class="news-image">
               <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
-              <span class="read-time">4 min read</span>
+              <span class="read-time">${tanggal}</span>
             </div>
         
             <div class="news-content">
@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
               <div class="news-meta">
                 <span>By ${editor}</span>
-                <span>${tanggal}</span>
               </div>
             </div>
         
