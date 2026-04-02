@@ -32,23 +32,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     return `
-      <a href="${link}" class="card-link">
-        <div class="card-image-wrapper">
-
-          <img src="${gambar}" alt="${judul}" class="card-terbaru" loading="lazy" decoding="async">
-
-          <div class="card-text-overlay">
-            <span class="card-text">${judul}</span>
-
-            <div class="card-meta">
-              <span class="card-author">By ${editor}</span>
-              <span class="card-date">${tanggal}</span>
-              <span class="card-category">${kategori}</span>
+        <a href="${link}" class="news-card">
+          <div class="news-card-container">
+        
+            <!-- Gambar -->
+            <div class="news-image">
+              <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
+        
+              <span class="read-time">4 min read</span>
             </div>
-
+        
+            <!-- Konten -->
+            <div class="news-content">
+        
+              <h3 class="news-title">${judul}</h3>
+        
+              <div class="news-tags">
+                <span class="tag">${kategori}</span>
+              </div>
+        
+              <p class="news-desc">
+                ${deskripsi ?? ''}
+              </p>
+        
+              <div class="news-meta">
+                <span>By ${editor}</span>
+                <span>${tanggal}</span>
+              </div>
+        
+            </div>
+        
           </div>
-        </div>
-      </a>
+        </a>
     `;
   }
 
