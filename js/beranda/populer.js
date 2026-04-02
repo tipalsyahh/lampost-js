@@ -39,8 +39,7 @@ const res=await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
 if(res.ok){
 const media=await res.json();
 MEDIA_CACHE[mediaId]=
-media.media_details?.sizes?.full?.source_url||
-media.media_details?.sizes?.large?.source_url||
+media.media_details?.sizes?.medium?.source_url||
 media.source_url||
 'image/default.jpg';
 }
@@ -50,24 +49,29 @@ return MEDIA_CACHE[mediaId]||'image/default.jpg';
 }
 
 function renderFast(post,kategoriSlug){
+
 const judul=post.title.rendered;
 const link=`halaman.html?${kategoriSlug}/${post.slug}`;
 const waktu=formatTanggalPendek(post.date);
 const id=`lampung-${post.id}`;
 
 return`
-<a href="${link}" class="card-link" id="${id}">
-<div class="card-image-wrapper">
-<img src="image/default.jpg" alt="${judul}" class="card-image" loading="lazy">
-<div class="card-text-overlay">
-<span class="card-category">Lampung</span>
-<span class="card-text">${judul}</span>
-<div class="card-meta">
-<span class="editor">By ...</span>
-<span class="waktu">${waktu}</span>
-</div>
-</div>
-</div>
+<a href="${link}" class="news-list" id="${id}">
+  
+  <div class="news-thumb">
+    <img src="image/default.jpg" alt="${judul}" loading="lazy">
+  </div>
+
+  <div class="news-info">
+    <span class="news-category">Lampung</span>
+    <h4 class="news-title">${judul}</h4>
+
+    <div class="news-meta">
+      <span class="editor">By ...</span>
+      <span class="waktu">${waktu}</span>
+    </div>
+  </div>
+
 </a>
 `;
 }
