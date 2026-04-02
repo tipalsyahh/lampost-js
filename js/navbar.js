@@ -1,29 +1,12 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("backToTop");
-    if (!btn) return;
 
-    btn.style.display = "none";
+    btn.addEventListener("click", () => {
 
-    function toggleButton() {
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
 
-        if (scrollTop > 200) {
-            btn.style.display = "block";
-        } else {
-            btn.style.display = "none";
-        }
-    }
-
-    window.addEventListener("scroll", toggleButton);
-
-    toggleButton(); // cek awal
-
-    btn.addEventListener("click", function () {
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
     });
 
 });
