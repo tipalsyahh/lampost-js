@@ -2,13 +2,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("backToTop");
 
-    window.addEventListener("scroll", () => {
-        if (window.scrollY > 200) {
+    if (!btn) return;
+
+    function toggleButton() {
+        if (window.pageYOffset > 200) {
             btn.classList.add("show");
         } else {
             btn.classList.remove("show");
         }
-    });
+    }
+
+    window.addEventListener("scroll", toggleButton);
+
+    toggleButton(); // 🔥 penting (biar langsung cek posisi awal)
 
     btn.addEventListener("click", () => {
         window.scrollTo({
