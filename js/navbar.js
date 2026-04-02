@@ -1,20 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("backToTop");
-
     if (!btn) return;
 
-    function toggleButton() {
-        if (window.pageYOffset > 200) {
-            btn.classList.add("show");
+    btn.style.display = "none"; // 🔥 awalnya disembunyikan
+
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 200) {
+            btn.style.display = "block";
         } else {
-            btn.classList.remove("show");
+            btn.style.display = "none";
         }
-    }
-
-    window.addEventListener("scroll", toggleButton);
-
-    toggleButton(); // 🔥 penting (biar langsung cek posisi awal)
+    });
 
     btn.addEventListener("click", () => {
         window.scrollTo({
