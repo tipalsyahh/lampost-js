@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.textContent || div.innerText || '';
   }
 
-  function render(post) {
+  function setContent(post, el) {
 
     const judul = post.title.rendered;
 
@@ -40,78 +40,74 @@ document.addEventListener('DOMContentLoaded', () => {
       ? stripHTML(post.excerpt.rendered).substring(0, 140) + '...'
       : '';
 
-    return `
-      <a href="${link}" class="news-card">
-        <div class="news-card-container">
-      
-          <div class="news-image">
-            <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
-            <span class="read-time">${tanggal}</span>
-          </div>
-      
-          <div class="news-content">
-            <h3 class="news-title">${judul}</h3>
-      
-            <div class="news-tags">
-              <span class="tag">${kategori}</span>
-            </div>
-      
-            <p class="news-desc">${deskripsi}</p>
-      
-            <div class="news-meta">
-              <span>By ${editor}</span>
-            </div>
-          </div>
-      
-        </div>
-      </a>
-    `;
+    el.querySelector('.news-card').href = link;
+    el.querySelector('.news-image img').src = gambar;
+    el.querySelector('.news-image img').alt = judul;
+    el.querySelector('.read-time').textContent = tanggal;
+    el.querySelector('.news-title').textContent = judul;
+    el.querySelector('.tag').textContent = kategori;
+    el.querySelector('.news-desc').textContent = deskripsi;
+    el.querySelector('.news-meta span').textContent = 'By ' + editor;
   }
 
   fetch(CATEGORY_API)
-    .then(res => {
-      if (!res.ok) throw new Error('Gagal ambil kategori');
-      return res.json();
-    })
+    .then(res => res.json())
     .then(cat => {
-
-      if (!cat.length) throw new Error('Kategori kriminal tidak ditemukan');
 
       const catId = cat[0].id;
 
       return fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${catId}&per_page=5&orderby=date&order=desc&_embed`);
     })
-    .then(res => {
-      if (!res.ok) throw new Error('Gagal ambil berita');
-      return res.json();
-    })
+    .then(res => res.json())
     .then(posts => {
 
-      if (!posts || !posts.length) return;
+      if (!posts.length) return;
 
       let index = 0;
-      container.innerHTML = render(posts[index]);
+
+      container.innerHTML = `
+        <a href="#" class="news-card">
+          <div class="news-card-container">
+            <div class="news-image">
+              <img src="" alt="">
+              <span class="read-time"></span>
+            </div>
+            <div class="news-content">
+              <h3 class="news-title"></h3>
+              <div class="news-tags">
+                <span class="tag"></span>
+              </div>
+              <p class="news-desc"></p>
+              <div class="news-meta">
+                <span></span>
+              </div>
+            </div>
+          </div>
+        </a>
+      `;
+
+      const wrapper = container;
+
+      setContent(posts[index], wrapper);
 
       setInterval(() => {
         index = (index + 1) % posts.length;
 
-        const card = container.querySelector('.news-card-container');
+        const card = wrapper.querySelector('.news-card-container');
 
-        if (card) {
-          card.classList.add('fade-out');
+        card.classList.add('fade-out');
+
+        setTimeout(() => {
+          setContent(posts[index], wrapper);
+
+          card.classList.remove('fade-out');
+          card.classList.add('fade-in');
 
           setTimeout(() => {
-            container.innerHTML = render(posts[index]);
-
-            const newCard = container.querySelector('.news-card-container');
-            newCard.classList.add('fade-in');
-
-            setTimeout(() => {
-              newCard.classList.remove('fade-in');
-            }, 300);
-
+            card.classList.remove('fade-in');
           }, 300);
-        }
+
+        }, 300);
 
       }, 4000);
 
