@@ -3,8 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.querySelector('.berita-terbaru');
   if (!container) return;
 
-  const API_URL =
-    'https://lampost.co/wp-json/wp/v2/posts?search=kriminal&per_page=5&orderby=date&order=desc&_embed';
+  const CATEGORY_API = 'https://lampost.co/wp-json/wp/v2/categories?slug=kriminal';
 
   function stripHTML(html) {
     const div = document.createElement('div');
@@ -42,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       : '';
 
     return `
-      <a href="${link}" class="news-card fade-item">
+      <a href="${link}" class="news-card">
         <div class="news-card-container">
       
           <div class="news-image">
@@ -57,9 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="tag">${kategori}</span>
             </div>
       
-            <p class="news-desc">
-              ${deskripsi}
-            </p>
+            <p class="news-desc">${deskripsi}</p>
       
             <div class="news-meta">
               <span>By ${editor}</span>
@@ -71,27 +68,50 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  fetch(API_URL)
+  fetch(CATEGORY_API)
     .then(res => {
-      if (!res.ok) throw new Error('Fetch error');
+      if (!res.ok) throw new Error('Gagal ambil kategori');
+      return res.json();
+    })
+    .then(cat => {
+
+      if (!cat.length) throw new Error('Kategori kriminal tidak ditemukan');
+
+      const catId = cat[0].id;
+
+      return fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${catId}&per_page=5&orderby=date&order=desc&_embed`);
+    })
+    .then(res => {
+      if (!res.ok) throw new Error('Gagal ambil berita');
       return res.json();
     })
     .then(posts => {
+
       if (!posts || !posts.length) return;
 
       let index = 0;
-
       container.innerHTML = render(posts[index]);
 
       setInterval(() => {
         index = (index + 1) % posts.length;
 
-        container.style.opacity = 0;
+        const card = container.querySelector('.news-card-container');
 
-        setTimeout(() => {
-          container.innerHTML = render(posts[index]);
-          container.style.opacity = 1;
-        }, 300);
+        if (card) {
+          card.classList.add('fade-out');
+
+          setTimeout(() => {
+            container.innerHTML = render(posts[index]);
+
+            const newCard = container.querySelector('.news-card-container');
+            newCard.classList.add('fade-in');
+
+            setTimeout(() => {
+              newCard.classList.remove('fade-in');
+            }, 300);
+
+          }, 300);
+        }
 
       }, 4000);
 
