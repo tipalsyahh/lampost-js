@@ -4,116 +4,96 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!container) return;
 
   const catCache = {};
-  const mediaCache = {};
 
-  async function getCategorySlug(catId) {
-    if (!catId) return 'berita';
+  async function getCategory(catId) {
+    if (!catId) return { name: 'Berita', slug: 'berita' };
     if (catCache[catId]) return catCache[catId];
 
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/categories/${catId}`
-    );
-    if (!res.ok) return 'berita';
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
+    if (!res.ok) return { name: 'Berita', slug: 'berita' };
 
     const data = await res.json();
-    return (catCache[catId] = data.slug || 'berita');
+
+    return (catCache[catId] = {
+      name: data.name || 'Berita',
+      slug: data.slug || 'berita'
+    });
   }
 
-  async function getMedia(mediaId) {
-    if (!mediaId) return 'image/ai.jpg';
-    if (mediaCache[mediaId]) return mediaCache[mediaId];
+  function formatTanggal(dateString) {
+    const d = new Date(dateString);
+    const now = new Date();
 
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
-    );
-    if (!res.ok) return 'image/ai.jpg';
+    const isToday =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
 
-    const data = await res.json();
-    return (mediaCache[mediaId] =
-      data.media_details?.sizes?.medium?.source_url ||
-      data.source_url ||
-      'image/ai.jpg'
-    );
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+
+    const isYesterday =
+      d.getDate() === yesterday.getDate() &&
+      d.getMonth() === yesterday.getMonth() &&
+      d.getFullYear() === yesterday.getFullYear();
+
+    const jam = d.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    if (isToday) return `Hari ini ${jam}`;
+    if (isYesterday) return `Kemarin ${jam}`;
+
+    return d.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }) + ` ${jam}`;
   }
 
   try {
-    // ===============================
-    // 1️⃣ AMBIL ID KATEGORI HIBURAN
-    // ===============================
-    const catRes = await fetch(
-      'https://lampost.co/wp-json/wp/v2/categories?slug=hiburan'
-    );
-    if (!catRes.ok) throw new Error('Gagal ambil kategori');
+    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=hiburan');
+    if (!catRes.ok) throw new Error();
 
     const catData = await catRes.json();
-    if (!catData.length) {
-      container.insertAdjacentHTML(
-        'beforeend',
-        '<p>Kategori hiburan tidak ditemukan</p>'
-      );
-      return;
-    }
+    if (!catData.length) return;
 
     const categoryId = catData[0].id;
 
-    // ===============================
-    // 2️⃣ AMBIL BERITA HIBURAN (TANPA EMBED)
-    // ===============================
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=4&orderby=date&order=desc`
-    );
-    if (!res.ok) throw new Error('Gagal ambil berita');
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&orderby=date&order=desc`);
+    if (!res.ok) throw new Error();
 
     const posts = await res.json();
+
     let html = '';
 
-    for (const post of posts) {
+    for (let i = 0; i < posts.length; i++) {
+      const post = posts[i];
 
-      /* 📝 JUDUL */
       const judul = post.title.rendered;
+      const nomor = i + 1;
 
-      /* 🏷️ KATEGORI SLUG */
-      const kategoriSlug = await getCategorySlug(post.categories?.[0]);
+      const { name: kategori, slug } = await getCategory(post.categories?.[0]);
+      const tanggal = formatTanggal(post.date);
 
-      /* 🔗 LINK */
-      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
-
-      /* 📅 TANGGAL */
-      const tanggal = new Date(post.date).toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-
-      /* ✍️ EDITOR (DISAMAKAN) */
-      const editor = 'Redaksi';
-
-      /* 🖼️ GAMBAR */
-      const gambar = await getMedia(post.featured_media);
+      const link = `halaman.html?${slug}/${post.slug}`;
 
       html += `
-        <a href="${link}" class="item-olahraga">
-          <img src="${gambar}" alt="${judul}" class="img-olahraga" loading="lazy">
-          <p class="judul">${judul}</p>
-          <div class="meta">
-            <span class="editor">By ${editor}</span>
-            <span class="tanggal">${tanggal}</span>
+        <a href="${link}" class="list-berita">
+          <div class="nomor">#${nomor}</div>
+          <div class="konten">
+            <p class="judul">${judul}</p>
+            <p class="meta">${kategori} ${tanggal}</p>
           </div>
         </a>
       `;
     }
 
-    // ===============================
-    // 3️⃣ SISIPKAN KE DOM
-    // ===============================
-    container.insertAdjacentHTML('beforeend', html);
+    container.innerHTML = html;
 
-  } catch (err) {
-    console.error(err);
-    container.insertAdjacentHTML(
-      'beforeend',
-      '<p>Gagal memuat berita hiburan</p>'
-    );
+  } catch (e) {
+    container.innerHTML = '<p>Gagal memuat</p>';
   }
 
 });
