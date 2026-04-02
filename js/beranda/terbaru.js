@@ -108,9 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           setContent(posts[index], wrapper);
           inner.style.opacity = '1';
-        }, 1500);
+        }, 600);
 
-      }, 5000);
+      }, 4000);
 
     })
     .catch(err => {
