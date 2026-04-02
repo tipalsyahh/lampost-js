@@ -68,43 +68,49 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = `
         <a href="#" class="news-card">
           <div class="news-card-container">
-            <div class="news-image">
-              <img src="" alt="">
-              <span class="read-time"></span>
-            </div>
-            <div class="news-content">
-              <h3 class="news-title"></h3>
-              <div class="news-tags">
-                <span class="tag"></span>
+
+            <div class="news-inner">
+
+              <div class="news-image">
+                <img src="" alt="">
+                <span class="read-time"></span>
               </div>
-              <p class="news-desc"></p>
-              <div class="news-meta">
-                <span></span>
+
+              <div class="news-content">
+                <h3 class="news-title"></h3>
+                <div class="news-tags">
+                  <span class="tag"></span>
+                </div>
+                <p class="news-desc"></p>
+                <div class="news-meta">
+                  <span></span>
+                </div>
               </div>
+
             </div>
+
           </div>
         </a>
       `;
 
       const wrapper = container;
-
       setContent(posts[index], wrapper);
 
       setInterval(() => {
         index = (index + 1) % posts.length;
 
-        const card = wrapper.querySelector('.news-card-container');
+        const inner = wrapper.querySelector('.news-inner');
 
-        card.classList.add('fade-out');
+        inner.classList.add('fade-out');
 
         setTimeout(() => {
           setContent(posts[index], wrapper);
 
-          card.classList.remove('fade-out');
-          card.classList.add('fade-in');
+          inner.classList.remove('fade-out');
+          inner.classList.add('fade-in');
 
           setTimeout(() => {
-            card.classList.remove('fade-in');
+            inner.classList.remove('fade-in');
           }, 300);
 
         }, 300);
