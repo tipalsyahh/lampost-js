@@ -2,14 +2,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("backToTop");
 
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 200) {
+            btn.classList.add("show");
+        } else {
+            btn.classList.remove("show");
+        }
+    });
+
     btn.addEventListener("click", () => {
-
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     });
 
 });
+
 document.addEventListener("DOMContentLoaded", function () {
     const menus = document.querySelectorAll(".menu-sidebar");
 
