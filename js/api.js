@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.querySelector('.info');
   if (!container) return;
 
-  const PER_PAGE = 10;
+  const PER_PAGE = 20;
   const MAX_PAGE = 10;
 
   let page = 1;
