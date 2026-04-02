@@ -94,21 +94,24 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       const wrapper = container;
+      const inner = wrapper.querySelector('.news-inner');
+
       setContent(posts[index], wrapper);
 
-setInterval(() => {
-  index = (index + 1) % posts.length;
+      inner.style.transition = 'opacity 1.5s ease-in-out';
 
-  const inner = wrapper.querySelector('.news-inner');
+      setInterval(() => {
+        index = (index + 1) % posts.length;
 
-  inner.classList.add('fade');
+        inner.style.opacity = '0';
 
-  setTimeout(() => {
-    setContent(posts[index], wrapper);
-    inner.classList.remove('fade');
-  }, 800);
+        setTimeout(() => {
+          setContent(posts[index], wrapper);
+          inner.style.opacity = '1';
+        }, 1500);
 
-}, 4000);
+      }, 5000);
+
     })
     .catch(err => {
       console.error('Gagal load list berita:', err);
