@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!container) return;
 
   const API_URL =
-    'https://lampost.co/wp-json/wp/v2/posts?per_page=1&orderby=date&order=desc&_embed';
+    'https://lampost.co/wp-json/wp/v2/posts?search=kriminal&per_page=5&orderby=date&order=desc&_embed';
 
   function stripHTML(html) {
     const div = document.createElement('div');
@@ -17,10 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const judul = post.title.rendered;
 
     const kategori =
-      post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Berita';
+      post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Kriminal';
 
     const kategoriSlug =
-      post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'berita';
+      post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'kriminal';
 
     const link = `halaman.html?${kategoriSlug}/${post.slug}`;
 
@@ -42,32 +42,32 @@ document.addEventListener('DOMContentLoaded', () => {
       : '';
 
     return `
-        <a href="${link}" class="news-card">
-          <div class="news-card-container">
-        
-            <div class="news-image">
-              <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
-              <span class="read-time">${tanggal}</span>
-            </div>
-        
-            <div class="news-content">
-              <h3 class="news-title">${judul}</h3>
-        
-              <div class="news-tags">
-                <span class="tag">${kategori}</span>
-              </div>
-        
-              <p class="news-desc">
-                ${deskripsi}
-              </p>
-        
-              <div class="news-meta">
-                <span>By ${editor}</span>
-              </div>
-            </div>
-        
+      <a href="${link}" class="news-card fade-item">
+        <div class="news-card-container">
+      
+          <div class="news-image">
+            <img src="${gambar}" alt="${judul}" loading="lazy" decoding="async">
+            <span class="read-time">${tanggal}</span>
           </div>
-        </a>
+      
+          <div class="news-content">
+            <h3 class="news-title">${judul}</h3>
+      
+            <div class="news-tags">
+              <span class="tag">${kategori}</span>
+            </div>
+      
+            <p class="news-desc">
+              ${deskripsi}
+            </p>
+      
+            <div class="news-meta">
+              <span>By ${editor}</span>
+            </div>
+          </div>
+      
+        </div>
+      </a>
     `;
   }
 
@@ -78,7 +78,23 @@ document.addEventListener('DOMContentLoaded', () => {
     })
     .then(posts => {
       if (!posts || !posts.length) return;
-      container.innerHTML = render(posts[0]);
+
+      let index = 0;
+
+      container.innerHTML = render(posts[index]);
+
+      setInterval(() => {
+        index = (index + 1) % posts.length;
+
+        container.style.opacity = 0;
+
+        setTimeout(() => {
+          container.innerHTML = render(posts[index]);
+          container.style.opacity = 1;
+        }, 300);
+
+      }, 4000);
+
     })
     .catch(err => {
       console.error('Gagal load list berita:', err);
