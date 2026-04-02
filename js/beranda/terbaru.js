@@ -96,27 +96,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const wrapper = container;
       setContent(posts[index], wrapper);
 
-      setInterval(() => {
-        index = (index + 1) % posts.length;
+setInterval(() => {
+  index = (index + 1) % posts.length;
 
-        const inner = wrapper.querySelector('.news-inner');
+  const inner = wrapper.querySelector('.news-inner');
 
-        inner.classList.add('fade-out');
+  inner.classList.add('fade');
 
-        setTimeout(() => {
-          setContent(posts[index], wrapper);
+  setTimeout(() => {
+    setContent(posts[index], wrapper);
+    inner.classList.remove('fade');
+  }, 800);
 
-          inner.classList.remove('fade-out');
-          inner.classList.add('fade-in');
-
-          setTimeout(() => {
-            inner.classList.remove('fade-in');
-          }, 300);
-
-        }, 300);
-
-      }, 4000);
-
+}, 4000);
     })
     .catch(err => {
       console.error('Gagal load list berita:', err);
