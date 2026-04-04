@@ -1,94 +1,31 @@
-const synth = window.speechSynthesis;
-let utterance = null;
-let isPlaying = false;
-let isMuted = true;
+const items = document.querySelectorAll('.widget-item');
+const prevBtn = document.querySelector('.prev');
+const nextBtn = document.querySelector('.next');
 
-function getText() {
-  const beritaEl = document.getElementById("berita");
-  if (!beritaEl) return "";
+let current = Math.floor(items.length / 2);
 
-  let text = "";
-
-  Array.from(beritaEl.childNodes).forEach(node => {
-    if (
-      node.nodeType === Node.ELEMENT_NODE &&
-      (
-        node.classList.contains("home") ||
-        node.classList.contains("load-more") ||
-        node.id === "aiTags"
-      )
-    ) return;
-
-    let content = node.innerText || node.textContent || "";
-
-    if (content.includes("BERITA LAINNYA")) {
-      content = content.replace("BERITA LAINNYA", "");
-    }
-
-    text += content;
-  });
-
-  return text.trim();
+function getIndex(i) {
+  return (i + items.length) % items.length;
 }
 
-function playVoice() {
-  if (isMuted) return;
+function updateCarousel() {
+  items.forEach(item => item.className = 'widget-item');
 
-  const text = getText();
-  if (!text) return;
-
-  if (synth.speaking || synth.pending) synth.cancel();
-
-  utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "id-ID";
-
-  utterance.onend = () => {
-    isPlaying = false;
-  };
-
-  utterance.onerror = () => {
-    isPlaying = false;
-  };
-
-  synth.speak(utterance);
-  if (synth.paused) synth.resume();
-
-  isPlaying = true;
+  items[getIndex(current)].classList.add('active');
+  items[getIndex(current + 1)].classList.add('next');
+  items[getIndex(current - 1)].classList.add('prev');
+  items[getIndex(current + 2)].classList.add('next2');
+  items[getIndex(current - 2)].classList.add('prev2');
 }
 
-function stopVoice() {
-  if (synth.speaking || synth.pending) synth.cancel();
-  isPlaying = false;
-}
+nextBtn.onclick = () => {
+  current++;
+  updateCarousel();
+};
 
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("voiceToggle");
-  if (!btn) return;
+prevBtn.onclick = () => {
+  current--;
+  updateCarousel();
+};
 
-  isMuted = true;
-  stopVoice();
-
-  btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
-
-  btn.addEventListener("click", () => {
-    if (isMuted) {
-      isMuted = false;
-      btn.innerHTML = '<i class="bi bi-volume-up"></i>';
-      playVoice();
-    } else {
-      isMuted = true;
-      btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
-      stopVoice();
-    }
-  });
-
-  if (!synth.getVoices().length) {
-    synth.onvoiceschanged = () => {};
-  }
-});
-
-window.addEventListener("beforeunload", () => synth.cancel());
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) stopVoice();
-});
+updateCarousel();
