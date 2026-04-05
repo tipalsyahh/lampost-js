@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=pariwisata');
+    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=breking-news');
     if (!catRes.ok) throw new Error();
 
     const catData = await catRes.json();
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const categoryId = catData[0].id;
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=4&_embed`);
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=8&_embed`);
     if (!res.ok) throw new Error();
 
     const posts = await res.json();
