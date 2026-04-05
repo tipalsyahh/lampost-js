@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editor = data?.[0]?.name || editor;
         TERM_CACHE[termLink] = editor;
       }
-    } catch { }
+    } catch {}
 
     return editor;
   }
@@ -43,41 +43,36 @@ document.addEventListener('DOMContentLoaded', () => {
           media.source_url ||
           'image/default.jpg';
       }
-    } catch { }
+    } catch {}
 
     return MEDIA_CACHE[mediaId] || 'image/default.jpg';
   }
 
   function renderFast(post, kategoriSlug) {
-
     const judul = post.title.rendered;
     const link = `halaman.html?${kategoriSlug}/${post.slug}`;
     const waktu = formatTanggalPendek(post.date);
-    const id = `kesehantan-${post.id}`;
+    const id = `kesehatan-${post.id}`;
 
     return `
 <a href="${link}" class="news-list" id="${id}">
-  
   <div class="news-thumb">
     <img src="image/default.jpg" alt="${judul}" loading="lazy">
   </div>
-
   <div class="news-info">
     <span class="news-category">Kesehatan</span>
     <h4 class="news-title">${judul}</h4>
-
     <div class="news-meta">
       <span class="editor">By ...</span>
       <span class="waktu">${waktu}</span>
     </div>
   </div>
-
 </a>
 `;
   }
 
   async function enrich(post) {
-    const id = `lampung-${post.id}`;
+    const id = `kesehatan-${post.id}`;
     const el = document.getElementById(id);
     if (!el) return;
 
@@ -94,15 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function init() {
     try {
-
-      const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=lampung');
+      const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=kesehatan');
       if (!catRes.ok) throw new Error();
 
       const catData = await catRes.json();
       if (!catData.length) throw new Error();
 
       const kategoriId = catData[0].id;
-      const kategoriSlug = 'lampung';
+      const kategoriSlug = 'kesehatan';
 
       const postRes = await fetch(`https://lampost.co/wp-json/wp/v2/posts?per_page=6&categories=${kategoriId}&orderby=date&order=desc`);
       if (!postRes.ok) throw new Error();
@@ -111,12 +105,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!posts.length) return;
 
       container.innerHTML = posts.map(p => renderFast(p, kategoriSlug)).join('');
-
       posts.forEach(p => enrich(p));
 
     } catch (err) {
       console.error(err);
-      container.innerHTML = 'Gagal memuat berita Lampung';
+      container.innerHTML = 'Gagal memuat berita Kesehatan';
     }
   }
 
