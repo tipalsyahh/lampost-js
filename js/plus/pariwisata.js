@@ -5,15 +5,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const catCache = {};
 
-  async function getCategoryName(catId) {
-    if (!catId) return 'Berita';
+  async function getCategory(catId) {
+    if (!catId) return { name: 'Berita', slug: 'berita' };
     if (catCache[catId]) return catCache[catId];
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
-    if (!res.ok) return 'Berita';
+    try {
+      const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
+      if (!res.ok) throw new Error();
 
-    const data = await res.json();
-    return (catCache[catId] = data.name || 'Berita');
+      const data = await res.json();
+
+      const result = {
+        name: data.name || 'Berita',
+        slug: data.slug || 'berita'
+      };
+
+      catCache[catId] = result;
+      return result;
+
+    } catch {
+      return { name: 'Berita', slug: 'berita' };
+    }
   }
 
   try {
@@ -37,23 +49,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const post of posts) {
 
       const judul = post.title.rendered;
-      const kategori = await getCategoryName(post.categories?.[0]);
-      const slug = post.slug;
+      const kategoriData = await getCategory(post.categories?.[0]);
+
+      const kategoriNama = kategoriData.name;
+      const kategoriSlug = kategoriData.slug;
 
       const gambar = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://via.placeholder.com/300x200';
 
-      const link = `halaman.html?${slug}/${post.slug}`;
+      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
 
       html += `
-<a href="${link}" class="post-item">
-  <div class="post-thumb">
-    <img src="${gambar}" alt="">
-  </div>
-  <div class="post-content">
-    <div class="post-category">${kategori}</div>
-    <div class="post-title">${judul}</div>
-  </div>
-</a>
+      <a href="${link}" class="post-item">
+        <div class="post-thumb">
+          <img src="${gambar}" alt="${judul}">
+        </div>
+        <div class="post-content">
+          <div class="post-category">${kategoriNama}</div>
+          <div class="post-title">${judul}</div>
+        </div>
+      </a>
       `;
     }
 
