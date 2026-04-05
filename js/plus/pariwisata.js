@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   try {
-    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=breking-news');
+    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=breaking-news');
     if (!catRes.ok) throw new Error();
 
     const catData = await catRes.json();
