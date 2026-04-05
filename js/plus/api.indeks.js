@@ -13,8 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterBtn = document.getElementById("filterBtn");
     const filterCategory = document.getElementById("filterCategory");
     const filterDate = document.getElementById("filterDate");
-    const filterMonth = document.getElementById("filterMonth");
-    const filterYear = document.getElementById("filterYear");
 
     const PER_PAGE = 8;
     let page = 1;
@@ -23,158 +21,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const mediaMap = {};
     const editorCache = {};
 
-    function pad(n) {
-        return n.toString().padStart(2, "0");
-    }
-
     function formatTanggal(date) {
         const d = new Date(date);
         return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
     }
 
-    function isiDropdown() {
-
-        let htmlDate = "";
-        for (let i = 1; i <= 31; i++) {
-            htmlDate += `<option value="${i}">${i}</option>`;
-        }
-        filterDate.innerHTML += htmlDate;
-
-        const bulan = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-        let htmlMonth = "";
-        bulan.forEach((b, i) => {
-            htmlMonth += `<option value="${i + 1}">${b}</option>`;
-        });
-        filterMonth.innerHTML += htmlMonth;
-
-        const yearNow = new Date().getFullYear();
-
-        let htmlYear = "";
-        for (let y = yearNow; y >= 2015; y--) {
-            htmlYear += `<option value="${y}">${y}</option>`;
-        }
-        filterYear.innerHTML += htmlYear;
-
-    }
-
     async function loadCategory() {
 
-        const CACHE_KEY = "kategori_cache";
-        const CACHE_TIME = 1000 * 60 * 60 * 24;
-
-        const cached = localStorage.getItem(CACHE_KEY);
-
-        if (cached) {
-            const parsed = JSON.parse(cached);
-
-            if (Date.now() - parsed.time < CACHE_TIME) {
-
-                let html = "";
-                parsed.data.forEach(cat => {
-                    categoryMap[cat.id] = { name: cat.name, slug: cat.slug };
-                    html += `<option value="${cat.id}">${cat.name}</option>`;
-                });
-
-                filterCategory.innerHTML += html;
-
-                fetchCategoryBackground();
-                return;
-
-            }
-        }
-
-        fetchCategoryBackground();
-
-    }
-
-    async function fetchCategoryBackground() {
-
         try {
-
             const res = await fetch("https://lampost.co/wp-json/wp/v2/categories?per_page=100");
             const data = await res.json();
 
-            let html = "";
+            let html = '<option value="">Semua Berita</option>';
+
             data.forEach(cat => {
                 categoryMap[cat.id] = { name: cat.name, slug: cat.slug };
                 html += `<option value="${cat.id}">${cat.name}</option>`;
             });
 
-            filterCategory.innerHTML = '<option value="">Semua Kategori</option>' + html;
+            filterCategory.innerHTML = html;
 
-            localStorage.setItem("kategori_cache", JSON.stringify({
-                time: Date.now(),
-                data: data
-            }));
-
-        } catch (e) {
-            console.log(e);
-        }
-
-    }
-
-    function daysInMonth(y, m) {
-        return new Date(y, m, 0).getDate();
+        } catch (e) {}
     }
 
     function buildDateQuery(url) {
 
-        let y = filterYear.value;
-        let m = filterMonth.value;
-        let d = filterDate.value;
+        if (!filterDate.value) return url;
 
-        if (!y && !m && !d) return url;
+        const date = new Date(filterDate.value);
 
-        let year = y ? parseInt(y) : new Date().getFullYear();
-        let month = m ? parseInt(m) : null;
-        let day = d ? parseInt(d) : null;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
 
-        let after = "";
-        let before = "";
+        const after = `${year}-${month}-${day}T00:00:00`;
+        const before = `${year}-${month}-${day}T23:59:59`;
 
-        if (year && month && day) {
-            let mm = pad(month);
-            let dd = pad(day);
-            after = `${year}-${mm}-${dd}T00:00:00`;
-            before = `${year}-${mm}-${dd}T23:59:59`;
-        }
-
-        else if (year && month && !day) {
-            let mm = pad(month);
-            let lastDay = daysInMonth(year, month);
-            after = `${year}-${mm}-01T00:00:00`;
-            before = `${year}-${mm}-${pad(lastDay)}T23:59:59`;
-        }
-
-        else if (year && !month && !day) {
-            after = `${year}-01-01T00:00:00`;
-            before = `${year}-12-31T23:59:59`;
-        }
-
-        else if (!y && month && day) {
-            let mm = pad(month);
-            let dd = pad(day);
-            after = `2000-${mm}-${dd}T00:00:00`;
-            before = `2100-${mm}-${dd}T23:59:59`;
-        }
-
-        else if (!y && month && !day) {
-            let mm = pad(month);
-            after = `2000-${mm}-01T00:00:00`;
-            before = `2100-${mm}-31T23:59:59`;
-        }
-
-        else if (!y && !month && day) {
-            let dd = pad(day);
-            after = `2000-01-${dd}T00:00:00`;
-            before = `2100-12-${dd}T23:59:59`;
-        }
-
-        url += `&after=${after}&before=${before}`;
-
-        return url;
-
+        return url + `&after=${after}&before=${before}`;
     }
 
     async function loadMedia(ids) {
@@ -190,9 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await res.json();
                     mediaMap[id] = data.source_url;
                 }
-            } catch (e) { }
+            } catch (e) {}
         }));
-
     }
 
     function fetchEditorsAsync(posts) {
@@ -214,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.querySelectorAll(`[data-editor="${termLink}"]`)
                         .forEach(el => el.textContent = `By ${name}`);
                 }
-            } catch (e) { }
+            } catch (e) {}
 
         });
 
@@ -293,10 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             page++;
 
-        } catch (e) {
-            console.log(e);
-        }
-
+        } catch (e) {}
     }
 
     filterBtn.addEventListener("click", () => {
@@ -307,7 +186,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loadPosts();
     });
 
-    isiDropdown();
     loadCategory();
     loadPosts();
 
