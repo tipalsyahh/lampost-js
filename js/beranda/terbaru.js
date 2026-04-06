@@ -33,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
       : '';
 
     el.card.href = link;
-    el.titleLink.href = link;
     el.img.src = gambar;
     el.img.alt = judul;
     el.date.textContent = tanggal;
@@ -60,9 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="read-time"></span>
               </div>
               <div class="news-content">
-                <h3 class="news-title">
-                  <a href="indeks.html" class="news-link"></a>
-                </h3>
+                <h3></h3>
                 <div class="news-tags">
                   <span class="tag"></span>
                 </div>
@@ -80,8 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card: container.querySelector('.news-card'),
         img: container.querySelector('.news-image img'),
         date: container.querySelector('.read-time'),
-        title: container.querySelector('.news-title .news-link'),
-        titleLink: container.querySelector('.news-title .news-link'),
+        title: container.querySelector('.news-content h3'),
         tag: container.querySelector('.tag'),
         desc: container.querySelector('.news-desc'),
         editor: container.querySelector('.news-meta span'),
