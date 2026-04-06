@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="lingkar-wrapper">
         <div class="lingkar-bg"></div>
         <div class="lingkar-panel">
-          <h3>Update Lampung Post</h3>
+          <h3>Colom Pakar</h3>
           <div class="lingkar-list">
             ${list}
           </div>
