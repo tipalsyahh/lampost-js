@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       html += `
         <a href="${link}" class="list-berita">
-          <div class="nomor">#${nomor}</div>
           <div class="konten">
             <p class="judul">${judul}</p>
             <p class="meta">${kategori} ${tanggal}</p>
