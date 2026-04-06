@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2️⃣ AMBIL POST (TANPA _embed)
     // ===============================
     const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&offset=2&per_page=6&orderby=date&order=desc`
+      `https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&offset=2&per_page=4&orderby=date&order=desc`
     );
     if (!res.ok) throw new Error('Gagal ambil berita');
 
