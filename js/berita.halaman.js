@@ -35,10 +35,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mediaCache = {};
   const editorCache = {};
 
-  const query = decodeURIComponent(
-    window.location.search.replace('?', '')
-  );
-  const [kategoriSlug, currentSlug] = query.split('/');
+  let kategoriSlug, currentSlug;
+
+  if(window.location.search){
+    const query = decodeURIComponent(window.location.search.replace('?', ''));
+    [kategoriSlug, currentSlug] = query.split('/');
+  }else{
+    const path = window.location.pathname.split('/').filter(Boolean);
+    kategoriSlug = path[0];
+    currentSlug = path[1];
+  }
+
   if (!kategoriSlug) return;
 
   let kategoriId = null;
@@ -58,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function getMedia(mediaId) {
-    if (!mediaId) return 'image/ai.jpg';
+    if (!mediaId) return '/image/ai.jpg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
     try {
@@ -71,10 +78,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (mediaCache[mediaId] =
         data.media_details?.sizes?.medium?.source_url ||
         data.source_url ||
-        'image/ai.jpg'
+        '/image/ai.jpg'
       );
     } catch {
-      return 'image/ai.jpg';
+      return '/image/ai.jpg';
     }
   }
 
@@ -149,11 +156,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           `${d.getFullYear()}`;
 
         output += `
-          <a href="halaman.html?${kategoriSlug}/${slug}"
+          <a href="/${kategoriSlug}/${slug}"
              class="item-info"
              id="${id}">
             <img
-              src="image/ai.jpg"
+              src="/image/ai.jpg"
               data-media="${post.featured_media}"
               class="img-microweb"
               loading="lazy">
