@@ -3,17 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.querySelector('.data-microsite-unila');
   if (!container) return;
 
-  const PER_PAGE = 2;
-
   function loadPosts() {
 
-    const target =
-      'https://lampost.co/microweb/universitaslampung/wp-json/wp/v2/posts' +
-      `?per_page=${PER_PAGE}&orderby=date&order=desc&_embed`;
-
-    const api = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
-
-    fetch(api)
+    fetch('/.netlify/functions/unila')
       .then(res => res.ok ? res.json() : [])
       .then(posts => {
 
