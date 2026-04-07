@@ -1,80 +1,94 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
 
   const wrap = document.querySelector('.lingkar-box');
   if (!wrap) return;
 
   const cache = {};
 
-  async function getSlug(id) {
-    if (!id) return 'berita';
-    if (cache[id]) return cache[id];
+  function getSlug(id) {
+    if (!id) return Promise.resolve('berita');
+    if (cache[id]) return Promise.resolve(cache[id]);
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${id}`);
-    if (!res.ok) return 'berita';
-
-    const data = await res.json();
-    return (cache[id] = data.slug || 'berita');
+    return fetch(`https://lampost.co/wp-json/wp/v2/categories/${id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const s = d?.slug || 'berita';
+        cache[id] = s;
+        return s;
+      })
+      .catch(() => 'berita');
   }
 
-  try {
+  fetch('https://lampost.co/wp-json/wp/v2/categories?slug=lampung')
+    .then(r => r.ok ? r.json() : [])
+    .then(catData => {
 
-    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=lampung');
-    if (!catRes.ok) throw new Error('err');
+      if (!catData.length) {
+        wrap.innerHTML = `<p>tidak ada kategori</p>`;
+        return;
+      }
 
-    const catData = await catRes.json();
-    if (!catData.length) {
-      wrap.innerHTML = `<p>tidak ada kategori</p>`;
-      return;
-    }
+      const catId = catData[0].id;
 
-    const catId = catData[0].id;
+      return fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${catId}&per_page=6&orderby=date&order=desc`)
+        .then(r => r.ok ? r.json() : [])
+        .then(posts => {
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${catId}&per_page=6&orderby=date&order=desc&_embed`);
-    if (!res.ok) throw new Error('err');
+          const baseHTML = posts.map((post, i) => {
 
-    const posts = await res.json();
+            const time = new Date(post.date).toLocaleString('id-ID', {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
 
-    let list = '';
+            return `
+              <a href="#" data-i="${i}" class="lingkar-item">
+                <div class="lingkar-text">
+                  <h4>${post.title.rendered}</h4>
+                  <span>${time}</span>
+                </div>
+                <img data-img="${i}" src="" alt="" loading="lazy">
+              </a>
+            `;
+          }).join('');
 
-    for (const post of posts) {
+          wrap.innerHTML = `
+            <div class="lingkar-wrapper">
+              <div class="lingkar-bg"></div>
+              <div class="lingkar-panel">
+                <h3>Kolom Pakar</h3>
+                <div class="lingkar-list">
+                  ${baseHTML}
+                </div>
+              </div>
+            </div>
+          `;
 
-      const title = post.title.rendered;
-      const slug = await getSlug(post.categories?.[0]);
-      const link = `halaman.html?${slug}/${post.slug}`;
+          posts.forEach((post, i) => {
 
-      const img = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || '';
+            Promise.all([
+              getSlug(post.categories?.[0]),
+              post.featured_media
+                ? fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`)
+                    .then(r => r.ok ? r.json() : null)
+                    .catch(() => null)
+                : Promise.resolve(null)
+            ]).then(([slug, media]) => {
 
-      const time = new Date(post.date).toLocaleString('id-ID', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+              const el = wrap.querySelector(`[data-i="${i}"]`);
+              const img = wrap.querySelector(`[data-img="${i}"]`);
 
-      list += `
-        <a href="${link}" class="lingkar-item">
-          <div class="lingkar-text">
-            <h4>${title}</h4>
-            <span>${time}</span>
-          </div>
-          <img src="${img}" alt="">
-        </a>
-      `;
-    }
+              if (el) el.href = `halaman.html?${slug}/${post.slug}`;
+              if (img) img.src = media?.source_url || '';
 
-    wrap.innerHTML = `
-      <div class="lingkar-wrapper">
-        <div class="lingkar-bg"></div>
-        <div class="lingkar-panel">
-          <h3>Kolom Pakar</h3>
-          <div class="lingkar-list">
-            ${list}
-          </div>
-        </div>
-      </div>
-    `;
+            });
 
-  } catch (e) {
-    console.error(e);
-    wrap.innerHTML = `<p>gagal memuat</p>`;
-  }
+          });
+
+        });
+    })
+    .catch(() => {
+      wrap.innerHTML = `<p>gagal memuat</p>`;
+    });
 
 });
