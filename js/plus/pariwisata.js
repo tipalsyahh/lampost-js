@@ -1,80 +1,80 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
 
   const container = document.querySelector('.pariwisata');
   if (!container) return;
 
   const catCache = {};
 
-  async function getCategory(catId) {
-    if (!catId) return { name: 'Berita', slug: 'berita' };
-    if (catCache[catId]) return catCache[catId];
+  function getCategory(catId) {
+    if (!catId) return Promise.resolve({ name: 'Berita', slug: 'berita' });
+    if (catCache[catId]) return Promise.resolve(catCache[catId]);
 
-    try {
-      const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
-
-      const result = {
-        name: data.name || 'Berita',
-        slug: data.slug || 'berita'
-      };
-
-      catCache[catId] = result;
-      return result;
-
-    } catch {
-      return { name: 'Berita', slug: 'berita' };
-    }
+    return fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        const result = {
+          name: data?.name || 'Berita',
+          slug: data?.slug || 'berita'
+        };
+        catCache[catId] = result;
+        return result;
+      })
+      .catch(() => ({ name: 'Berita', slug: 'berita' }));
   }
 
-  try {
-    const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=breaking-news');
-    if (!catRes.ok) throw new Error();
+  fetch('https://lampost.co/wp-json/wp/v2/categories?slug=breaking-news')
+    .then(res => res.ok ? res.json() : [])
+    .then(catData => {
+      if (!catData.length) {
+        container.innerHTML = '<p>Data tidak ditemukan</p>';
+        return;
+      }
 
-    const catData = await catRes.json();
-    if (!catData.length) {
-      container.innerHTML = '<p>Data tidak ditemukan</p>';
-      return;
-    }
+      const categoryId = catData[0].id;
 
-    const categoryId = catData[0].id;
+      return fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=8`)
+        .then(res => res.ok ? res.json() : [])
+        .then(posts => {
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=8&_embed`);
-    if (!res.ok) throw new Error();
+          const promises = posts.map(post => {
+            const judul = post.title.rendered;
 
-    const posts = await res.json();
-    let html = '';
+            const mediaFetch = post.featured_media
+              ? fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`)
+                  .then(r => r.ok ? r.json() : null)
+                  .catch(() => null)
+              : Promise.resolve(null);
 
-    for (const post of posts) {
+            return Promise.all([
+              getCategory(post.categories?.[0]),
+              mediaFetch
+            ]).then(([kategoriData, media]) => {
 
-      const judul = post.title.rendered;
-      const kategoriData = await getCategory(post.categories?.[0]);
+              const imgUrl = media?.source_url || 'https://via.placeholder.com/300x200';
+              const link = `halaman.html?${kategoriData.slug}/${post.slug}`;
 
-      const kategoriNama = kategoriData.name;
-      const kategoriSlug = kategoriData.slug;
+              return `
+              <a href="${link}" class="post-item">
+                <div class="post-thumb">
+                  <img src="${imgUrl}" alt="${judul}" loading="lazy">
+                </div>
+                <div class="post-content">
+                  <div class="post-category">${kategoriData.name}</div>
+                  <div class="post-title">${judul}</div>
+                </div>
+              </a>
+              `;
+            });
+          });
 
-      const gambar = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://via.placeholder.com/300x200';
+          Promise.all(promises).then(items => {
+            container.innerHTML = items.join('');
+          });
 
-      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
-
-      html += `
-      <a href="${link}" class="post-item">
-        <div class="post-thumb">
-          <img src="${gambar}" alt="${judul}">
-        </div>
-        <div class="post-content">
-          <div class="post-category">${kategoriNama}</div>
-          <div class="post-title">${judul}</div>
-        </div>
-      </a>
-      `;
-    }
-
-    container.innerHTML = html;
-
-  } catch (err) {
-    container.innerHTML = '<p>Gagal memuat data</p>';
-  }
+        });
+    })
+    .catch(() => {
+      container.innerHTML = '<p>Gagal memuat data</p>';
+    });
 
 });
