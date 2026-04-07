@@ -1,54 +1,54 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
 
   const container = document.querySelector('.data-microsite-unila');
   if (!container) return;
 
   const PER_PAGE = 2;
 
-  async function loadPosts() {
-    try {
-      const api =
-        'https://lampost.co/microweb/universitaslampung/wp-json/wp/v2/posts' +
-        `?per_page=${PER_PAGE}&orderby=date&order=desc&_embed`;
+  function loadPosts() {
 
-      const res = await fetch(api);
-      if (!res.ok) throw new Error('API gagal');
+    const target =
+      'https://lampost.co/microweb/universitaslampung/wp-json/wp/v2/posts' +
+      `?per_page=${PER_PAGE}&orderby=date&order=desc&_embed`;
 
-      const posts = await res.json();
+    const api = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
 
-      let output = `<ul class="list-judul">`;
+    fetch(api)
+      .then(res => res.ok ? res.json() : [])
+      .then(posts => {
 
-      posts.forEach(post => {
+        let output = `<ul class="list-judul">`;
 
-        let judul = post.title.rendered
-          .replace(/<[^>]+>/g, '') // bersihin tag HTML
-          .trim();
+        posts.forEach(post => {
 
-        if (judul.length > 150) {
-          judul = judul.substring(0, 150) + '...';
-        }
+          let judul = post.title.rendered.replace(/<[^>]+>/g, '').trim();
 
-        const slug = post.slug;
+          if (judul.length > 150) {
+            judul = judul.substring(0, 150) + '...';
+          }
 
-        const kategoriSlug =
-          post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'unila';
+          const slug = post.slug;
 
-        const link = `microweb/berita.unila.html?${kategoriSlug}/${slug}`;
+          const kategoriSlug =
+            post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'unila';
 
-        output += `
-          <li class="item-judul">
-            <a href="${link}" class="link-judul">${judul}</a>
-          </li>
-        `;
+          const link = `microweb/berita.unila.html?${kategoriSlug}/${slug}`;
+
+          output += `
+            <li class="item-judul">
+              <a href="${link}" class="link-judul">${judul}</a>
+            </li>
+          `;
+        });
+
+        output += `</ul>`;
+
+        container.innerHTML = output;
+
+      })
+      .catch(() => {
+        container.innerHTML = '<p>gagal memuat</p>';
       });
-
-      output += `</ul>`;
-
-      container.innerHTML = output;
-
-    } catch (err) {
-      console.error(err);
-    }
   }
 
   loadPosts();
