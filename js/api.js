@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const editorCache = {};
 
+  const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
   const loadMoreWrapper = document.createElement('center');
   loadMoreWrapper.innerHTML =
     '<button id="loadMore" class="load-more">LOAD MORE</button>';
@@ -119,7 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
           const gambar = await getMedia(post.featured_media);
           const editor = await getEditor(post);
 
-          const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+          const link = isLocal
+            ? `halaman.html?${kategoriSlug}/${post.slug}`
+            : `/${kategoriSlug}/${post.slug}`;
 
           htmlArr.push(`
             <a href="${link}" class="item-berita">
