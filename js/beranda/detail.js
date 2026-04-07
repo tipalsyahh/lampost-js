@@ -14,6 +14,11 @@ kategoriSlug=path[0];
 slug=path[1];
 }
 
+if(window.location.search){
+const cleanUrl=`/${kategoriSlug}/${slug}`;
+history.replaceState(null,'',cleanUrl);
+}
+
 if(!slug){
 berita.innerHTML='<p>Berita tidak ditemukan</p>';
 return;
