@@ -3,9 +3,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 const berita=document.getElementById('berita');
 if(!berita)return;
 
+const isLocal =
+location.hostname==='localhost' ||
+location.hostname==='127.0.0.1' ||
+location.protocol==='file:';
+
 let kategoriSlug,slug;
 
-if(window.location.search){
+if(isLocal){
 const query=decodeURIComponent(window.location.search.substring(1));
 [kategoriSlug,slug]=query.split('/');
 }else{
@@ -14,7 +19,7 @@ kategoriSlug=path[0];
 slug=path[1];
 }
 
-if(window.location.search){
+if(!isLocal && window.location.search){
 const cleanUrl=`/${kategoriSlug}/${slug}`;
 history.replaceState(null,'',cleanUrl);
 }
