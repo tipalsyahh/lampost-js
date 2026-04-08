@@ -10,18 +10,26 @@ location.protocol==='file:';
 
 let kategoriSlug,slug;
 
-if(isLocal){
-const query=decodeURIComponent(window.location.search.substring(1));
-[kategoriSlug,slug]=query.split('/');
+if(window.location.search){
+const query=decodeURIComponent(window.location.search.substring(1)||'');
+const parts=query.split('/').filter(Boolean);
+if(parts.length>=2){
+kategoriSlug=parts[0];
+slug=parts.slice(1).join('/');
+}
 }else{
 const path=window.location.pathname.replace('.html','').split('/').filter(Boolean);
+if(path.length>=2){
 kategoriSlug=path[0];
-slug=path[1];
+slug=path.slice(1).join('/');
+}
 }
 
-if(!isLocal && window.location.search){
+if(!isLocal && window.location.search && kategoriSlug && slug){
+try{
 const cleanUrl=`/${kategoriSlug}/${slug}`;
 history.replaceState(null,'',cleanUrl);
+}catch(e){}
 }
 
 if(!slug){
