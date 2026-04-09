@@ -133,7 +133,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // 🔥 FIX EDITOR (AMBIL DARI WP TERM CUSTOM)
     const editorEl = document.getElementById('editor');
     if (editorEl) {
 
@@ -168,7 +167,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         .catch(() => kategoriEl.innerText = kategoriSlug || 'Berita');
     }
 
-    // 🔥 FIX TAG → tag.html
     setTimeout(() => {
 
       const tagBox = document.getElementById("aiTags");
@@ -187,7 +185,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const a = document.createElement("a");
 
-            a.href = `tag.html?q=${encodeURIComponent(tag.name)}`;
+            a.href = isLocal
+              ? `tag.html?q=${encodeURIComponent(tag.name)}`
+              : `/tag.html?q=${encodeURIComponent(tag.name)}`;
+
             a.innerText = tag.name;
             a.title = tag.name;
 
