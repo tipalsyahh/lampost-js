@@ -8,7 +8,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     location.hostname === '127.0.0.1' ||
     location.protocol === 'file:';
 
-  let kategoriSlug, slug;
+  let kategoriSlug = null;
+  let slug = null;
+
+  const getPathParts = () => {
+    return window.location.pathname
+      .replace('.html', '')
+      .split('/')
+      .filter(Boolean);
+  };
 
   if (window.location.search) {
     const query = decodeURIComponent(window.location.search.substring(1) || '');
@@ -17,15 +25,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       kategoriSlug = parts[0];
       slug = parts.slice(1).join('/');
     }
-  } else {
-    const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
-    if (path.length >= 2) {
-      kategoriSlug = path[0];
-      slug = path.slice(1).join('/');
+  }
+
+  if (!slug) {
+    const parts = getPathParts();
+    if (parts.length >= 2) {
+      kategoriSlug = parts[0];
+      slug = parts.slice(1).join('/');
     }
   }
 
-  if (!isLocal && window.location.search && kategoriSlug && slug) {
+  if (!isLocal && kategoriSlug && slug && window.location.search) {
     try {
       const cleanUrl = `/${kategoriSlug}/${slug}`;
       history.replaceState(null, '', cleanUrl);
@@ -135,27 +145,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const editorEl = document.getElementById('editor');
     if (editorEl) {
-
-      const termLink = post._links?.['wp:term']?.find(t =>
-        !['category', 'post_tag'].includes(t.taxonomy)
-      )?.href;
-
+      const termLink = post._links?.['wp:term']?.[2]?.href;
       if (!termLink) {
-        editorEl.innerText = 'oleh Redaksi';
+        editorEl.innerText = 'by Redaksi';
       } else {
         fetch(termLink)
           .then(r => r.ok ? r.json() : [])
           .then(editors => {
             if (!editors.length) {
-              editorEl.innerText = 'oleh Redaksi';
+              editorEl.innerText = 'by Redaksi';
             } else if (editors.length === 1) {
-              editorEl.innerText = `oleh ${editors[0].name}`;
+              editorEl.innerText = ` ${editors[0].name}`;
             } else {
               const last = editors.pop().name;
-              editorEl.innerText = `oleh ${editors.map(e => e.name).join(', ')}, dan ${last}`;
+              editorEl.innerText = `by ${editors.map(e => e.name).join(', ')}, and ${last}`;
             }
           })
-          .catch(() => editorEl.innerText = 'oleh Redaksi');
+          .catch(() => editorEl.innerText = 'by Redaksi');
       }
     }
 
@@ -172,32 +178,70 @@ document.addEventListener('DOMContentLoaded', async () => {
       const tagBox = document.getElementById("aiTags");
       if (!tagBox) return;
 
-      const tagLink = post._links?.['wp:term']?.find(t => t.taxonomy === 'post_tag')?.href;
-      if (!tagLink) return;
+      let kategoriNama = document.getElementById('kategori')?.innerText || '';
 
-      fetch(tagLink)
-        .then(r => r.ok ? r.json() : [])
-        .then(tags => {
+      const stopWords = [
+        "yang", "dan", "di", "ke", "dari", "ini", "itu", "untuk", "pada", "dengan", "adalah", "akan", "juga",
+        "karena", "oleh", "sebagai", "atau", "dalam", "para", "tidak", "telah", "agar", "bagi", "hingga",
+        "kepada", "serta", "bahwa", "yakni", "ia", "kami", "mereka", "anda", "saya", "jadi", "pun", "lagi"
+      ];
 
-          tagBox.innerHTML = '';
+      const platform = ["instagram", "tiktok", "youtube", "facebook", "twitter", "x", "whatsapp", "telegram"];
 
-          tags.forEach(tag => {
+      const raw = (post.title.rendered + " " + isi.innerText)
+        .replace(/[0-9]/g, ' ')
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 
-            const a = document.createElement("a");
+      const lower = raw.toLowerCase();
 
-            a.href = isLocal
-              ? `tag.html?q=${encodeURIComponent(tag.name)}`
-              : `/tag.html?q=${encodeURIComponent(tag.name)}`;
+      let words = lower.split(' ').filter(w => w.length > 4 && !stopWords.includes(w));
 
-            a.innerText = tag.name;
-            a.title = tag.name;
+      let freq = {};
+      words.forEach(w => freq[w] = (freq[w] || 0) + 1);
 
-            tagBox.appendChild(a);
+      const judulWords = post.title.rendered.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+      Object.keys(freq).forEach(k => {
+        if (judulWords.includes(k)) freq[k] += 8;
+      });
 
-          });
+      let tags = Object.entries(freq).sort((a, b) => b[1] - a[1]).map(t => t[0]);
 
-        })
-        .catch(() => { });
+      const namaOrang = [...new Set(
+        (post.content.rendered.match(/\b[A-Z][a-z]{2,}\s+[A-Z][a-z]{2,}\b/g) || [])
+          .map(n => n.trim())
+      )];
+
+      const platformTags = platform.filter(p => lower.includes(p));
+
+      if (kategoriNama) tags.unshift(kategoriNama.toLowerCase());
+      platformTags.forEach(p => tags.unshift(p));
+      namaOrang.forEach(n => tags.unshift(n));
+
+      tags = [...new Set(tags)].slice(0, 12);
+
+      tagBox.innerHTML = '';
+
+      tags.forEach(tag => {
+
+        let clean = tag.toLowerCase().replace(/\s+/g, '').trim();
+        if (!clean) return;
+
+        const short = clean.length > 14 ? clean.slice(0, 14) + '…' : clean;
+
+        const a = document.createElement("a");
+
+        a.href = isLocal
+          ? `search.html?q=${encodeURIComponent(tag)}`
+          : `/search?q=${encodeURIComponent(tag)}`;
+
+        a.innerText = "#" + short;
+        a.title = tag;
+
+        tagBox.appendChild(a);
+
+      });
 
     }, 500);
 
