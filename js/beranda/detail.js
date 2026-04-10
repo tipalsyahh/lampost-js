@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               editorEl.innerText = `oleh ${editors[0].name}`;
             } else {
               const last = editors.pop().name;
-              editorEl.innerText = `oleh ${editors.map(e => e.name).join(', ')}, dan ${last}`;
+              editorEl.innerText = `Editor ${editors.map(e => e.name).join(', ')}, Penulis ${last}`;
             }
           })
           .catch(() => editorEl.innerText = 'oleh Redaksi');
