@@ -146,13 +146,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetch(termLink)
           .then(r => r.ok ? r.json() : [])
           .then(editors => {
+
+            const formatName = (name = '') => {
+              return name
+                .replace(/-/g, ' ')
+                .split(' ')
+                .filter(Boolean)
+                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+            };
+
             if (!editors.length) {
               editorEl.innerText = 'oleh Redaksi';
             } else if (editors.length === 1) {
-              editorEl.innerText = `oleh ${editors[0].name}`;
+              editorEl.innerText = `oleh ${formatName(editors[0].name)}`;
             } else {
-              const last = editors.pop().name;
-              editorEl.innerText = `oleh ${editors.map(e => e.name).join(', ')}, dan ${last}`;
+              const last = formatName(editors.pop().name);
+              const names = editors.map(e => formatName(e.name)).join(', ');
+              editorEl.innerText = `Editor ${names}, Penulis ${last}`;
             }
           })
           .catch(() => editorEl.innerText = 'oleh Redaksi');
