@@ -7,18 +7,34 @@ function getText() {
   const beritaEl = document.getElementById("berita");
   if (!beritaEl) return "";
 
-  const clone = beritaEl.cloneNode(true);
+  const judul = beritaEl.querySelector(".judul-berita")?.innerText || "";
 
-  const removeEls = clone.querySelectorAll("#voiceToggle, .baca-berita, #aiTags, .home, .load-more");
+  const isiEl = beritaEl.querySelector(".isi-berita");
+  if (!isiEl) return judul;
+
+  const clone = isiEl.cloneNode(true);
+
+  const removeEls = clone.querySelectorAll(
+    "button, a, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
+  );
   removeEls.forEach(el => el.remove());
 
-  let text = clone.innerText || clone.textContent || "";
+  let isi = "";
 
-  if (text.includes("BERITA LAINNYA")) {
-    text = text.replace(/BERITA LAINNYA/g, "");
+  clone.querySelectorAll("p").forEach(p => {
+    const text = p.innerText.trim();
+    if (text) {
+      isi += text + " ";
+    }
+  });
+
+  let finalText = `${judul} ${isi}`;
+
+  if (finalText.includes("BERITA LAINNYA")) {
+    finalText = finalText.replace(/BERITA LAINNYA/g, "");
   }
 
-  return text.trim();
+  return finalText.trim();
 }
 
 function playVoice(btn) {
