@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        link.href = '/index/index';
+        link.href = '/index';
         link.target = '_self';
       } catch {
-        link.href = '/index/index';
+        link.href = '/index';
         link.target = '_self';
       }
     });
