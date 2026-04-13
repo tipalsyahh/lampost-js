@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       )?.href;
 
       if (!termLink) {
-        editorEl.innerText = 'oleh Redaksi';
+        editorEl.innerText = 'Editor Redaksi';
       } else {
         fetch(termLink)
           .then(r => r.ok ? r.json() : [])
@@ -160,16 +160,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             if (!editors.length) {
-              editorEl.innerText = 'oleh Redaksi';
+              editorEl.innerText = 'Editor Redaksi';
             } else if (editors.length === 1) {
-              editorEl.innerText = `oleh ${formatName(editors[0].name)}`;
+              editorEl.innerText = `Editor ${formatName(editors[0].name)}`;
             } else {
               const last = formatName(editors.pop().name);
               const names = editors.map(e => formatName(e.name)).join(', ');
               editorEl.innerText = `Editor ${names}, Penulis ${last}`;
             }
           })
-          .catch(() => editorEl.innerText = 'oleh Redaksi');
+          .catch(() => editorEl.innerText = 'Editor Redaksi');
       }
     }
 
