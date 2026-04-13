@@ -1,3 +1,4 @@
+<script>
 document.addEventListener('DOMContentLoaded', async () => {
 
   const berita = document.getElementById('berita');
@@ -19,7 +20,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } else {
     const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
-    if (path.length >= 2) {
+    if (path.length >= 3 && path[0] === 'index') {
+      kategoriSlug = path[1];
+      slug = path.slice(2).join('/');
+    } else if (path.length >= 2) {
       kategoriSlug = path[0];
       slug = path.slice(1).join('/');
     }
@@ -27,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
-      const cleanUrl = `/${kategoriSlug}/${slug}`;
+      const cleanUrl = `/index/${kategoriSlug}/${slug}`;
       history.replaceState(null, '', cleanUrl);
     } catch (e) { }
   }
@@ -75,22 +79,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const search = url.searchParams.get('s');
         if (search) {
-          link.href = `/search?q=${encodeURIComponent(search)}`;
+          link.href = `/index/search?q=${encodeURIComponent(search)}`;
           link.target = '_self';
           return;
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
         if (parts.length >= 2) {
-          link.href = `/${parts.at(-2)}/${parts.at(-1)}`;
+          link.href = `/index/${parts.at(-2)}/${parts.at(-1)}`;
           link.target = '_self';
           return;
         }
 
-        link.href = '/';
+        link.href = '/index/';
         link.target = '_self';
       } catch {
-        link.href = '/';
+        link.href = '/index/';
         link.target = '_self';
       }
     });
@@ -123,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           gambar.style.width = '100%';
           gambar.style.height = 'auto';
         })
-        .catch(() => gambar.src = '/image/default.jpg');
+        .catch(() => gambar.src = '/index/image/default.jpg');
     }
 
     const tanggal = document.getElementById('tanggal');
@@ -198,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             a.href = isLocal
               ? `tag.html?q=${encodeURIComponent(tag.name)}`
-              : `/tag.html?q=${encodeURIComponent(tag.name)}`;
+              : `/index/tag.html?q=${encodeURIComponent(tag.name)}`;
 
             a.innerText = tag.name;
             a.title = tag.name;
@@ -218,3 +222,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 });
+</script>
