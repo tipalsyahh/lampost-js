@@ -41,9 +41,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const query = decodeURIComponent(window.location.search.replace('?', ''));
     [kategoriSlug, currentSlug] = query.split('/');
   }else{
-    const path = window.location.pathname.split('/').filter(Boolean);
-    kategoriSlug = path[0];
-    currentSlug = path[1];
+    const path = window.location.pathname.replace('.html','').split('/').filter(Boolean);
+
+    if (path[0] === 'index') {
+      kategoriSlug = path[1];
+      currentSlug = path[2];
+    } else {
+      kategoriSlug = path[0];
+      currentSlug = path[1];
+    }
   }
 
   if (!kategoriSlug) return;
@@ -156,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           `${d.getFullYear()}`;
 
         output += `
-          <a href="/${kategoriSlug}/${slug}"
+          <a href="/index/${kategoriSlug}/${slug}.html"
              class="item-info"
              id="${id}">
             <img
