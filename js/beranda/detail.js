@@ -1,4 +1,3 @@
-<script>
 document.addEventListener('DOMContentLoaded', async () => {
 
   const berita = document.getElementById('berita');
@@ -222,4 +221,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
 });
-</script>
