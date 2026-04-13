@@ -42,35 +42,28 @@
   gtag('js', new Date());
   gtag('config', 'G-J2QD4LYXQH');
 
-  function removeGoogleAutoAds() {
+  function removeAutoPlacedAds() {
 
-    const selectors = [
-      ".goog-rentries",
-      ".goog-rentry",
-      ".google-anno-skip",
-      ".google-anno-sc"
-    ];
-
-    document.querySelectorAll(selectors.join(",")).forEach(el => {
+    document.querySelectorAll(".google-auto-placed").forEach(el => {
       el.remove();
     });
 
     const isiBerita = document.querySelector(".isi-berita");
     if (isiBerita) {
-      isiBerita.querySelectorAll(selectors.join(",")).forEach(el => el.remove());
+      isiBerita.querySelectorAll(".google-auto-placed").forEach(el => el.remove());
     }
 
   }
 
   document.addEventListener("DOMContentLoaded", () => {
 
-    removeGoogleAutoAds();
+    removeAutoPlacedAds();
 
     const target = document.body;
     if (!target) return;
 
     const observer = new MutationObserver(() => {
-      removeGoogleAutoAds();
+      removeAutoPlacedAds();
     });
 
     observer.observe(target, {
