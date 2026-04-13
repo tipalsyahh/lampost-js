@@ -13,10 +13,12 @@ function getText() {
     if (
       node.classList.contains("home") ||
       node.classList.contains("load-more") ||
-      node.id === "aiTags"
+      node.id === "aiTags" ||
+      node.id === "voiceToggle" ||
+      node.classList.contains("baca-berita")
     ) return;
 
-    let content = node.innerText || "";
+    let content = node.innerText || node.textContent || "";
 
     if (content.includes("BERITA LAINNYA")) {
       content = content.replace("BERITA LAINNYA", "");
@@ -91,5 +93,8 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("beforeunload", () => synth.cancel());
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) stopVoice(document.getElementById("voiceToggle"));
+  if (document.hidden) {
+    const btn = document.getElementById("voiceToggle");
+    if (btn) stopVoice(btn);
+  }
 });
