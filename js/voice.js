@@ -7,25 +7,16 @@ function getText() {
   const beritaEl = document.getElementById("berita");
   if (!beritaEl) return "";
 
-  let text = "";
+  const clone = beritaEl.cloneNode(true);
 
-  Array.from(beritaEl.children).forEach(node => {
-    if (
-      node.classList.contains("home") ||
-      node.classList.contains("load-more") ||
-      node.id === "aiTags" ||
-      node.id === "voiceToggle" ||
-      node.classList.contains("baca-berita")
-    ) return;
+  const removeEls = clone.querySelectorAll("#voiceToggle, .baca-berita, #aiTags, .home, .load-more");
+  removeEls.forEach(el => el.remove());
 
-    let content = node.innerText || node.textContent || "";
+  let text = clone.innerText || clone.textContent || "";
 
-    if (content.includes("BERITA LAINNYA")) {
-      content = content.replace("BERITA LAINNYA", "");
-    }
-
-    text += content + " ";
-  });
+  if (text.includes("BERITA LAINNYA")) {
+    text = text.replace(/BERITA LAINNYA/g, "");
+  }
 
   return text.trim();
 }
