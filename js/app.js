@@ -114,4 +114,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 });
-
+document.querySelectorAll('.logo-img').forEach(el => {
+  el.onclick = () => {
+    window.location.href = '/index/index.html';
+  };
+});
