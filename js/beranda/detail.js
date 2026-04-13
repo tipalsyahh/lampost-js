@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const search = url.searchParams.get('s');
         if (search) {
-          link.href = `/index/search.html?q=${encodeURIComponent(search)}`;
+          link.href = `/index/search?q=${encodeURIComponent(search)}`;
           link.target = '_self';
           return;
         }
@@ -90,10 +90,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        link.href = '/index/index.html';
+        link.href = '/index/index';
         link.target = '_self';
       } catch {
-        link.href = '/index/index.html';
+        link.href = '/index/index';
         link.target = '_self';
       }
     });
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             a.href = isLocal
               ? `tag.html?q=${encodeURIComponent(tag.name)}`
-              : `/index/tag.html?q=${encodeURIComponent(tag.name)}`;
+              : `/index/tag?q=${encodeURIComponent(tag.name)}`;
 
             a.innerText = tag.name;
             a.title = tag.name;
