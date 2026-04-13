@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
-      const cleanUrl = `/index/${kategoriSlug}/${slug}`;
+      const cleanUrl = `/index/${kategoriSlug}/${slug}.html`;
       history.replaceState(null, '', cleanUrl);
     } catch (e) { }
   }
@@ -78,22 +78,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const search = url.searchParams.get('s');
         if (search) {
-          link.href = `/index/search?q=${encodeURIComponent(search)}`;
+          link.href = `/index/search.html?q=${encodeURIComponent(search)}`;
           link.target = '_self';
           return;
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
         if (parts.length >= 2) {
-          link.href = `/index/${parts.at(-2)}/${parts.at(-1)}`;
+          link.href = `/index/${parts.at(-2)}/${parts.at(-1)}.html`;
           link.target = '_self';
           return;
         }
 
-        link.href = '/index/';
+        link.href = '/index/index.html';
         link.target = '_self';
       } catch {
-        link.href = '/index/';
+        link.href = '/index/index.html';
         link.target = '_self';
       }
     });
