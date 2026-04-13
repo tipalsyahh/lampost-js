@@ -42,4 +42,32 @@
   gtag('js', new Date());
   gtag('config', 'G-J2QD4LYXQH');
 
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const isiBerita = document.querySelector(".isi-berita");
+
+    if (isiBerita) {
+      isiBerita.querySelectorAll(".adsbygoogle").forEach(ad => ad.remove());
+    }
+
+    const footer = document.querySelector("footer");
+    if (!footer) return;
+
+    const bodyChildren = Array.from(document.body.children);
+
+    bodyChildren.forEach(el => {
+      if (el !== footer && !footer.contains(el)) {
+
+        if (
+          el.innerText &&
+          el.innerText.toLowerCase().includes("temukan lebih banyak")
+        ) {
+          footer.parentNode.insertBefore(el, footer);
+        }
+
+      }
+    });
+
+  });
+
 })();
