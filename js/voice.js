@@ -39,6 +39,10 @@ function getText() {
   return finalText.trim();
 }
 
+function setBtnText(btn, text, icon) {
+  btn.innerHTML = `<span>${text}</span> <i class="${icon}"></i>`;
+}
+
 function playVoice(btn) {
   if (isMuted) return;
 
@@ -53,13 +57,13 @@ function playVoice(btn) {
   utterance.onend = () => {
     isPlaying = false;
     isMuted = true;
-    btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
+    setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
   };
 
   utterance.onerror = () => {
     isPlaying = false;
     isMuted = true;
-    btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
+    setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
   };
 
   synth.speak(utterance);
@@ -72,7 +76,7 @@ function stopVoice(btn) {
   if (synth.speaking || synth.pending) synth.cancel();
   isPlaying = false;
   isMuted = true;
-  btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
+  setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -82,12 +86,12 @@ document.addEventListener("DOMContentLoaded", () => {
   isMuted = true;
   stopVoice(btn);
 
-  btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
+  setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
 
   btn.addEventListener("click", () => {
     if (isMuted) {
       isMuted = false;
-      btn.innerHTML = 'Berhenti <i class="bi bi-volume-mute-fill"></i>';
+      setBtnText(btn, 'Berhenti', 'bi bi-volume-mute-fill');
       playVoice(btn);
     } else {
       stopVoice(btn);
