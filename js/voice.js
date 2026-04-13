@@ -8,9 +8,11 @@ function getText() {
   if (!beritaEl) return "";
 
   const judul = beritaEl.querySelector(".judul-berita")?.innerText || "";
+  const editor = beritaEl.querySelector("#editor")?.innerText || "";
+  const tanggal = beritaEl.querySelector("#tanggal")?.innerText || "";
 
   const isiEl = beritaEl.querySelector(".isi-berita");
-  if (!isiEl) return judul;
+  if (!isiEl) return `${judul} ${editor} ${tanggal}`;
 
   const clone = isiEl.cloneNode(true);
 
@@ -28,7 +30,7 @@ function getText() {
     }
   });
 
-  let finalText = `${judul} ${isi}`;
+  let finalText = `${judul}. ${editor}. ${tanggal}. ${isi}`;
 
   if (finalText.includes("BERITA LAINNYA")) {
     finalText = finalText.replace(/BERITA LAINNYA/g, "");
