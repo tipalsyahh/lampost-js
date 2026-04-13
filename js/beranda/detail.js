@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
-      const cleanUrl = `/index/${kategoriSlug}/${slug}.html`;
+      const cleanUrl = `/index/${kategoriSlug}/${slug}`;
       history.replaceState(null, '', cleanUrl);
     } catch (e) { }
   }
