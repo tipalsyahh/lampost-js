@@ -42,32 +42,36 @@
   gtag('js', new Date());
   gtag('config', 'G-J2QD4LYXQH');
 
-  document.addEventListener("DOMContentLoaded", () => {
-
-    const isiBerita = document.querySelector(".isi-berita");
-
-    if (isiBerita) {
-      isiBerita.querySelectorAll(".adsbygoogle").forEach(ad => ad.remove());
-    }
+  function fixGoogleAutoAds() {
 
     const footer = document.querySelector("footer");
     if (!footer) return;
 
-    const bodyChildren = Array.from(document.body.children);
+    const selectors = [
+      ".goog-rentries",
+      ".goog-rentry",
+      ".google-anno-skip"
+    ];
 
-    bodyChildren.forEach(el => {
-      if (el !== footer && !footer.contains(el)) {
+    document.querySelectorAll(selectors.join(",")).forEach(el => {
 
-        if (
-          el.innerText &&
-          el.innerText.toLowerCase().includes("temukan lebih banyak")
-        ) {
-          footer.parentNode.insertBefore(el, footer);
-        }
-
+      if (!footer.contains(el)) {
+        footer.parentNode.insertBefore(el, footer);
       }
+
     });
 
+  }
+
+  document.addEventListener("DOMContentLoaded", fixGoogleAutoAds);
+
+  const observer = new MutationObserver(() => {
+    fixGoogleAutoAds();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
   });
 
 })();
