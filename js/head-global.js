@@ -62,15 +62,22 @@
 
   }
 
-  document.addEventListener("DOMContentLoaded", removeGoogleAutoAds);
+  document.addEventListener("DOMContentLoaded", () => {
 
-  const observer = new MutationObserver(() => {
     removeGoogleAutoAds();
-  });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
+    const target = document.body;
+    if (!target) return;
+
+    const observer = new MutationObserver(() => {
+      removeGoogleAutoAds();
+    });
+
+    observer.observe(target, {
+      childList: true,
+      subtree: true
+    });
+
   });
 
 })();
