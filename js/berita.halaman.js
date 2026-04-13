@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           `${d.getFullYear()}`;
 
         output += `
-          <a href="/index/${kategoriSlug}/${slug}.html"
+          <a href="/index/${kategoriSlug}/${slug}"
              class="item-info"
              id="${id}">
             <img
