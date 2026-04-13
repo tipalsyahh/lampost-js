@@ -79,7 +79,17 @@ document.addEventListener('DOMContentLoaded', function () {
     overlay.addEventListener('click', closeSidebar);
 });
 document.querySelectorAll('.logo-img').forEach(el => {
+  el.style.cursor = 'pointer';
+
   el.onclick = () => {
     window.location.href = '/index/index.html';
+  };
+
+  el.setAttribute('tabindex', '0');
+
+  el.onkeypress = (e) => {
+    if (e.key === 'Enter') {
+      window.location.href = '/index/index.html';
+    }
   };
 });
