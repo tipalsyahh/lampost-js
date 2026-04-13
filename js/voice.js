@@ -9,23 +9,20 @@ function getText() {
 
   let text = "";
 
-  Array.from(beritaEl.childNodes).forEach(node => {
+  Array.from(beritaEl.children).forEach(node => {
     if (
-      node.nodeType === Node.ELEMENT_NODE &&
-      (
-        node.classList.contains("home") ||
-        node.classList.contains("load-more") ||
-        node.id === "aiTags"
-      )
+      node.classList.contains("home") ||
+      node.classList.contains("load-more") ||
+      node.id === "aiTags"
     ) return;
 
-    let content = node.innerText || node.textContent || "";
+    let content = node.innerText || "";
 
     if (content.includes("BERITA LAINNYA")) {
       content = content.replace("BERITA LAINNYA", "");
     }
 
-    text += content;
+    text += content + " ";
   });
 
   return text.trim();
