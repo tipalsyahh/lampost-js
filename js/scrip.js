@@ -78,4 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     overlay.addEventListener('click', closeSidebar);
 });
-
+document.querySelectorAll('.logo-img').forEach(el => {
+  el.onclick = () => {
+    window.location.href = '/index/index.html';
+  };
+});
