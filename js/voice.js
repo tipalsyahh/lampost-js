@@ -28,7 +28,7 @@ function getText() {
   return text.trim();
 }
 
-function playVoice() {
+function playVoice(btn) {
   if (isMuted) return;
 
   const text = getText();
@@ -41,10 +41,14 @@ function playVoice() {
 
   utterance.onend = () => {
     isPlaying = false;
+    isMuted = true;
+    btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
   };
 
   utterance.onerror = () => {
     isPlaying = false;
+    isMuted = true;
+    btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
   };
 
   synth.speak(utterance);
@@ -53,9 +57,11 @@ function playVoice() {
   isPlaying = true;
 }
 
-function stopVoice() {
+function stopVoice(btn) {
   if (synth.speaking || synth.pending) synth.cancel();
   isPlaying = false;
+  isMuted = true;
+  btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -63,19 +69,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!btn) return;
 
   isMuted = true;
-  stopVoice();
+  stopVoice(btn);
 
-  btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
+  btn.innerHTML = 'Baca Berita <i class="bi bi-volume-up"></i>';
 
   btn.addEventListener("click", () => {
     if (isMuted) {
       isMuted = false;
-      btn.innerHTML = '<i class="bi bi-volume-up"></i>';
-      playVoice();
+      btn.innerHTML = 'Berhenti <i class="bi bi-volume-mute-fill"></i>';
+      playVoice(btn);
     } else {
-      isMuted = true;
-      btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i>';
-      stopVoice();
+      stopVoice(btn);
     }
   });
 
@@ -87,5 +91,5 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("beforeunload", () => synth.cancel());
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) stopVoice();
+  if (document.hidden) stopVoice(document.getElementById("voiceToggle"));
 });
