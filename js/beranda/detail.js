@@ -116,6 +116,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.style.margin = '1rem auto';
     });
 
+    const captions = isi.querySelectorAll('figcaption');
+    if (captions.length > 1) {
+      captions.forEach((cap, i) => {
+        if (i > 0) cap.remove();
+      });
+    }
+
     isi.querySelectorAll('figcaption').forEach(cap => {
       cap.style.textAlign = 'center';
       cap.style.display = 'block';
@@ -134,13 +141,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const sudahAdaCaption = document.querySelector('.isi-berita figcaption');
 
-          if (!sudahAdaCaption && m.caption?.rendered) {
-            const cap = document.createElement('p');
-            cap.innerHTML = m.caption.rendered;
-            cap.style.textAlign = 'center';
-            cap.style.fontSize = '14px';
-            cap.style.marginTop = '5px';
-            gambar.after(cap);
+          if (!sudahAdaCaption) {
+            if (m.caption?.rendered) {
+              const cap = document.createElement('p');
+              cap.innerHTML = m.caption.rendered;
+              cap.style.textAlign = 'center';
+              cap.style.fontSize = '14px';
+              cap.style.marginTop = '5px';
+              gambar.after(cap);
+            }
           }
         })
         .catch(() => gambar.src = '/index/image/default.jpg');
