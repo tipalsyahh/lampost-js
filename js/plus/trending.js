@@ -19,18 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => 'berita');
   }
 
-  fetch('https://lampost.co/wp-json/wp/v2/categories?slug=lampung')
+  // 🔥 UBAH: ambil TAG bukan kategori
+  fetch('https://lampost.co/wp-json/wp/v2/tags?slug=lpef')
     .then(r => r.ok ? r.json() : [])
-    .then(catData => {
+    .then(tagData => {
 
-      if (!catData.length) {
-        wrap.innerHTML = `<p>tidak ada kategori</p>`;
+      if (!tagData.length) {
+        wrap.innerHTML = `<p>tag tidak ditemukan</p>`;
         return;
       }
 
-      const catId = catData[0].id;
+      const tagId = tagData[0].id;
 
-      return fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${catId}&per_page=6&orderby=date&order=desc`)
+      // 🔥 UBAH: pakai tags= bukan categories=
+      return fetch(`https://lampost.co/wp-json/wp/v2/posts?tags=${tagId}&per_page=6&orderby=date&order=desc`)
         .then(r => r.ok ? r.json() : [])
         .then(posts => {
 
