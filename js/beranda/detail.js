@@ -116,18 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.style.margin = '1rem auto';
     });
 
-    const captions = isi.querySelectorAll('figcaption');
-    if (captions.length > 1) {
-      captions.forEach((cap, i) => {
-        if (i > 0) cap.remove();
-      });
-    }
-
-    isi.querySelectorAll('figcaption').forEach(cap => {
-      cap.style.textAlign = 'center';
-      cap.style.display = 'block';
-      cap.style.fontSize = '14px';
-    });
+    isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
 
     const gambar = document.querySelector('.gambar-berita');
     if (gambar && post.featured_media) {
@@ -140,9 +129,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           gambar.style.width = '100%';
           gambar.style.height = 'auto';
 
-          document.querySelectorAll('.isi-berita figcaption').forEach(el => el.remove());
+          document.querySelectorAll('.caption-gambar-utama').forEach(el => el.remove());
 
-          
+          if (m.caption?.rendered) {
+            const cap = document.createElement('p');
+            cap.className = 'caption-gambar-utama';
+            cap.innerHTML = m.caption.rendered;
+            cap.style.textAlign = 'center';
+            cap.style.fontSize = '14px';
+            cap.style.marginTop = '5px';
+            gambar.after(cap);
+          }
         })
         .catch(() => gambar.src = '/index/image/default.jpg');
     }
