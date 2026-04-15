@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         hour: '2-digit',
         minute: '2-digit'
       });
-      tanggal.innerText = `${tanggalStr} | pukul ${jam}`;
+      tanggal.innerText = `${tanggalStr} , pukul ${jam}`;
     }
 
     const editorEl = document.getElementById('editor');
