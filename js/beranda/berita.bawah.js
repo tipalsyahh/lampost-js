@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let isLoading = false;
   let hasMore = true;
 
-  // ❌ embed dibuang
   const API_BASE =
     'https://lampost.co/wp-json/wp/v2/posts?orderby=date&order=desc';
 
@@ -18,16 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const editorCache = {};
 
-  let allowedCategoryIds = []; // 🔥 hanya olahraga & hiburan
+  let allowedCategoryIds = [];
 
   function formatTanggal(dateString) {
     const d = new Date(dateString);
     return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
   }
 
-  // ===============================
-  // AMBIL ID KATEGORI (OLAHRAGA & HIBURAN)
-  // ===============================
   async function loadAllowedCategories() {
     const slugs = ['olahraga', 'hiburan'];
 
@@ -40,9 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     allowedCategoryIds = data.map(c => c.id);
   }
 
-  // ===============================
-  // KATEGORI
-  // ===============================
   async function getCategory(catId) {
     if (!catId) return { name: 'Berita', slug: 'berita' };
     if (catCache[catId]) return catCache[catId];
@@ -58,9 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ===============================
-  // GAMBAR
-  // ===============================
   async function getMedia(mediaId) {
     if (!mediaId) return 'image/default.jpg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
@@ -77,9 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  // ===============================
-  // ✍️ EDITOR (TETAP CARA LAMA)
-  // ===============================
   async function getEditor(post) {
     let editor = 'Redaksi';
 
@@ -100,16 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return editor;
   }
 
-  // ===============================
-  // SENTINEL
-  // ===============================
-  const sentinel = document.createElement('div');
-  sentinel.style.height = '1px';
-  container.appendChild(sentinel);
-
-  // ===============================
-  // LOAD POSTS
-  // ===============================
   async function loadPosts() {
     if (isLoading || !hasMore || page > MAX_PAGE) return;
     isLoading = true;
@@ -122,8 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let posts = await res.json();
       if (page === 1) posts.shift();
+
       if (!posts.length) {
         hasMore = false;
+        loadMoreBtn.style.display = 'none';
         return;
       }
 
@@ -135,25 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
           const judul = post.title.rendered;
           const tanggal = formatTanggal(post.date);
 
-          const { name: kategori, slug: kategoriSlug } =
-            await getCategory(post.categories?.[0]);
+          const [kategoriData, gambar, editor] = await Promise.all([
+            getCategory(post.categories?.[0]),
+            getMedia(post.featured_media),
+            getEditor(post)
+          ]);
 
-          const gambar = await getMedia(post.featured_media);
-          const editor = await getEditor(post);
-
-          const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+          const link = `halaman.html?${kategoriData.slug}/${post.slug}`;
 
           htmlArr.push(`
             <a href="${link}" class="item-berita">
-              <img
-                src="${gambar}"
-                alt="${judul}"
-                loading="lazy"
-                decoding="async">
-
+              <img src="${gambar}" alt="${judul}" decoding="async">
               <div class="info-berita">
                 <p class="judul">${judul}</p>
-                <p class="kategori">${kategori}</p>
+                <p class="kategori">${kategoriData.name}</p>
                 <div class="detail-info">
                   <p class="editor">By ${editor}</p>
                   <p class="tanggal">${tanggal}</p>
@@ -164,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
       );
 
-      sentinel.insertAdjacentHTML('beforebegin', htmlArr.join(''));
+      container.insertAdjacentHTML('beforeend', htmlArr.join(''));
       page++;
 
     } catch (e) {
@@ -174,22 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ===============================
-  // OBSERVER
-  // ===============================
-  const observer = new IntersectionObserver(
-    entries => {
-      if (entries[0].isIntersecting) loadPosts();
-    },
-    { rootMargin: '300px' }
-  );
+  const loadMoreWrapper = document.createElement('div');
+  loadMoreWrapper.style.textAlign = 'center';
 
-  // ===============================
-  // INIT
-  // ===============================
+  const loadMoreBtn = document.createElement('button');
+  loadMoreBtn.className = 'load-more';
+  loadMoreBtn.textContent = 'Load More';
+
+  loadMoreBtn.addEventListener('click', loadPosts);
+
+  loadMoreWrapper.appendChild(loadMoreBtn);
+  container.after(loadMoreWrapper);
+
   (async () => {
     await loadAllowedCategories();
-    observer.observe(sentinel);
     loadPosts();
   })();
 
