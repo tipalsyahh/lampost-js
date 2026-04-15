@@ -141,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
       container.insertAdjacentHTML('beforeend', htmlArr.join(''));
       page++;
 
+      container.appendChild(center);
+
     } catch (e) {
       console.error(e);
     } finally {
@@ -157,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadMoreBtn.addEventListener('click', loadPosts);
 
   center.appendChild(loadMoreBtn);
-  container.after(center);
+  container.appendChild(center);
 
   (async () => {
     await loadAllowedCategories();
