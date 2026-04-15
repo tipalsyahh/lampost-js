@@ -118,6 +118,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
 
+    isi.querySelectorAll('p').forEach(p => {
+      const text = p.innerText.trim().toUpperCase();
+
+      if (text.startsWith('BACA JUGA')) {
+
+        const link = p.querySelector('a');
+        if (!link) return;
+
+        const wrapper = document.createElement('blockquote');
+        wrapper.className = 'baca-juga';
+
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.innerText = 'BACA JUGA:';
+
+        const newLink = document.createElement('a');
+        newLink.href = link.href;
+        newLink.innerText = link.innerText;
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(newLink);
+
+        p.replaceWith(wrapper);
+      }
+    });
+
     const gambar = document.querySelector('.gambar-berita');
     if (gambar && post.featured_media) {
       fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`)
