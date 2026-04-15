@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return (mediaCache[mediaId] =
             data.media_details?.sizes?.full?.source_url ||
-            data.media_details?.sizes?.large?.source_url ||
             data.source_url ||
             'image/ai.jpg'
         );
@@ -80,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         el.innerHTML = `
 <a class="hero-link" id="${id}">
-<img src="image/ai.jpg" alt="" loading="lazy">
+<img src="image/ai.jpg" alt="" loading="lazy" decoding="async">
 <div class="hero-content">
 <p class="hero-category">...</p>
 <h2 class="card-text">${judul}</h2>
@@ -97,9 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         (async () => {
 
-            const imgUrl = await getMedia(post.featured_media);
-            const { name: kategori, slug } = await getCategory(post.categories?.[0]);
-            const editor = await getEditor(post);
+            const [imgUrl, kategoriData, editor] = await Promise.all([
+                getMedia(post.featured_media),
+                getCategory(post.categories?.[0]),
+                getEditor(post)
+            ]);
+
+            const { name: kategori, slug } = kategoriData;
 
             const imgEl = el.querySelector('img');
             if (!linkEl || !imgEl) return;
