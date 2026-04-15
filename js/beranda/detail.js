@@ -116,6 +116,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.style.margin = '1rem auto';
     });
 
+    isi.querySelectorAll('figcaption').forEach(cap => {
+      cap.style.textAlign = 'center';
+      cap.style.display = 'block';
+      cap.style.fontSize = '14px';
+    });
+
     const gambar = document.querySelector('.gambar-berita');
     if (gambar && post.featured_media) {
       fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`)
@@ -125,15 +131,30 @@ document.addEventListener('DOMContentLoaded', async () => {
           gambar.src = m.source_url;
           gambar.style.width = '100%';
           gambar.style.height = 'auto';
+
+          if (m.caption?.rendered) {
+            const cap = document.createElement('p');
+            cap.innerHTML = m.caption.rendered;
+            cap.style.textAlign = 'center';
+            cap.style.fontSize = '14px';
+            cap.style.marginTop = '5px';
+            gambar.after(cap);
+          }
         })
         .catch(() => gambar.src = '/index/image/default.jpg');
     }
 
     const tanggal = document.getElementById('tanggal');
     if (tanggal) {
-      tanggal.innerText = new Date(post.date).toLocaleDateString('id-ID', {
+      const d = new Date(post.date);
+      const tanggalStr = d.toLocaleDateString('id-ID', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
+      const jam = d.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      tanggal.innerText = `${tanggalStr} | ${jam}`;
     }
 
     const editorEl = document.getElementById('editor');
