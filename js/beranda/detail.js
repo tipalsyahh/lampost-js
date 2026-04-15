@@ -132,7 +132,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           gambar.style.width = '100%';
           gambar.style.height = 'auto';
 
-          if (m.caption?.rendered) {
+          const sudahAdaCaption = document.querySelector('.isi-berita figcaption');
+
+          if (!sudahAdaCaption && m.caption?.rendered) {
             const cap = document.createElement('p');
             cap.innerHTML = m.caption.rendered;
             cap.style.textAlign = 'center';
@@ -154,7 +156,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         hour: '2-digit',
         minute: '2-digit'
       });
-      tanggal.innerText = `${tanggalStr} | ${jam}`;
+      tanggal.innerText = `${tanggalStr} | pukul ${jam}`;
     }
 
     const editorEl = document.getElementById('editor');

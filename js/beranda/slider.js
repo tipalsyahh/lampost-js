@@ -21,34 +21,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!mediaId) return 'image/ai.jpg';
         if (mediaCache[mediaId]) return mediaCache[mediaId];
 
-        try {
-            const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
-            const data = await res.json();
-            return (mediaCache[mediaId] =
-                data.media_details?.sizes?.medium?.source_url ||
-                data.media_details?.sizes?.large?.source_url ||
-                data.source_url ||
-                'image/ai.jpg'
-            );
-        } catch {
-            return 'image/ai.jpg';
-        }
+        const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
+        const data = await res.json();
+
+        return (mediaCache[mediaId] =
+            data.media_details?.sizes?.full?.source_url ||
+            data.media_details?.sizes?.large?.source_url ||
+            data.source_url ||
+            'image/ai.jpg'
+        );
     }
 
     async function getCategory(catId) {
         if (!catId) return { name: 'Berita', slug: 'berita' };
         if (categoryCache[catId]) return categoryCache[catId];
 
-        try {
-            const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
-            const data = await res.json();
-            return (categoryCache[catId] = {
-                name: data.name,
-                slug: data.slug
-            });
-        } catch {
-            return { name: 'Berita', slug: 'berita' };
-        }
+        const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
+        const data = await res.json();
+
+        return (categoryCache[catId] = {
+            name: data.name,
+            slug: data.slug
+        });
     }
 
     async function getEditor(post) {
@@ -65,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 editor = data?.[0]?.name || editor;
                 editorCache[termLink] = editor;
             }
-        } catch {}
+        } catch (_) { }
 
         return editor;
     }
@@ -86,12 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         el.innerHTML = `
 <a class="hero-link" id="${id}">
-<img src="image/ai.jpg" loading="lazy">
+<img src="image/ai.jpg" alt="" loading="lazy">
 <div class="hero-content">
-<p class="hero-category"></p>
+<p class="hero-category">...</p>
 <h2 class="card-text">${judul}</h2>
 <div class="detail-info">
-<p class="editor-slider"></p>
+<p class="editor-slider">By ...</p>
 <p class="tanggal-slider">${tanggal}</p>
 </div>
 </div>
@@ -99,29 +93,31 @@ document.addEventListener('DOMContentLoaded', () => {
 `;
 
         const linkEl = el.querySelector('.hero-link');
-        const imgEl = el.querySelector('img');
-
         killBorder(linkEl);
 
-        Promise.all([
-            getMedia(post.featured_media),
-            getCategory(post.categories?.[0]),
-            getEditor(post)
-        ]).then(([imgUrl, kategori, editor]) => {
+        (async () => {
+
+            const imgUrl = await getMedia(post.featured_media);
+            const { name: kategori, slug } = await getCategory(post.categories?.[0]);
+            const editor = await getEditor(post);
+
+            const imgEl = el.querySelector('img');
+            if (!linkEl || !imgEl) return;
 
             const preload = new Image();
             preload.src = imgUrl;
 
             preload.onload = () => {
                 imgEl.src = imgUrl;
-                linkEl.href = `halaman.html?${kategori.slug}/${post.slug}`;
+                imgEl.alt = judul;
+                linkEl.href = `halaman.html?${slug}/${post.slug}`;
                 killBorder(linkEl);
             };
 
-            linkEl.querySelector('.hero-category').textContent = kategori.name;
+            linkEl.querySelector('.hero-category').textContent = kategori;
             linkEl.querySelector('.editor-slider').textContent = `By ${editor}`;
 
-        });
+        })();
     }
 
     async function init() {
@@ -130,13 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const tagRes = await fetch('https://lampost.co/wp-json/wp/v2/tags?slug=headline');
             const tagData = await tagRes.json();
 
-            if (!tagData.length) return;
+            if (!tagData.length) throw new Error('Tag tidak ditemukan');
 
             const tagId = tagData[0].id;
 
             const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?tags=${tagId}&per_page=4&orderby=date&order=desc`);
-            const posts = await res.json();
+            if (!res.ok) throw new Error('Gagal ambil data');
 
+            const posts = await res.json();
             if (posts.length < 4) return;
 
             renderFast(heroLeft, posts[0]);
@@ -144,7 +141,9 @@ document.addEventListener('DOMContentLoaded', () => {
             renderFast(top2, posts[2]);
             renderFast(bottom1, posts[3]);
 
-        } catch {}
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     init();
