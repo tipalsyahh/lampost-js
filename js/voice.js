@@ -67,7 +67,11 @@ function playVoice(btn) {
   };
 
   synth.speak(utterance);
-  if (synth.paused) synth.resume();
+
+  const resumeInterval = setInterval(() => {
+    if (!synth.speaking) clearInterval(resumeInterval);
+    else if (synth.paused) synth.resume();
+  }, 1000);
 
   isPlaying = true;
 }
@@ -106,8 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("beforeunload", () => synth.cancel());
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    const btn = document.getElementById("voiceToggle");
-    if (btn) stopVoice(btn);
+  if (!document.hidden && synth.paused && isPlaying) {
+    synth.resume();
   }
 });
