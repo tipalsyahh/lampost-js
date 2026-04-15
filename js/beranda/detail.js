@@ -142,14 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           document.querySelectorAll('.isi-berita figcaption').forEach(el => el.remove());
 
-          if (m.caption?.rendered) {
-            const cap = document.createElement('p');
-            cap.innerHTML = m.caption.rendered;
-            cap.style.textAlign = 'center';
-            cap.style.fontSize = '14px';
-            cap.style.marginTop = '5px';
-            gambar.after(cap);
-          }
+          
         })
         .catch(() => gambar.src = '/index/image/default.jpg');
     }
