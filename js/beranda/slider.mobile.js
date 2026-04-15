@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return (mediaCache[mediaId] =
             data.media_details?.sizes?.full?.source_url ||
-            data.media_details?.sizes?.large?.source_url ||
             data.source_url ||
             'image/ai.jpg'
         );
@@ -69,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tanggal = formatTanggal(post.date);
 
         el.innerHTML = `
-<img src="image/ai.jpg" alt="${judul}" loading="lazy">
+<img src="image/ai.jpg" alt="${judul}" loading="lazy" decoding="async">
 <a href="#" class="hero-overlay">
 ${isMain ? `<span class="hero-category">...</span>` : ``}
 <h3 class="hero-title">${judul}</h3>
@@ -78,34 +77,42 @@ ${isMain
 <span class="hero-editor">By ...</span>
 <span class="hero-date">${tanggal}</span>
 </div>`
-                : ``
-            }
+                : ``}
 </a>
 `;
     }
 
-    async function enrich(el, post, isMain = false) {
+    function enrich(el, post, isMain = false) {
 
-        const imgUrl = await getMedia(post.featured_media);
-        const { name, slug } = await getCategory(post.categories?.[0]);
+        (async () => {
 
-        const imgEl = el.querySelector('img');
+            const [imgUrl, kategoriData, editor] = await Promise.all([
+                getMedia(post.featured_media),
+                getCategory(post.categories?.[0]),
+                isMain ? getEditor(post) : Promise.resolve(null)
+            ]);
 
-        const preload = new Image();
-        preload.src = imgUrl;
+            const { name, slug } = kategoriData;
 
-        preload.onload = () => {
-            imgEl.src = imgUrl;
-        };
+            const imgEl = el.querySelector('img');
+            const a = el.querySelector('.hero-overlay');
+            if (!imgEl || !a) return;
 
-        const a = el.querySelector('.hero-overlay');
-        a.href = `halaman.html?${slug}/${post.slug}`;
+            const preload = new Image();
+            preload.src = imgUrl;
 
-        if (isMain) {
-            const editor = await getEditor(post);
-            a.querySelector('.hero-category').textContent = name;
-            a.querySelector('.hero-editor').textContent = `By ${editor}`;
-        }
+            preload.onload = () => {
+                imgEl.src = imgUrl;
+            };
+
+            a.href = `halaman.html?${slug}/${post.slug}`;
+
+            if (isMain) {
+                a.querySelector('.hero-category').textContent = name;
+                a.querySelector('.hero-editor').textContent = `By ${editor}`;
+            }
+
+        })();
     }
 
     async function init() {
