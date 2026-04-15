@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 🔥 UBAH: ambil TAG bukan kategori
-  fetch('https://lampost.co/wp-json/wp/v2/tags?slug=lpef')
+  fetch('https://lampost.co/wp-json/wp/v2/tags?slug=lampung-post-executive-forum')
     .then(r => r.ok ? r.json() : [])
     .then(tagData => {
 
