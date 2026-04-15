@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             cap.className = 'caption-gambar-utama';
             cap.innerHTML = m.caption.rendered;
             cap.style.textAlign = 'center';
-            cap.style.fontSize = '14px';
+            cap.style.fontSize = '11px';
             cap.style.marginTop = '5px';
             gambar.after(cap);
           }

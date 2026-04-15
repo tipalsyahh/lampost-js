@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!container) return;
 
   const catCache = {};
+  const mediaCache = {};
 
   function getCategory(catId) {
     if (!catId) return Promise.resolve({ name: 'Berita', slug: 'berita' });
@@ -22,7 +23,25 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => ({ name: 'Berita', slug: 'berita' }));
   }
 
-  fetch(`https://lampost.co/wp-json/wp/v2/posts?per_page=8&_embed`)
+  function getMedia(mediaId) {
+    if (!mediaId) return Promise.resolve('image/ai.jpg');
+    if (mediaCache[mediaId]) return Promise.resolve(mediaCache[mediaId]);
+
+    return fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        const url =
+          data?.media_details?.sizes?.full?.source_url ||
+          data?.source_url ||
+          'image/ai.jpg';
+
+        mediaCache[mediaId] = url;
+        return url;
+      })
+      .catch(() => 'image/ai.jpg');
+  }
+
+  fetch(`https://lampost.co/wp-json/wp/v2/posts?per_page=8&_fields=id,slug,title,featured_media,categories`)
     .then(res => res.ok ? res.json() : [])
     .then(async posts => {
 
@@ -35,13 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const judul = post.title.rendered;
 
-        const media = post._embedded?.['wp:featuredmedia']?.[0];
-        const imgUrl =
-          media?.media_details?.sizes?.full?.source_url ||
-          media?.source_url ||
-          'https://via.placeholder.com/300x200';
-
-        const kategoriData = await getCategory(post.categories?.[0]);
+        const [imgUrl, kategoriData] = await Promise.all([
+          getMedia(post.featured_media),
+          getCategory(post.categories?.[0])
+        ]);
 
         const link = `halaman.html?${kategoriData.slug}/${post.slug}`;
 
