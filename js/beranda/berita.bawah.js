@@ -148,8 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  const loadMoreWrapper = document.createElement('div');
-  loadMoreWrapper.style.textAlign = 'center';
+  const center = document.createElement('center');
 
   const loadMoreBtn = document.createElement('button');
   loadMoreBtn.className = 'load-more';
@@ -157,8 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   loadMoreBtn.addEventListener('click', loadPosts);
 
-  loadMoreWrapper.appendChild(loadMoreBtn);
-  container.after(loadMoreWrapper);
+  center.appendChild(loadMoreBtn);
+  container.after(center);
 
   (async () => {
     await loadAllowedCategories();
