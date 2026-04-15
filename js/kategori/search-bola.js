@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       window.location.href =
-        `../../search.html?q=${encodeURIComponent(q.trim())}`;
+        `../../search?q=${encodeURIComponent(q.trim())}`;
     }
 
     /* klik icon (kalau ada) */
