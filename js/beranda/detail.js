@@ -59,18 +59,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const judulEl = document.querySelector('.judul-berita');
     if (judulEl) judulEl.innerHTML = post.title.rendered;
 
-    const subJudulText =
-      post.subtitle ||
-      post.acf?.subtitle ||
-      post.meta?.subtitle ||
-      post.meta?.sub_title ||
-      '';
+    let subJudulText = '';
 
-    const subJudulEl = document.createElement('p');
-    subJudulEl.className = 'subjudul-berita';
-    subJudulEl.innerText = subJudulText;
+    if (post.excerpt && post.excerpt.rendered) {
+      subJudulText = post.excerpt.rendered.replace(/<[^>]+>/g, '').trim();
+    }
 
-    if (judulEl && subJudulText.trim() !== '') {
+    document.querySelectorAll('.subjudul-berita').forEach(el => el.remove());
+
+    if (judulEl && subJudulText !== '') {
+      const subJudulEl = document.createElement('p');
+      subJudulEl.className = 'subjudul-berita';
+      subJudulEl.innerText = subJudulText;
       judulEl.insertAdjacentElement('afterend', subJudulEl);
     }
 
