@@ -59,6 +59,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const judulEl = document.querySelector('.judul-berita');
     if (judulEl) judulEl.innerHTML = post.title.rendered;
 
+    const subJudulEl = document.createElement('p');
+    subJudulEl.className = 'subjudul-berita';
+    subJudulEl.innerHTML = post.excerpt?.rendered || '';
+
+    if (judulEl && subJudulEl.innerHTML.trim() !== '') {
+      judulEl.insertAdjacentElement('afterend', subJudulEl);
+    }
+
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
