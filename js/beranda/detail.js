@@ -55,10 +55,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const post = posts[0];
 
     // ===============================
-    // TAMBAHAN VIEW COUNTER (TANPA UBAH LOGIKA)
+    // VIEW COUNTER (PRIORITAS /index)
     // ===============================
     try {
-      const viewKey = `viewed_${post.id}`;
+      const cleanPath = `/index/${kategoriSlug}/${slug}`;
+      const viewKey = `viewed_${cleanPath}`;
+
       if (!sessionStorage.getItem(viewKey)) {
         fetch(`/wp-json/custom/v1/view/${post.id}`);
         sessionStorage.setItem(viewKey, '1');
