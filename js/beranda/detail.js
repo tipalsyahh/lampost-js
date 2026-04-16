@@ -55,32 +55,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const post = posts[0];
 
     // ===============================
-    // 🔥 VIEW COUNTER FINAL (REDIRECT + BALIK)
+    // 🔥 VIEW COUNTER FINAL (SERVER SIDE TRIGGER)
     // ===============================
     console.log("VIEW TRIGGER:", post.id);
 
     try {
 
-      const viewedKey = 'viewed_' + post.id;
+      if (!sessionStorage.getItem('viewed_' + post.id)) {
 
-      // jika sudah dari redirect WP → jangan ulang
-      const fromWP = new URLSearchParams(window.location.search).get('from_wp');
+        fetch(`https://lampost.co/wp-json/custom/v1/hit/${post.id}`, {
+          method: 'GET',
+          credentials: 'include'
+        })
+        .then(r => r.json())
+        .then(data => console.log("VIEW OK:", data))
+        .catch(err => console.error("VIEW ERROR:", err));
 
-      if (!sessionStorage.getItem(viewedKey) && !fromWP) {
-
-        sessionStorage.setItem(viewedKey, '1');
-
-        // redirect ke WP asli untuk hit view
-        window.location.href = `https://lampost.co/${kategoriSlug}/${slug}?from_index=1`;
-
-        return; // stop script sementara
-
-      }
-
-      // jika kembali dari WP → bersihkan URL
-      if (fromWP) {
-        const cleanUrl = `/index/${kategoriSlug}/${slug}`;
-        history.replaceState(null, '', cleanUrl);
+        sessionStorage.setItem('viewed_' + post.id, '1');
       }
 
     } catch (e) {
