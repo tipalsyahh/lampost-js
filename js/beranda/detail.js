@@ -80,6 +80,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     /* =========================
+       🔥 FIX TAMBAHAN: HAPUS IFRAME DARI WP
+    ========================= */
+    isi.querySelectorAll('iframe').forEach(el => el.remove());
+
+    /* =========================
        VIDEO JNEWS AUTO (FIX TOTAL)
     ========================= */
     let videoUsed = false;
@@ -88,7 +93,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
       const videoData = await videoRes.json();
 
-      // 🔥 AMBIL SEMUA KEMUNGKINAN FIELD VIDEO
       let videoUrl =
         videoData?.video ||
         videoData?.url ||
@@ -99,67 +103,71 @@ document.addEventListener('DOMContentLoaded', async () => {
         videoUrl = videoUrl.rendered;
       }
 
-      // 🔥 JIKA SUDAH IFRAME → LANGSUNG PAKAI
+      // ✅ FIX 1: kalau iframe → STOP di sini
       if (videoUrl.includes('<iframe')) {
+
         videoUsed = true;
+
         isi.insertAdjacentHTML('afterbegin', videoUrl);
-      }
 
-      // 🔥 JIKA URL YOUTUBE
-      let videoId = null;
+      } else {
 
-      if (videoUrl.includes('youtube.com')) {
-        videoId = videoUrl.split('v=')[1]?.split('&')[0];
-      }
+        let videoId = null;
 
-      if (videoUrl.includes('youtu.be')) {
-        videoId = videoUrl.split('/').pop();
-      }
+        if (videoUrl.includes('youtube.com')) {
+          videoId = videoUrl.split('v=')[1]?.split('&')[0];
+        }
 
-      if (videoId) {
+        if (videoUrl.includes('youtu.be')) {
+          videoId = videoUrl.split('/').pop();
+        }
 
-        videoUsed = true;
+        if (videoId) {
 
-        const thumbDiv = document.createElement('div');
-        thumbDiv.style.cssText = `
-          background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
-          width:100%;
-          padding-top:56.25%;
-          background-size:cover;
-          background-position:center;
-          position:relative;
-          cursor:pointer;
-          margin-bottom:1rem;
-        `;
+          videoUsed = true;
 
-        const play = document.createElement('div');
-        play.innerText = '▶';
-        play.style.cssText = `
-          position:absolute;
-          top:50%;
-          left:50%;
-          transform:translate(-50%,-50%);
-          font-size:60px;
-          color:white;
-          text-shadow:0 0 10px rgba(0,0,0,.8);
-        `;
-
-        thumbDiv.appendChild(play);
-
-        thumbDiv.addEventListener('click', () => {
-          thumbDiv.outerHTML = `
-            <iframe
-              width="100%"
-              height="400"
-              src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
-              frameborder="0"
-              allow="autoplay; encrypted-media"
-              allowfullscreen>
-            </iframe>
+          const thumbDiv = document.createElement('div');
+          thumbDiv.style.cssText = `
+            background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
+            width:100%;
+            padding-top:56.25%;
+            background-size:cover;
+            background-position:center;
+            position:relative;
+            cursor:pointer;
+            margin-bottom:1rem;
           `;
-        });
 
-        isi.prepend(thumbDiv);
+          const play = document.createElement('div');
+          play.innerText = '▶';
+          play.style.cssText = `
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            font-size:60px;
+            color:white;
+            text-shadow:0 0 10px rgba(0,0,0,.8);
+          `;
+
+          thumbDiv.appendChild(play);
+
+          thumbDiv.addEventListener('click', () => {
+            thumbDiv.outerHTML = `
+              <iframe
+                width="100%"
+                height="400"
+                src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
+                frameborder="0"
+                allow="autoplay; encrypted-media"
+                allowfullscreen>
+              </iframe>
+            `;
+          });
+
+          isi.prepend(thumbDiv);
+        }
+
       }
 
     } catch (e) {}
