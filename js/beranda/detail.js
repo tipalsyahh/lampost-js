@@ -19,10 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   } else {
     const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
-    if (path.length >= 3 && path[0] === 'index') {
-      kategoriSlug = path[1];
-      slug = path.slice(2).join('/');
-    } else if (path.length >= 2) {
+    if (path.length >= 2) {
       kategoriSlug = path[0];
       slug = path.slice(1).join('/');
     }
@@ -30,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
-      const cleanUrl = `{kategoriSlug}/${slug}`;
+      const cleanUrl = `/${kategoriSlug}/${slug}`;
       history.replaceState(null, '', cleanUrl);
     } catch (e) { }
   }
@@ -54,9 +51,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
-    // ===============================
-    // TAMBAHAN VIEW (TANPA UBAH SCRIPT LAIN)
-    // ===============================
     fetch(`https://lampost.co/wp-json/custom/v1/view/${post.id}`);
     new Image().src = `https://lampost.co/?p=${post.id}`;
 
@@ -102,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const searchParam = url.searchParams.get('s');
 
         if (searchParam) {
-          link.href = `/index/search?q=${encodeURIComponent(searchParam)}`;
+          link.href = `/search?q=${encodeURIComponent(searchParam)}`;
           link.target = '_self';
           return;
         }
@@ -111,21 +105,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (parts.includes('search')) {
           const q = url.searchParams.get('q') || '';
-          link.href = `/index/search${q ? `?q=${encodeURIComponent(q)}` : ''}`;
+          link.href = `/search${q ? `?q=${encodeURIComponent(q)}` : ''}`;
           link.target = '_self';
           return;
         }
 
         if (parts.length >= 2) {
-          link.href = `/index/${parts.at(-2)}/${parts.at(-1)}`;
+          link.href = `/${parts.at(-2)}/${parts.at(-1)}`;
           link.target = '_self';
           return;
         }
 
-        link.href = '/index';
+        link.href = '/';
         link.target = '_self';
       } catch {
-        link.href = '/index';
+        link.href = '/';
         link.target = '_self';
       }
     });
@@ -283,7 +277,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             a.href = isLocal
               ? `tag.html?q=${encodeURIComponent(tag.name)}`
-              : `/index/tag?q=${encodeURIComponent(tag.name)}`;
+              : `/tag?q=${encodeURIComponent(tag.name)}`;
 
             a.innerText = tag.name;
             a.title = tag.name;
