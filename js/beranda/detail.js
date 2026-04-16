@@ -54,19 +54,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
-// ===============================
-// VIEW COUNTER (PASTI TERPANGGIL)
-// ===============================
-console.log("VIEW TRIGGER:", post.id);
+    // ===============================
+    // VIEW COUNTER (FIX JNEWS + NO DOUBLE)
+    // ===============================
+    console.log("VIEW TRIGGER:", post.id);
 
-try {
-  fetch(`https://lampost.co/wp-json/custom/v1/view/${post.id}`)
-    .then(r => r.json())
-    .then(data => console.log("VIEW OK:", data))
-    .catch(err => console.error("VIEW ERROR:", err));
-} catch (e) {
-  console.error("VIEW FAIL:", e);
-}
+    try {
+
+      // 🔥 hanya 1x per user (per tab)
+      if (!sessionStorage.getItem('viewed_' + post.id)) {
+
+        // 🔥 pakai AJAX asli JNews (INI KUNCI MASUK KE ADMIN WP)
+        fetch(`https://lampost.co/wp-admin/admin-ajax.php?action=jnews_view_count&post_id=${post.id}`, {
+          method: 'GET',
+          credentials: 'include'
+        })
+        .then(() => console.log("VIEW JNEWS OK"))
+        .catch(err => console.error("VIEW ERROR:", err));
+
+        sessionStorage.setItem('viewed_' + post.id, '1');
+      }
+
+    } catch (e) {
+      console.error("VIEW FAIL:", e);
+    }
 
     document.title = post.title.rendered + ' - Lampost';
 
