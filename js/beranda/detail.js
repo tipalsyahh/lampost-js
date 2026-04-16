@@ -79,94 +79,93 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-/* =========================
-   VIDEO JNEWS AUTO (FIX FINAL)
-========================= */
-let videoUsed = false;
-
-try {
-  const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
-  const videoData = await videoRes.json();
-
-  let videoUrl =
-    videoData?.video ||
-    videoData?.url ||
-    videoData?.embed ||
-    '';
-
-  if (typeof videoUrl === 'object' && videoUrl.rendered) {
-    videoUrl = videoUrl.rendered;
-  }
-
-  let videoId = null;
-
-  // 🔥 AMBIL ID DARI IFRAME JUGA
-  if (videoUrl.includes('<iframe')) {
-    const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
-    if (match) videoId = match[1];
-  }
-
-  // 🔥 URL YOUTUBE NORMAL
-  if (!videoId && videoUrl.includes('youtube.com')) {
-    videoId = videoUrl.split('v=')[1]?.split('&')[0];
-  }
-
-  if (!videoId && videoUrl.includes('youtu.be')) {
-    videoId = videoUrl.split('/').pop();
-  }
-
-  // 🔥 JIKA ADA VIDEO VALID
-  if (videoId) {
-
-    videoUsed = true;
-
-    const thumbDiv = document.createElement('div');
-    thumbDiv.style.cssText = `
-      background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
-      width:100%;
-      padding-top:56.25%;
-      background-size:cover;
-      background-position:center;
-      position:relative;
-      cursor:pointer;
-      margin-bottom:1rem;
-    `;
-
-    const play = document.createElement('div');
-    play.innerText = '▶';
-    play.style.cssText = `
-      position:absolute;
-      top:50%;
-      left:50%;
-      transform:translate(-50%,-50%);
-      font-size:60px;
-      color:white;
-      text-shadow:0 0 10px rgba(0,0,0,.8);
-    `;
-
-    thumbDiv.appendChild(play);
-
-    thumbDiv.addEventListener('click', () => {
-      thumbDiv.outerHTML = `
-        <iframe
-          width="100%"
-          height="400"
-          src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
-          frameborder="0"
-          allow="autoplay; encrypted-media"
-          allowfullscreen>
-        </iframe>
-      `;
-    });
-
-    isi.prepend(thumbDiv);
-  }
-
-} catch (e) {}
+    // 🔥 FIX UTAMA: HAPUS VIDEO DARI WP (BIAR TIDAK DOBEL)
+    isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
     /* =========================
-       FIX GAMBAR JIKA VIDEO ADA
+       VIDEO JNEWS AUTO (FINAL FIX)
     ========================= */
+    let videoUsed = false;
+
+    try {
+      const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
+      const videoData = await videoRes.json();
+
+      let videoUrl =
+        videoData?.video ||
+        videoData?.url ||
+        videoData?.embed ||
+        '';
+
+      if (typeof videoUrl === 'object' && videoUrl.rendered) {
+        videoUrl = videoUrl.rendered;
+      }
+
+      let videoId = null;
+
+      // ambil dari iframe
+      if (videoUrl.includes('<iframe')) {
+        const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
+        if (match) videoId = match[1];
+      }
+
+      // youtube biasa
+      if (!videoId && videoUrl.includes('youtube.com')) {
+        videoId = videoUrl.split('v=')[1]?.split('&')[0];
+      }
+
+      if (!videoId && videoUrl.includes('youtu.be')) {
+        videoId = videoUrl.split('/').pop();
+      }
+
+      if (videoId) {
+
+        videoUsed = true;
+
+        const thumbDiv = document.createElement('div');
+        thumbDiv.style.cssText = `
+          background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
+          width:100%;
+          padding-top:56.25%;
+          background-size:cover;
+          background-position:center;
+          position:relative;
+          cursor:pointer;
+          margin-bottom:1rem;
+        `;
+
+        const play = document.createElement('div');
+        play.innerText = '▶';
+        play.style.cssText = `
+          position:absolute;
+          top:50%;
+          left:50%;
+          transform:translate(-50%,-50%);
+          font-size:60px;
+          color:white;
+          text-shadow:0 0 10px rgba(0,0,0,.8);
+        `;
+
+        thumbDiv.appendChild(play);
+
+        thumbDiv.addEventListener('click', () => {
+          thumbDiv.outerHTML = `
+            <iframe
+              width="100%"
+              height="400"
+              src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
+              frameborder="0"
+              allow="autoplay; encrypted-media"
+              allowfullscreen>
+            </iframe>
+          `;
+        });
+
+        isi.prepend(thumbDiv);
+      }
+
+    } catch (e) {}
+
     if (videoUsed) {
       isi.querySelectorAll('img').forEach(img => img.remove());
       const gambarFix = document.querySelector('.gambar-berita');
