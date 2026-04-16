@@ -60,10 +60,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (judulEl) judulEl.innerHTML = post.title.rendered;
 
     const subJudulText =
+      post.subtitle ||
       post.acf?.subtitle ||
       post.meta?.subtitle ||
       post.meta?.sub_title ||
-      post.subtitle ||
       '';
 
     const subJudulEl = document.createElement('p');
@@ -91,9 +91,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const url = href.startsWith('http') ? new URL(href) : new URL(href, 'https://lampost.co');
         if (!url.hostname.includes('lampost.co')) return;
 
-        const search = url.searchParams.get('s');
-        if (search) {
-          link.href = `/index/search?q=${encodeURIComponent(search)}`;
+        const searchParam = url.searchParams.get('s');
+
+        if (searchParam) {
+          link.href = `/index/search?q=${encodeURIComponent(searchParam)}`;
           link.target = '_self';
           return;
         }
@@ -101,7 +102,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const parts = url.pathname.split('/').filter(Boolean);
 
         if (parts.includes('search')) {
-          link.href = `/index/search`;
+          const q = url.searchParams.get('q') || '';
+          link.href = `/index/search${q ? `?q=${encodeURIComponent(q)}` : ''}`;
           link.target = '_self';
           return;
         }
