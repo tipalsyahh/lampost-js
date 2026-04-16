@@ -54,6 +54,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
+    // ===============================
+    // TAMBAHAN VIEW COUNTER (TANPA UBAH LOGIKA)
+    // ===============================
+    try {
+      const viewKey = `viewed_${post.id}`;
+      if (!sessionStorage.getItem(viewKey)) {
+        fetch(`/wp-json/custom/v1/view/${post.id}`);
+        sessionStorage.setItem(viewKey, '1');
+      }
+    } catch (e) {}
+
     document.title = post.title.rendered + ' - Lampost';
 
     const judulEl = document.querySelector('.judul-berita');
