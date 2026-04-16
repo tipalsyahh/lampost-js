@@ -61,9 +61,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let subJudulText = '';
 
-    if (post.excerpt && post.excerpt.rendered) {
-      subJudulText = post.excerpt.rendered.replace(/<[^>]+>/g, '').trim();
+    if (post.meta?.jnews_single_post?.subtitle) {
+      subJudulText = post.meta.jnews_single_post.subtitle;
     }
+
+    subJudulText = (subJudulText || '').replace(/<[^>]+>/g, '').trim();
 
     document.querySelectorAll('.subjudul-berita').forEach(el => el.remove());
 
