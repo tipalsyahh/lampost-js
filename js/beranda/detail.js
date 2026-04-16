@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
 
-    const api = `https://lampost.co/wp-json/wp/v2/posts?slug=${slug}&orderby=date&order=desc`;
+    const api = `https://lampost.co/wp-json/wp/v2/posts?slug=${slug}&orderby=date&order=desc&_embed`;
     const res = await fetch(api);
     if (!res.ok) throw new Error();
 
@@ -59,11 +59,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const judulEl = document.querySelector('.judul-berita');
     if (judulEl) judulEl.innerHTML = post.title.rendered;
 
+    const subJudulText =
+      post.yoast_head_json?.description ||
+      post.excerpt?.rendered?.replace(/<[^>]+>/g, '') ||
+      '';
+
     const subJudulEl = document.createElement('p');
     subJudulEl.className = 'subjudul-berita';
-    subJudulEl.innerHTML = post.excerpt?.rendered || '';
+    subJudulEl.innerText = subJudulText;
 
-    if (judulEl && subJudulEl.innerHTML.trim() !== '') {
+    if (judulEl && subJudulText.trim() !== '') {
       judulEl.insertAdjacentElement('afterend', subJudulEl);
     }
 
