@@ -59,10 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const judulEl = document.querySelector('.judul-berita');
     if (judulEl) judulEl.innerHTML = post.title.rendered;
 
-    const subJudulText =
-      post.yoast_head_json?.description ||
-      post.excerpt?.rendered?.replace(/<[^>]+>/g, '') ||
-      '';
+    const subJudulText = post.yoast_head_json?.description || '';
 
     const subJudulEl = document.createElement('p');
     subJudulEl.className = 'subjudul-berita';
@@ -97,8 +94,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
+
+        if (parts.includes('search')) {
+          link.href = `/index/search`;
+          link.target = '_self';
+          return;
+        }
+
         if (parts.length >= 2) {
-          link.href = `/index/${parts.at(-2)}/${parts.at(-1)}.html`;
+          link.href = `/index/${parts.at(-2)}/${parts.at(-1)}`;
           link.target = '_self';
           return;
         }
