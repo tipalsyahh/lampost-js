@@ -3,8 +3,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const berita = document.getElementById('berita');
   if (!berita) return;
 
-  const query = window.location.search.substring(1);
-  const [kategoriSlug, slug] = query.split('/');
+  let kategoriSlug, slug;
+
+  if (window.location.search) {
+    const query = decodeURIComponent(window.location.search.substring(1));
+    const parts = query.split('/').filter(Boolean);
+    kategoriSlug = parts[0];
+    slug = parts.slice(1).join('/');
+  } else {
+    const path = window.location.pathname.split('/').filter(Boolean);
+    kategoriSlug = path[0];
+    slug = path.slice(1).join('/');
+  }
 
   if (!slug) {
     berita.innerHTML = '<p>Berita tidak ditemukan</p>';
@@ -22,15 +32,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
-    /* =========================
-       JUDUL
-    ========================= */
     document.querySelector('.judul-berita').innerHTML =
       post.title.rendered;
 
-    /* =========================
-       EDITOR (SAMA DENGAN HOME)
-    ========================= */
     const editor =
       post._embedded?.['wp:term']?.[2]?.[0]?.name ||
       post._embedded?.author?.[0]?.name ||
@@ -38,9 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('editor').innerText = editor;
 
-    /* =========================
-       TANGGAL
-    ========================= */
     document.getElementById('tanggal').innerText =
       new Date(post.date).toLocaleDateString('id-ID', {
         weekday: 'long',
@@ -49,9 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         year: 'numeric'
       });
 
-    /* =========================
-       KATEGORI
-    ========================= */
     const kategoriEl = document.getElementById('kategori');
     if (kategoriEl) {
       kategoriEl.innerText =
@@ -60,15 +58,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Berita';
     }
 
-    /* =========================
-       KONTEN
-    ========================= */
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered || '';
 
-    /* =========================
-       VIDEO YOUTUBE (MANUAL MAP)
-    ========================= */
     const videoIdMap = {
       'kpk-endus-aroma-korupsi-ada-bau-busuk-kuota-haji': 'HOterxKOtXE',
       'menteri-purbaya-masih-pakai-gaya-koboi-bagaimana-respon-prabowo': 'm5nnBanrkYo',
@@ -126,9 +118,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       isi.prepend(thumbDiv);
     }
 
-    /* =========================
-       RESPONSIVE IMAGE
-    ========================= */
     isi.querySelectorAll('img').forEach(img => {
       img.style.maxWidth = '100%';
       img.style.height = 'auto';
