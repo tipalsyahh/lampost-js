@@ -59,7 +59,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const judulEl = document.querySelector('.judul-berita');
     if (judulEl) judulEl.innerHTML = post.title.rendered;
 
-    const subJudulText = post.yoast_head_json?.description || '';
+    const subJudulText =
+      post.acf?.subtitle ||
+      post.meta?.subtitle ||
+      post.meta?.sub_title ||
+      post.subtitle ||
+      '';
 
     const subJudulEl = document.createElement('p');
     subJudulEl.className = 'subjudul-berita';
