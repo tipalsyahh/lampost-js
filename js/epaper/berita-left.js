@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <a href="${
           isRSS
             ? card.dataset.link
-            : `koran.html?${card.dataset.kategori}/${card.dataset.slug}`
+            : `koran?${card.dataset.kategori}/${card.dataset.slug}`
         }" class="detail-btn">
           Baca Selengkapnya
         </a>
