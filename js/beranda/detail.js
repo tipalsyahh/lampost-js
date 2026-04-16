@@ -118,13 +118,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
 
-    isi.querySelectorAll('p').forEach(p => {
-      const text = p.innerText.trim().toUpperCase();
+    isi.querySelectorAll('p, blockquote').forEach(el => {
 
-      if (text.startsWith('BACA JUGA')) {
+      const text = el.innerText.replace(/\s+/g, ' ').trim().toUpperCase();
 
-        const link = p.querySelector('a');
-        if (!link) return;
+      if (text.includes('BACA JUGA')) {
+
+        const links = el.querySelectorAll('a');
+        if (!links.length) return;
 
         const wrapper = document.createElement('blockquote');
         wrapper.className = 'baca-juga';
@@ -133,14 +134,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         label.className = 'label';
         label.innerText = 'BACA JUGA:';
 
-        const newLink = document.createElement('a');
-        newLink.href = link.href;
-        newLink.innerText = link.innerText;
-
         wrapper.appendChild(label);
-        wrapper.appendChild(newLink);
 
-        p.replaceWith(wrapper);
+        links.forEach(link => {
+          const newLink = document.createElement('a');
+          newLink.href = link.href;
+          newLink.innerText = link.innerText;
+          wrapper.appendChild(newLink);
+        });
+
+        el.replaceWith(wrapper);
       }
     });
 
@@ -180,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         hour: '2-digit',
         minute: '2-digit'
       });
-      tanggal.innerText = `${tanggalStr} , pukul ${jam}`;
+      tanggal.innerText = `${tanggalStr} , ${jam} WIB`;
     }
 
     const editorEl = document.getElementById('editor');

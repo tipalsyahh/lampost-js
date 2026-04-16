@@ -57,13 +57,13 @@ function playVoice(btn) {
   utterance.onend = () => {
     isPlaying = false;
     isMuted = true;
-    setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
+    setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
   };
 
   utterance.onerror = () => {
     isPlaying = false;
     isMuted = true;
-    setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
+    setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
   };
 
   synth.speak(utterance);
@@ -80,7 +80,7 @@ function stopVoice(btn) {
   if (synth.speaking || synth.pending) synth.cancel();
   isPlaying = false;
   isMuted = true;
-  setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
+  setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
   isMuted = true;
   stopVoice(btn);
 
-  setBtnText(btn, 'Baca Berita', 'bi bi-volume-up');
+  setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
 
   btn.addEventListener("click", () => {
     if (isMuted) {
