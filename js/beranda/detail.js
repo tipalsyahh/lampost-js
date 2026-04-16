@@ -80,112 +80,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     /* =========================
-       🔥 CEK VIDEO DARI WP
-    ========================= */
-    let wpHasVideo = false;
-
-    if (isi.querySelector('iframe, video')) {
-      wpHasVideo = true;
-    }
-
-    /* =========================
-       VIDEO JNEWS AUTO (FIX TOTAL)
+       VIDEO JNEWS AUTO (FIX)
     ========================= */
     let videoUsed = false;
 
-    // ✅ PRIORITAS: kalau WP sudah ada video → pakai itu saja
-    if (wpHasVideo) {
+    try {
+      const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
+      const videoData = await videoRes.json();
 
-      videoUsed = true;
+      let videoUrl =
+        videoData?.video ||
+        videoData?.url ||
+        videoData?.embed ||
+        '';
 
-    } else {
+      if (typeof videoUrl === 'object' && videoUrl.rendered) {
+        videoUrl = videoUrl.rendered;
+      }
 
-      try {
-        const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
-        const videoData = await videoRes.json();
+      // ✅ IF IFRAME → STOP DI SINI
+      if (videoUrl.includes('<iframe')) {
+        videoUsed = true;
+        isi.insertAdjacentHTML('afterbegin', videoUrl);
+      }
 
-        let videoUrl =
-          videoData?.video ||
-          videoData?.url ||
-          videoData?.embed ||
-          '';
+      // ✅ FIX: JANGAN LANJUT JIKA SUDAH ADA VIDEO
+      if (!videoUsed) {
 
-        if (typeof videoUrl === 'object' && videoUrl.rendered) {
-          videoUrl = videoUrl.rendered;
+        let videoId = null;
+
+        if (videoUrl.includes('youtube.com')) {
+          videoId = videoUrl.split('v=')[1]?.split('&')[0];
         }
 
-        // =========================
-        // 🔥 HANDLE IFRAME
-        // =========================
-        if (videoUrl.includes('<iframe')) {
+        if (videoUrl.includes('youtu.be')) {
+          videoId = videoUrl.split('/').pop();
+        }
+
+        if (videoId) {
 
           videoUsed = true;
 
-          isi.insertAdjacentHTML('afterbegin', videoUrl);
+          const thumbDiv = document.createElement('div');
+          thumbDiv.style.cssText = `
+            background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
+            width:100%;
+            padding-top:56.25%;
+            background-size:cover;
+            background-position:center;
+            position:relative;
+            cursor:pointer;
+            margin-bottom:1rem;
+          `;
 
-        } else {
+          const play = document.createElement('div');
+          play.innerText = '▶';
+          play.style.cssText = `
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%);
+            font-size:60px;
+            color:white;
+            text-shadow:0 0 10px rgba(0,0,0,.8);
+          `;
 
-          let videoId = null;
+          thumbDiv.appendChild(play);
 
-          if (videoUrl.includes('youtube.com')) {
-            videoId = videoUrl.split('v=')[1]?.split('&')[0];
-          }
-
-          if (videoUrl.includes('youtu.be')) {
-            videoId = videoUrl.split('/').pop();
-          }
-
-          if (videoId) {
-
-            videoUsed = true;
-
-            const thumbDiv = document.createElement('div');
-            thumbDiv.style.cssText = `
-              background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
-              width:100%;
-              padding-top:56.25%;
-              background-size:cover;
-              background-position:center;
-              position:relative;
-              cursor:pointer;
-              margin-bottom:1rem;
+          thumbDiv.addEventListener('click', () => {
+            thumbDiv.outerHTML = `
+              <iframe
+                width="100%"
+                height="400"
+                src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
+                frameborder="0"
+                allow="autoplay; encrypted-media"
+                allowfullscreen>
+              </iframe>
             `;
+          });
 
-            const play = document.createElement('div');
-            play.innerText = '▶';
-            play.style.cssText = `
-              position:absolute;
-              top:50%;
-              left:50%;
-              transform:translate(-50%,-50%);
-              font-size:60px;
-              color:white;
-              text-shadow:0 0 10px rgba(0,0,0,.8);
-            `;
-
-            thumbDiv.appendChild(play);
-
-            thumbDiv.addEventListener('click', () => {
-              thumbDiv.outerHTML = `
-                <iframe
-                  width="100%"
-                  height="400"
-                  src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
-                  frameborder="0"
-                  allow="autoplay; encrypted-media"
-                  allowfullscreen>
-                </iframe>
-              `;
-            });
-
-            isi.prepend(thumbDiv);
-          }
-
+          isi.prepend(thumbDiv);
         }
+      }
 
-      } catch (e) {}
-
-    }
+    } catch (e) {}
 
     /* =========================
        FIX GAMBAR JIKA VIDEO ADA
