@@ -55,28 +55,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const post = posts[0];
 
     // ===============================
-    // 🔥 VIEW COUNTER FINAL (SERVER SIDE TRIGGER)
+    // TAMBAHAN VIEW (TANPA UBAH SCRIPT LAIN)
     // ===============================
-    console.log("VIEW TRIGGER:", post.id);
-
-    try {
-
-      if (!sessionStorage.getItem('viewed_' + post.id)) {
-
-        fetch(`https://lampost.co/wp-json/custom/v1/hit/${post.id}`, {
-          method: 'GET',
-          credentials: 'include'
-        })
-        .then(r => r.json())
-        .then(data => console.log("VIEW OK:", data))
-        .catch(err => console.error("VIEW ERROR:", err));
-
-        sessionStorage.setItem('viewed_' + post.id, '1');
-      }
-
-    } catch (e) {
-      console.error("VIEW FAIL:", e);
-    }
+    fetch(`https://lampost.co/wp-json/custom/v1/view/${post.id}`);
+    new Image().src = `https://lampost.co/?p=${post.id}`;
 
     document.title = post.title.rendered + ' - Lampost';
 
