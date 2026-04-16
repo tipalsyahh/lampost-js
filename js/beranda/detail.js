@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const post = posts[0];
 
     // ===============================
-    // 🔥 VIEW COUNTER FIX JNEWS (IFRAME)
+    // 🔥 VIEW COUNTER FINAL (SERVER SIDE TRIGGER)
     // ===============================
     console.log("VIEW TRIGGER:", post.id);
 
@@ -63,15 +63,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!sessionStorage.getItem('viewed_' + post.id)) {
 
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-
-        // URL halaman WP asli (INI KUNCI)
-        iframe.src = `https://lampost.co/${kategoriSlug}/${slug}`;
-
-        document.body.appendChild(iframe);
-
-        console.log("VIEW JNEWS VIA IFRAME");
+        fetch(`https://lampost.co/wp-json/custom/v1/hit/${post.id}`, {
+          method: 'GET',
+          credentials: 'include'
+        })
+        .then(r => r.json())
+        .then(data => console.log("VIEW OK:", data))
+        .catch(err => console.error("VIEW ERROR:", err));
 
         sessionStorage.setItem('viewed_' + post.id, '1');
       }
