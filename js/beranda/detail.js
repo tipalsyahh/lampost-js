@@ -54,18 +54,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
-    // ===============================
-    // VIEW COUNTER (PRIORITAS /index)
-    // ===============================
-    try {
-      const cleanPath = `/index/${kategoriSlug}/${slug}`;
-      const viewKey = `viewed_${cleanPath}`;
+// ===============================
+// VIEW COUNTER (PASTI TERPANGGIL)
+// ===============================
+console.log("VIEW TRIGGER:", post.id);
 
-      if (!sessionStorage.getItem(viewKey)) {
-        fetch(`/wp-json/custom/v1/view/${post.id}`);
-        sessionStorage.setItem(viewKey, '1');
-      }
-    } catch (e) {}
+try {
+  fetch(`https://lampost.co/wp-json/custom/v1/view/${post.id}`)
+    .then(r => r.json())
+    .then(data => console.log("VIEW OK:", data))
+    .catch(err => console.error("VIEW ERROR:", err));
+} catch (e) {
+  console.error("VIEW FAIL:", e);
+}
 
     document.title = post.title.rendered + ' - Lampost';
 
