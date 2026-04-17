@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const container = document.querySelector('.data-microsite-uin');
+  const container = document.querySelector('.data-microsite-unila');
   if (!container) return;
 
   const PER_PAGE = 2;
