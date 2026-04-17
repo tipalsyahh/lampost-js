@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         isi.prepend(thumbDiv);
       }
 
-    } catch (e) {}
+    } catch (e) { }
 
     if (videoUsed) {
       isi.querySelectorAll('img').forEach(img => img.remove());
@@ -267,29 +267,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const gambar = document.querySelector('.gambar-berita');
-    if (gambar && post.featured_media) {
-      fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(m => {
-          if (!m) return;
 
-          gambar.src = m.source_url;
-          gambar.style.width = '100%';
-          gambar.style.height = 'auto';
+    if (gambar && post._embedded?.['wp:featuredmedia']?.[0]) {
 
-          document.querySelectorAll('.caption-gambar-utama').forEach(el => el.remove());
+      const media = post._embedded['wp:featuredmedia'][0];
 
-          if (m.caption?.rendered) {
-            const cap = document.createElement('p');
-            cap.className = 'caption-gambar-utama';
-            cap.innerHTML = m.caption.rendered;
-            cap.style.textAlign = 'center';
-            cap.style.fontSize = '11px';
-            cap.style.marginTop = '5px';
-            gambar.after(cap);
-          }
-        })
-        .catch(() => gambar.src = '/index/image/default.jpg');
+      gambar.src = media.source_url;
+      gambar.style.width = '100%';
+      gambar.style.height = 'auto';
+
+      document.querySelectorAll('.caption-gambar-utama').forEach(el => el.remove());
+
+      if (media.caption?.rendered) {
+        const cap = document.createElement('p');
+        cap.className = 'caption-gambar-utama';
+        cap.innerHTML = media.caption.rendered;
+        cap.style.textAlign = 'center';
+        cap.style.fontSize = '11px';
+        cap.style.marginTop = '5px';
+        gambar.after(cap);
+      }
+
     }
 
     const tanggal = document.getElementById('tanggal');
