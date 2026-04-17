@@ -3,14 +3,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   const berita = document.getElementById('berita');
   if (!berita) return;
 
-  /* ========================
-     🔥 AMBIL URL (UNILA ONLY)
-     /microweb/unila/kategori/slug
-  ======================== */
-  const path = window.location.pathname.split('/').filter(Boolean);
+  const isLocal =
+    location.hostname === 'localhost' ||
+    location.hostname === '127.0.0.1' ||
+    location.protocol === 'file:';
 
-  const kategoriSlug = path.at(-2); // berita-terkini
-  const slug = path.at(-1);         // slug berita
+  let kategoriSlug, slug;
+
+  /* ========================
+     🔥 SUPPORT 2 MODE
+     1. URL LAMA  → ?kategori/slug
+     2. URL BARU  → /microweb/unila/kategori/slug
+  ======================== */
+
+  if (window.location.search) {
+    // MODE LAMA
+    const query = decodeURIComponent(window.location.search.substring(1) || '');
+    const parts = query.split('/').filter(Boolean);
+
+    if (parts.length >= 2) {
+      kategoriSlug = parts[0];
+      slug = parts.slice(1).join('/');
+    }
+
+  } else {
+    // MODE BARU (FIX UTAMA)
+    const path = window.location.pathname.split('/').filter(Boolean);
+
+    // struktur: microweb / unila / kategori / slug
+    if (path.length >= 4) {
+      kategoriSlug = path[2];
+      slug = path.slice(3).join('/');
+    }
+  }
+
+  /* ========================
+     🔥 AUTO CLEAN URL
+  ======================== */
+  if (!isLocal && window.location.search && kategoriSlug && slug) {
+    try {
+      const cleanUrl = `/microweb/unila/${kategoriSlug}/${slug}`;
+      history.replaceState(null, '', cleanUrl);
+    } catch (e) {}
+  }
 
   if (!slug) {
     berita.innerHTML = '<p>Berita tidak ditemukan</p>';
@@ -46,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /* ========================
-       🔁 LINK INTERNAL (UNILA ONLY)
+       🔁 LINK INTERNAL (FIX TOTAL)
     ======================== */
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
@@ -72,12 +107,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
-
         const slugBerita = parts.at(-1);
         const kategoriBaru = parts.at(-2) || 'berita';
 
         if (slugBerita) {
-          // 🔥 KHUSUS UNILA
           link.href = `/microweb/unila/${kategoriBaru}/${slugBerita}`;
           link.target = '_self';
         } else {
