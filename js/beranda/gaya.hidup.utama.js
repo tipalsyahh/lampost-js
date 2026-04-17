@@ -21,7 +21,7 @@ const categoryId=catData[0].id;
 const kategoriNama=catData[0].name||'Nasional';
 const kategoriSlug=catData[0].slug||'nasional';
 
-const res=await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=2&orderby=date&order=desc`);
+const res=await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=4&orderby=date&order=desc`);
 if(!res.ok)throw new Error();
 
 const posts=await res.json();
