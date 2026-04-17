@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               editor = termData?.[0]?.name || editor;
               TERM_CACHE[termLink] = editor;
             }
-          } catch (_) {}
+          } catch (_) { }
         }
       }
 
@@ -89,16 +89,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       htmlArr.push(`
         <a href="${link}" class="item-info">
-          <div class="berita-unila">
-            <p class="judul-unila-lanjutan">${judul}</p>
-            <p class="kategori">${kategoriNama}</p>
-            <div class="info-microweb">
-              <p class="editor-kkn">By ${editor}</p>
-              <p class="tanggal">${tanggal}</p>
-            </div>
-            <p class="deskripsi-unila-lanjutan">${deskripsi}</p>
-          </div>
-        </a>
+<img src="${gambar}" class="img-unila" loading="lazy" alt="${judul}">
+<div class="berita-unila">
+<p class="judul-unila">${judul}</p>
+<p class="kategori">${kategoriNama}</p>
+<div class="info-microweb">
+<p class="editor-kkn">By ${editor}</p>
+<p class="tanggal" id="tanggal-unila-berita">${tanggal}</p>
+</div>
+<p class="deskripsi-unila-lanjutan">${deskripsi}</p>
+</div>
+</a>
       `);
     }
 
