@@ -11,13 +11,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let kategoriSlug, slug;
 
   /* ========================
-     🔥 SUPPORT 2 MODE
-     1. URL LAMA  → ?kategori/slug
-     2. URL BARU  → /microweb/unila/kategori/slug
+     🔥 SUPPORT 2 MODE URL
+     1. ?kategori/slug
+     2. /microweb/unila/kategori/slug
   ======================== */
-
   if (window.location.search) {
-    // MODE LAMA
     const query = decodeURIComponent(window.location.search.substring(1) || '');
     const parts = query.split('/').filter(Boolean);
 
@@ -27,10 +25,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
   } else {
-    // MODE BARU (FIX UTAMA)
     const path = window.location.pathname.split('/').filter(Boolean);
 
-    // struktur: microweb / unila / kategori / slug
+    // microweb / unila / kategori / slug
     if (path.length >= 4) {
       kategoriSlug = path[2];
       slug = path.slice(3).join('/');
@@ -81,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /* ========================
-       🔁 LINK INTERNAL (FIX TOTAL)
+       🔁 LINK INTERNAL (DINAMIS KATEGORI)
     ======================== */
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
@@ -107,10 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
+
         const slugBerita = parts.at(-1);
         const kategoriBaru = parts.at(-2) || 'berita';
 
         if (slugBerita) {
+          // 🔥 KATEGORI DINAMIS
           link.href = `/microweb/unila/${kategoriBaru}/${slugBerita}`;
           link.target = '_self';
         } else {
