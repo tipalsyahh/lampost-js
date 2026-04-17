@@ -3,9 +3,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const berita = document.getElementById('berita');
   if (!berita) return;
 
-  // 🔥 Ambil kategori & slug judul dari URL
-  const query = decodeURIComponent(window.location.search.replace('?', ''));
-  const [kategoriSlug, slug] = query.split('/');
+  /* ========================
+     🔥 AMBIL URL TANPA ?
+     contoh:
+     /microweb/berita-terkini/slug
+  ======================== */
+  const path = window.location.pathname.split('/').filter(Boolean);
+
+  const kategoriSlug = path.at(-2);
+  const slug = path.at(-1);
 
   if (!slug) {
     berita.innerHTML = '<p>Berita tidak ditemukan</p>';
@@ -24,21 +30,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
-    /* ========================
-       📝 JUDUL
-    ======================== */
+    /* ======================== */
     const judul = document.querySelector('.judul-berita');
     if (judul) judul.innerHTML = post.title.rendered;
 
-    /* ========================
-       📰 ISI BERITA
-    ======================== */
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    /* ========================
-       🧹 HAPUS <p>&nbsp;</p> & PARAGRAF KOSONG
-    ======================== */
+    /* ======================== */
     isi.querySelectorAll('p').forEach(p => {
       const bersih = p.innerHTML
         .replace(/&nbsp;/gi, '')
@@ -48,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /* ========================
-       🔁 REDIRECT LINK INTERNAL
+       🔁 LINK INTERNAL (FIX URL BARU)
     ======================== */
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
@@ -67,34 +66,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!url.hostname.includes('lampost.co')) return;
 
-        // 🔎 SEARCH
         const search = url.searchParams.get('s');
         if (search) {
           link.href = `search.html?q=${encodeURIComponent(search)}`;
-          link.target = '_self';
           return;
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
         const slugBerita = parts.at(-1);
+        const kategoriBaru = parts.at(-2) || 'berita';
 
         if (slugBerita) {
-          link.href = `berita.unila.html?${kategoriSlug}|${slugBerita}`;
-          link.target = '_self';
+          link.href = `/${kategoriBaru}/${slugBerita}`;
         } else {
-          link.href = 'index.html';
-          link.target = '_self';
+          link.href = '/';
         }
 
       } catch {
-        link.href = 'index.html';
-        link.target = '_self';
+        link.href = '/';
       }
     });
 
-    /* ========================
-       🖼️ PAKSA IMG RESPONSIVE
-    ======================== */
+    /* ======================== */
     isi.querySelectorAll('img').forEach(img => {
       img.removeAttribute('width');
       img.removeAttribute('height');
@@ -104,23 +97,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       img.style.display = 'block';
     });
 
-    /* ========================
-       🖼️ GAMBAR UTAMA
-    ======================== */
     const gambar = document.querySelector('.gambar-berita');
     if (gambar) {
       gambar.src =
         post._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
         'image/default.jpg';
-
-      gambar.style.maxWidth = '100%';
-      gambar.style.width = '100%';
-      gambar.style.height = 'auto';
     }
 
-    /* ========================
-       📅 TANGGAL
-    ======================== */
     const tanggal = document.getElementById('tanggal');
     if (tanggal) {
       tanggal.innerText =
@@ -132,9 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    /* ========================
-       ✍️ EDITOR
-    ======================== */
     const editor = document.getElementById('editor');
     if (editor) {
       editor.innerText =
@@ -142,9 +122,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Redaksi';
     }
 
-    /* ========================
-       🏷️ KATEGORI
-    ======================== */
     const kategoriEl = document.getElementById('kategori');
     if (kategoriEl) {
       kategoriEl.innerText =
