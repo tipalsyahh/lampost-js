@@ -1,46 +1,54 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
-  const container = document.querySelector('.data-microsite-unila');
+  const container = document.querySelector('.data-microsite-uin');
   if (!container) return;
 
-  function loadPosts() {
+  const PER_PAGE = 2;
 
-    fetch('/.netlify/functions/unila')
-      .then(res => res.ok ? res.json() : [])
-      .then(posts => {
+  async function loadPosts() {
+    try {
+      const api =
+        'https://lampost.co/microweb/universitaslampung/wp-json/wp/v2/posts' +
+        `?per_page=${PER_PAGE}&orderby=date&order=desc&_embed`;
 
-        let output = `<ul class="list-judul">`;
+      const res = await fetch(api);
+      if (!res.ok) throw new Error('API gagal');
 
-        posts.forEach(post => {
+      const posts = await res.json();
 
-          let judul = post.title.rendered.replace(/<[^>]+>/g, '').trim();
+      let output = `<ul class="list-judul">`;
 
-          if (judul.length > 150) {
-            judul = judul.substring(0, 150) + '...';
-          }
+      posts.forEach(post => {
 
-          const slug = post.slug;
+        let judul = post.title.rendered
+          .replace(/<[^>]+>/g, '') // bersihin tag HTML
+          .trim();
 
-          const kategoriSlug =
-            post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'unila';
+        if (judul.length > 150) {
+          judul = judul.substring(0, 150) + '...';
+        }
 
-          const link = `microweb/berita.unila.html?${kategoriSlug}/${slug}`;
+        const slug = post.slug;
 
-          output += `
-            <li class="item-judul">
-              <a href="${link}" class="link-judul">${judul}</a>
-            </li>
-          `;
-        });
+        const kategoriSlug =
+          post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'uin';
 
-        output += `</ul>`;
+        const link = `microweb/berita.uin.html?${kategoriSlug}/${slug}`;
 
-        container.innerHTML = output;
-
-      })
-      .catch(() => {
-        container.innerHTML = '<p>gagal memuat</p>';
+        output += `
+          <li class="item-judul">
+            <a href="${link}" class="link-judul">${judul}</a>
+          </li>
+        `;
       });
+
+      output += `</ul>`;
+
+      container.innerHTML = output;
+
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   loadPosts();
