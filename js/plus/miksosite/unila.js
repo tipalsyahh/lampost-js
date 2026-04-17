@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const kategoriSlug =
           post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'uin';
 
-        const link = `microweb/berita.uin.html?${kategoriSlug}/${slug}`;
+        const link = `microweb/berita.unila.html?${kategoriSlug}/${slug}`;
 
         output += `
           <li class="item-judul">
