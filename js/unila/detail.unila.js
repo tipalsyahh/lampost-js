@@ -3,48 +3,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const berita = document.getElementById('berita');
   if (!berita) return;
 
-  const isLocal =
-    location.hostname === 'localhost' ||
-    location.hostname === '127.0.0.1' ||
-    location.protocol === 'file:';
-
-  let kategoriSlug, slug;
-
-  /* ========================
-     🔥 SUPPORT 2 MODE URL
-     1. ?kategori/slug
-     2. /microweb/unila/kategori/slug
-  ======================== */
-  if (window.location.search) {
-    const query = decodeURIComponent(window.location.search.substring(1) || '');
-    const parts = query.split('/').filter(Boolean);
-
-    if (parts.length >= 2) {
-      kategoriSlug = parts[0];
-      slug = parts.slice(1).join('/');
-    }
-
-  } else {
-    const path = window.location.pathname.split('/').filter(Boolean);
-
-    // 🔥 FLEXIBLE: cari "unila" bukan index tetap
-    const idx = path.indexOf('unila');
-
-    if (idx !== -1 && path.length > idx + 2) {
-      kategoriSlug = path[idx + 1];
-      slug = path.slice(idx + 2).join('/');
-    }
-  }
-
-  /* ========================
-     🔥 AUTO CLEAN URL
-  ======================== */
-  if (!isLocal && window.location.search && kategoriSlug && slug) {
-    try {
-      const cleanUrl = `${window.location.origin}/microweb/unila/${kategoriSlug}/${slug}`;
-      history.replaceState(null, '', cleanUrl);
-    } catch (e) {}
-  }
+  // 🔥 Ambil kategori & slug judul dari URL
+  const query = decodeURIComponent(window.location.search.replace('?', ''));
+  const [kategoriSlug, slug] = query.split('/');
 
   if (!slug) {
     berita.innerHTML = '<p>Berita tidak ditemukan</p>';
@@ -63,15 +24,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const post = posts[0];
 
-    /* ======================== */
+    /* ========================
+       📝 JUDUL
+    ======================== */
     const judul = document.querySelector('.judul-berita');
     if (judul) judul.innerHTML = post.title.rendered;
 
+    /* ========================
+       📰 ISI BERITA
+    ======================== */
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
     /* ========================
-       🔥 HAPUS PARAGRAF KOSONG
+       🧹 HAPUS <p>&nbsp;</p> & PARAGRAF KOSONG
     ======================== */
     isi.querySelectorAll('p').forEach(p => {
       const bersih = p.innerHTML
@@ -82,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /* ========================
-       🔁 LINK INTERNAL DINAMIS
+       🔁 REDIRECT LINK INTERNAL
     ======================== */
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
@@ -101,31 +67,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (!url.hostname.includes('lampost.co')) return;
 
+        // 🔎 SEARCH
         const search = url.searchParams.get('s');
         if (search) {
-          link.href = `/microweb/search.html?q=${encodeURIComponent(search)}`;
+          link.href = `search.html?q=${encodeURIComponent(search)}`;
+          link.target = '_self';
           return;
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
-
         const slugBerita = parts.at(-1);
-        const kategoriBaru = parts.at(-2) || 'berita';
 
         if (slugBerita) {
-          link.href = `/microweb/unila/${kategoriBaru}/${slugBerita}`;
+          link.href = `berita.unila.html?${kategoriSlug}|${slugBerita}`;
           link.target = '_self';
         } else {
-          link.href = `/microweb/unila/`;
+          link.href = 'index.html';
+          link.target = '_self';
         }
 
       } catch {
-        link.href = `/microweb/unila/`;
+        link.href = 'index.html';
+        link.target = '_self';
       }
     });
 
     /* ========================
-       🔥 RESPONSIVE IMAGE
+       🖼️ PAKSA IMG RESPONSIVE
     ======================== */
     isi.querySelectorAll('img').forEach(img => {
       img.removeAttribute('width');
@@ -136,15 +104,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       img.style.display = 'block';
     });
 
-    /* ======================== */
+    /* ========================
+       🖼️ GAMBAR UTAMA
+    ======================== */
     const gambar = document.querySelector('.gambar-berita');
     if (gambar) {
       gambar.src =
         post._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
         'image/default.jpg';
+
+      gambar.style.maxWidth = '100%';
+      gambar.style.width = '100%';
+      gambar.style.height = 'auto';
     }
 
-    /* ======================== */
+    /* ========================
+       📅 TANGGAL
+    ======================== */
     const tanggal = document.getElementById('tanggal');
     if (tanggal) {
       tanggal.innerText =
@@ -156,7 +132,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    /* ======================== */
+    /* ========================
+       ✍️ EDITOR
+    ======================== */
     const editor = document.getElementById('editor');
     if (editor) {
       editor.innerText =
@@ -164,7 +142,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Redaksi';
     }
 
-    /* ======================== */
+    /* ========================
+       🏷️ KATEGORI
+    ======================== */
     const kategoriEl = document.getElementById('kategori');
     if (kategoriEl) {
       kategoriEl.innerText =
