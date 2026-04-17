@@ -4,14 +4,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!berita) return;
 
   /* ========================
-     🔥 AMBIL URL TANPA ?
-     contoh:
-     /microweb/berita-terkini/slug
+     🔥 AMBIL URL (UNILA ONLY)
+     /microweb/unila/kategori/slug
   ======================== */
   const path = window.location.pathname.split('/').filter(Boolean);
 
-  const kategoriSlug = path.at(-2);
-  const slug = path.at(-1);
+  const kategoriSlug = path.at(-2); // berita-terkini
+  const slug = path.at(-1);         // slug berita
 
   if (!slug) {
     berita.innerHTML = '<p>Berita tidak ditemukan</p>';
@@ -47,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /* ========================
-       🔁 LINK INTERNAL (FIX URL BARU)
+       🔁 LINK INTERNAL (UNILA ONLY)
     ======================== */
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
@@ -68,22 +67,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const search = url.searchParams.get('s');
         if (search) {
-          link.href = `search.html?q=${encodeURIComponent(search)}`;
+          link.href = `/microweb/search.html?q=${encodeURIComponent(search)}`;
           return;
         }
 
         const parts = url.pathname.split('/').filter(Boolean);
+
         const slugBerita = parts.at(-1);
         const kategoriBaru = parts.at(-2) || 'berita';
 
         if (slugBerita) {
-          link.href = `/${kategoriBaru}/${slugBerita}`;
+          // 🔥 KHUSUS UNILA
+          link.href = `/microweb/unila/${kategoriBaru}/${slugBerita}`;
+          link.target = '_self';
         } else {
-          link.href = '/';
+          link.href = `/microweb/unila/`;
         }
 
       } catch {
-        link.href = '/';
+        link.href = `/microweb/unila/`;
       }
     });
 
@@ -97,6 +99,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       img.style.display = 'block';
     });
 
+    /* ======================== */
     const gambar = document.querySelector('.gambar-berita');
     if (gambar) {
       gambar.src =
@@ -104,6 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'image/default.jpg';
     }
 
+    /* ======================== */
     const tanggal = document.getElementById('tanggal');
     if (tanggal) {
       tanggal.innerText =
@@ -115,6 +119,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    /* ======================== */
     const editor = document.getElementById('editor');
     if (editor) {
       editor.innerText =
@@ -122,6 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         'Redaksi';
     }
 
+    /* ======================== */
     const kategoriEl = document.getElementById('kategori');
     if (kategoriEl) {
       kategoriEl.innerText =
