@@ -27,10 +27,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     const path = window.location.pathname.split('/').filter(Boolean);
 
-    // microweb / unila / kategori / slug
-    if (path.length >= 4) {
-      kategoriSlug = path[2];
-      slug = path.slice(3).join('/');
+    // 🔥 FLEXIBLE: cari "unila" bukan index tetap
+    const idx = path.indexOf('unila');
+
+    if (idx !== -1 && path.length > idx + 2) {
+      kategoriSlug = path[idx + 1];
+      slug = path.slice(idx + 2).join('/');
     }
   }
 
@@ -39,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   ======================== */
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
-      const cleanUrl = `/microweb/unila/${kategoriSlug}/${slug}`;
+      const cleanUrl = `${window.location.origin}/microweb/unila/${kategoriSlug}/${slug}`;
       history.replaceState(null, '', cleanUrl);
     } catch (e) {}
   }
@@ -68,7 +70,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    /* ======================== */
+    /* ========================
+       🔥 HAPUS PARAGRAF KOSONG
+    ======================== */
     isi.querySelectorAll('p').forEach(p => {
       const bersih = p.innerHTML
         .replace(/&nbsp;/gi, '')
@@ -78,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     /* ========================
-       🔁 LINK INTERNAL (DINAMIS KATEGORI)
+       🔁 LINK INTERNAL DINAMIS
     ======================== */
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
@@ -109,7 +113,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const kategoriBaru = parts.at(-2) || 'berita';
 
         if (slugBerita) {
-          // 🔥 KATEGORI DINAMIS
           link.href = `/microweb/unila/${kategoriBaru}/${slugBerita}`;
           link.target = '_self';
         } else {
@@ -121,7 +124,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    /* ======================== */
+    /* ========================
+       🔥 RESPONSIVE IMAGE
+    ======================== */
     isi.querySelectorAll('img').forEach(img => {
       img.removeAttribute('width');
       img.removeAttribute('height');
