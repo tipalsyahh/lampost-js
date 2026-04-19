@@ -8,26 +8,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     location.hostname === '127.0.0.1' ||
     location.protocol === 'file:';
 
-  let kategoriSlug, slug;
+  // 🔥 TAMBAHAN: subKategori
+  let kategoriSlug, subKategori, slug;
 
   if (window.location.search) {
     const query = decodeURIComponent(window.location.search.substring(1) || '');
     const parts = query.split('/').filter(Boolean);
-    if (parts.length >= 2) {
+
+    // 🔥 FIX SUPPORT SUB KATEGORI
+    if (parts.length >= 3) {
       kategoriSlug = parts[0];
-      slug = parts.slice(1).join('/');
+      subKategori = parts[1];
+      slug = parts.slice(2).join('/');
+    } else if (parts.length === 2) {
+      kategoriSlug = parts[0];
+      slug = parts[1];
     }
+
   } else {
     const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
-    if (path.length >= 2) {
+
+    // 🔥 FIX SUPPORT SUB KATEGORI
+    if (path.length >= 3) {
       kategoriSlug = path[0];
-      slug = path.slice(1).join('/');
+      subKategori = path[1];
+      slug = path.slice(2).join('/');
+    } else if (path.length === 2) {
+      kategoriSlug = path[0];
+      slug = path[1];
     }
   }
 
+  // 🔥 FIX CLEAN URL (TIDAK MERUBAH LOGIKA, HANYA MENYESUAIKAN)
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
-      const cleanUrl = `/${kategoriSlug}/${slug}`;
+      let cleanUrl = `/${kategoriSlug}/`;
+
+      if (subKategori) {
+        cleanUrl += `${subKategori}/`;
+      }
+
+      cleanUrl += `${slug}`;
+
       history.replaceState(null, '', cleanUrl);
     } catch (e) { }
   }
@@ -79,11 +101,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    // 🔥 FIX UTAMA: HAPUS VIDEO DARI WP (BIAR TIDAK DOBEL)
+    // 🔥 FIX UTAMA: HAPUS VIDEO DARI WP
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
     /* =========================
-       VIDEO JNEWS AUTO (FINAL FIX)
+       VIDEO JNEWS AUTO (TETAP)
     ========================= */
     let videoUsed = false;
 
@@ -103,13 +125,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let videoId = null;
 
-      // ambil dari iframe
       if (videoUrl.includes('<iframe')) {
         const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
         if (match) videoId = match[1];
       }
 
-      // youtube biasa
       if (!videoId && videoUrl.includes('youtube.com')) {
         videoId = videoUrl.split('v=')[1]?.split('&')[0];
       }

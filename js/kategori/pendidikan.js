@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <img src="image/ai.jpg" class="img-microweb" loading="lazy">
             <div class="berita-microweb">
               <p class="judul">${judul}</p>
-              <p class="kategori">Opini</p>
+              <p class="kategori">Pendidikan</p>
               <div class="info-microweb">
                 <p class="editor">By ...</p>
                 <p class="tanggal">${tanggal}</p>
