@@ -35,7 +35,13 @@ document.addEventListener("DOMContentLoaded", () => {
             let html = '<option value="">Semua Berita</option>';
 
             data.forEach(cat => {
-                categoryMap[cat.id] = { name: cat.name, slug: cat.slug };
+                // 🔥 TAMBAHAN: SIMPAN PARENT
+                categoryMap[cat.id] = {
+                    name: cat.name,
+                    slug: cat.slug,
+                    parent: cat.parent
+                };
+
                 html += `<option value="${cat.id}">${cat.name}</option>`;
             });
 
@@ -143,15 +149,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 const title = post.title.rendered;
                 const date = formatTanggal(post.date);
 
-                const catData = categoryMap[post.categories?.[0]] || { name: "Berita", slug: "berita" };
+                const catData = categoryMap[post.categories?.[0]] || { name: "Berita", slug: "berita", parent: 0 };
+
                 const catName = catData.name;
                 const catSlug = catData.slug;
+
+                // 🔥 AMBIL PARENT
+                const parentData = categoryMap[catData.parent];
 
                 const img = mediaMap[post.featured_media] || "image/default.jpg";
 
                 const termLink = post._links?.['wp:term']?.[2]?.href;
 
-                const link = `/${catSlug}/${post.slug}`;
+                // 🔥 BUILD URL (SUPPORT SUB KATEGORI)
+                let link = `/${catSlug}/${post.slug}`;
+
+                if (parentData && parentData.slug) {
+                    link = `/${parentData.slug}/${catSlug}/${post.slug}`;
+                }
 
                 html += `
                 <a href="${link}" class="item-berita">
