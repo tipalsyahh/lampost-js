@@ -105,7 +105,7 @@ ${isMain
                 imgEl.src = imgUrl;
             };
 
-            a.href = `halaman.html?${slug}/${post.slug}`;
+            a.href = `/${slug}/${post.slug}`;
 
             if (isMain) {
                 a.querySelector('.hero-category').textContent = name;

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const post of posts) {
 
       const judul = post.title.rendered;
-      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+      const link = `/${kategoriSlug}/${post.slug}`;
 
       const d = new Date(post.date);
       const tanggal = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;

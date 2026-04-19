@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const kategoriSlug =
           post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'opini';
 
-        const link = `../halaman.html?${kategoriSlug}/${slug}`;
+        const link = `/${kategoriSlug}/${slug}`;
 
         let deskripsi =
           post.excerpt?.rendered

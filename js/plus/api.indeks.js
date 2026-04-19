@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const termLink = post._links?.['wp:term']?.[2]?.href;
 
-                const link = `halaman.html?${catSlug}/${post.slug}`;
+                const link = `/${catSlug}/${post.slug}`;
 
                 html += `
                 <a href="${link}" class="item-berita">

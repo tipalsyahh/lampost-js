@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       await getCategory(post.categories?.[0]);
 
     ticker.textContent = judul;
-    ticker.href = `halaman.html?${kategoriSlug}/${slug}`;
+    ticker.href = `/${kategoriSlug}/${slug}`;
 
     /* reset posisi (KANAN) */
     ticker.style.transition = 'none';

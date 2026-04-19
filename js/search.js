@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const { name: kategori, slug } = await getCategory(post);
     const editor = await getEditor(post);
 
-    el.href = `halaman.html?${slug}/${post.slug}`;
+    el.href = `/?${slug}/${post.slug}`;
     el.querySelector('.kategori').textContent = kategori;
     el.querySelector('.editor').textContent = `By ${editor}`;
   }

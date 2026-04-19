@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const kategoriSlug =
                 post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'berita';
 
-            const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+            const link = `/${kategoriSlug}/${post.slug}`;
 
             const tanggal = new Date(post.date).toLocaleDateString('id-ID', {
                 day: '2-digit',

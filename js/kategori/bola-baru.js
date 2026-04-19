@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const { name: category, slug: categorySlug } =
           await getCategory(catId);
 
-        const link = `../../halaman.html?${categorySlug}/${slug}`;
+        const link = `/${categorySlug}/${slug}`;
 
         let deskripsi =
           post.excerpt?.rendered

@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
           getCategory(post.categories?.[0])
         ]);
 
-        const link = `halaman.html?${kategoriData.slug}/${post.slug}`;
+        const link = `/${kategoriData.slug}/${post.slug}`;
 
         return `
           <a href="${link}" class="post-item">

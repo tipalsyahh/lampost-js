@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const el = document.getElementById(id);
           if (!el) return;
 
-          el.href = `halaman.html?${categorySlug}/${slug}`;
+          el.href = `/?${categorySlug}/${slug}`;
           el.querySelector('img').src = gambar;
         })();
 

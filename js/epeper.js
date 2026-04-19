@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     posts.forEach(post => {
 
       const judul = post.title.rendered;
+
       const tanggal = new Date(post.date).toLocaleDateString('id-ID', {
         day: '2-digit',
         month: '2-digit',
@@ -44,8 +45,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         post._embedded?.['wp:featuredmedia']?.[0]?.source_url
         || 'image/ai.jpg';
 
+      // 🔥 TAMBAHAN (ambil slug kategori, tanpa ubah logika lain)
+      const kategoriSlug =
+        post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'berita';
+
       html += `
-        <a href="halaman.html?id=${post.id}" class="item-olahraga">
+        <a href="/${kategoriSlug}/${post.slug}" class="item-olahraga">
           <img src="${gambar}" alt="${judul}" class="img-olahraga" loading="lazy">
         </a>
       `;

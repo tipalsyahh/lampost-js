@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
             deskripsi = deskripsi.slice(0, 150) + '...';
           }
 
-          const link = `../../halaman.html?${kategoriSlug}/${slug}`;
+          const link = `/${kategoriSlug}/${slug}`;
 
           htmlArr.push(`
             <a href="${link}" class="item-info">

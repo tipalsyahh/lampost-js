@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         htmlArr.push(`
-          <a href="../halaman.html?nuansa/${slug}" class="item-info" id="${id}">
+          <a href="/nuansa/${slug}" class="item-info" id="${id}">
             <img src="image/ai.jpg" class="img-microweb" loading="lazy">
             <div class="berita-microweb">
               <p class="judul">${judul}</p>

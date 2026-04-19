@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             deskripsi = deskripsi.slice(0, 150) + '...';
 
           return `
-            <a href="../../halaman.html?${kategoriSlug}/${slug}" class="item-info">
+            <a href="/${kategoriSlug}/${slug}" class="item-info">
               <img src="${gambar}" alt="${judul}" loading="lazy" class="img-microweb">
               <div class="berita-microweb">
                 <p class="judul">${judul}</p>

@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const { name: kategori, slug } = await getCategory(post.categories?.[0]);
       const tanggal = formatTanggal(post.date);
 
-      const link = `halaman.html?${slug}/${post.slug}`;
+      const link = `/${slug}/${post.slug}`;
 
       html += `
         <a href="${link}" class="list-berita">

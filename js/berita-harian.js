@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const gambar = await getMedia(post.featured_media);
           const editor = await getEditor(post);
 
-          const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+          const link = `/${kategoriSlug}/${post.slug}`;
 
           htmlArr.push(`
             <a href="${link}" class="item-berita">

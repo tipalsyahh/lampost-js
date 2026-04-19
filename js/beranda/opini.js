@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const kategoriSlug = await getCategorySlug(post.categories?.[0]);
 
       /* 🔗 LINK */
-      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+      const link = `/${kategoriSlug}/${post.slug}`;
 
       html += `
         <a href="${link}" class="item-hukum">

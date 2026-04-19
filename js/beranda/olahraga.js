@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       for (const post of groups[i]) {
 
         const judul = post.title.rendered;
-        const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+        const link = `/${kategoriSlug}/${post.slug}`;
 
         let gambar = 'image/ai.jpg';
         let kategori = 'Berita';

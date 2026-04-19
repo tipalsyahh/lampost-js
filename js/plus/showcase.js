@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(r => {
                     return `
             <li>
-              <a href="halaman.html?${slug}/${r.slug}" class="related-link">
+              <a href="/${slug}/${r.slug}" class="related-link">
                 ${r.title.rendered}
               </a>
             </li>
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         el.addEventListener('click', () => {
-            window.location.href = `halaman.html?${slug}/${post.slug}`;
+            window.location.href = `/${slug}/${post.slug}`;
         });
     }
 

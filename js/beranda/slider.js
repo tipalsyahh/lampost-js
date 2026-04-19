@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             preload.onload = () => {
                 imgEl.src = imgUrl;
                 imgEl.alt = judul;
-                linkEl.href = `halaman.html?${slug}/${post.slug}`;
+                linkEl.href = `/${slug}/${post.slug}`;
                 killBorder(linkEl);
             };
 

@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderFast(post, kategoriSlug) {
     const judul = post.title.rendered;
-    const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+    const link = `/?${kategoriSlug}/${post.slug}`;
     const waktu = formatTanggalPendek(post.date);
     const id = `kesehatan-${post.id}`;
 

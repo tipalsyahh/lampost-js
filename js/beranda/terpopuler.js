@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const slugKategori = await getCategorySlug(post.categories);
           const el = document.getElementById(id);
           if (!el) return;
-          el.href = `halaman.html?${slugKategori}/${post.slug}`;
+          el.href = `/${slugKategori}/${post.slug}`;
         })();
 
       });

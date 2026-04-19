@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editor = post._embedded?.['wp:term']?.[2]?.[0]?.name || 'Redaksi';
     const gambar = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'image/default.jpg';
 
-    const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+    const link = `/${kategoriSlug}/${post.slug}`;
 
     const tanggal = new Date(post.date).toLocaleDateString('id-ID', {
       day: '2-digit',

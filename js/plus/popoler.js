@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const slug = post.slug;
 
         htmlArr.push(`
-          <a href="halaman.html?tajuk-lampung-post/${slug}" class="alink-item" id="${id}">
+          <a href="/tajuk-lampung-post/${slug}" class="alink-item" id="${id}">
             <img src="image/ai.jpg" class="alink-img" loading="lazy">
             <div class="alink-content">
               <p class="alink-title">${judul}</p>

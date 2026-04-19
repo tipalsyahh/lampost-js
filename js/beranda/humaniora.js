@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'berita';
 
       /* 🔗 LINK (KATEGORI DULU, BARU JUDUL) */
-      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+      const link = `/${kategoriSlug}/${post.slug}`;
 
       /* 📅 TANGGAL */
       const tanggal = new Date(post.date).toLocaleDateString('id-ID', {

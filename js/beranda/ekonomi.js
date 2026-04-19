@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editor = await getEditor(post);
     const gambar = await getMedia(post.featured_media);
 
-    el.href = `halaman.html?${slug}/${post.slug}`;
+    el.href = `/${slug}/${post.slug}`;
     el.querySelector('.kategori').textContent = kategori;
     el.querySelector('.editor').textContent = `Oleh ${editor}`;
     el.querySelector('img').src = gambar;

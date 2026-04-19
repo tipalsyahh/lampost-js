@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const el = wrap.querySelector(`[data-i="${i}"]`);
               const img = wrap.querySelector(`[data-img="${i}"]`);
 
-              if (el) el.href = `halaman.html?${slug}/${post.slug}`;
+              if (el) el.href = `/${slug}/${post.slug}`;
               if (img) img.src = media?.source_url || '';
 
             });

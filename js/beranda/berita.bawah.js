@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             getEditor(post)
           ]);
 
-          const link = `halaman.html?${kategoriData.slug}/${post.slug}`;
+          const link = `/${kategoriData.slug}/${post.slug}`;
 
           htmlArr.push(`
             <a href="${link}" class="item-berita">

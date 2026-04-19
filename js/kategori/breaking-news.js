@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return `
-          <a href="../halaman.html?breaking-news/${post.slug}" class="item-info">
+          <a href="/breaking-news/${post.slug}" class="item-info">
             <img src="${img}" class="img-microweb" loading="lazy">
             <div class="berita-microweb">
               <p class="judul">${post.title.rendered}</p>

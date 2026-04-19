@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const kategoriSlug =
         post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'berita';
 
-      const link = `halaman.html?${kategoriSlug}/${post.slug}`;
+      const link = `/${kategoriSlug}/${post.slug}`;
 
       return `
         <a href="${link}" class="item-hukum">
