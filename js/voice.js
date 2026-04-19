@@ -16,9 +16,15 @@ function getText() {
 
   const clone = isiEl.cloneNode(true);
 
-  // hapus elemen tidak perlu
+  // 🔥 FIX: jangan hapus <a>, tapi ubah jadi text biasa
+  clone.querySelectorAll("a").forEach(a => {
+    const text = a.innerText;
+    a.replaceWith(text);
+  });
+
+  // hapus elemen tidak perlu (tanpa a)
   const removeEls = clone.querySelectorAll(
-    "button, a, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
+    "button, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
   );
   removeEls.forEach(el => el.remove());
 
@@ -30,19 +36,11 @@ function getText() {
 
     const tag = el.tagName;
 
-    // 🔥 PENEKANAN HEADING
-    if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "H4") {
-      isi += `Judul: ${text}. `;
-    }
-
-    // 🔥 LIST DENGAN JEDA
-    else if (tag === "LI") {
-      isi += `Poin penting: ${text}. ... `;
-    }
-
-    // 🔥 PARAGRAF NORMAL
-    else {
-      isi += text + ". ";
+    // 🔥 TANPA PENEKANAN HEADING (normal aja)
+    if (tag === "LI") {
+      isi += `${text}. ... `;
+    } else {
+      isi += `${text}. `;
     }
   });
 
@@ -72,10 +70,9 @@ function playVoice(btn) {
   utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "id-ID";
 
-  // 🔥 sedikit pengaturan biar lebih enak didengar
-  utterance.rate = 1;      // kecepatan
-  utterance.pitch = 1;     // nada
-  utterance.volume = 1;    // volume
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
 
   utterance.onend = () => {
     isPlaying = false;
@@ -91,7 +88,6 @@ function playVoice(btn) {
 
   synth.speak(utterance);
 
-  // fix pause di browser
   const resumeInterval = setInterval(() => {
     if (!synth.speaking) clearInterval(resumeInterval);
     else if (synth.paused) synth.resume();
