@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           parentSlug = parent.slug;
         }
       }
-    } catch (e) {}
+    } catch (e) { }
 
     // 🔥 OVERRIDE CLEAN URL (SUPPORT SUB KATEGORI)
     if (!isLocal && slug) {
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         cleanUrl += slug;
 
         history.replaceState(null, '', cleanUrl);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     fetch(`https://lampost.co/wp-json/custom/v1/view/${post.id}`);
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         isi.prepend(thumbDiv);
       }
 
-    } catch (e) {}
+    } catch (e) { }
 
     if (videoUsed) {
       isi.querySelectorAll('img').forEach(img => img.remove());
@@ -415,9 +415,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const a = document.createElement("a");
 
+            // 🔥 SLUG SEO
+            const slug = tag.name
+              .toLowerCase()
+              .trim()
+              .replace(/[^\w\s-]/g, '')
+              .replace(/\s+/g, '-');
+
+            // 🔥 FIX URL (PAKAI SLASH)
             a.href = isLocal
               ? `tag.html?q=${encodeURIComponent(tag.name)}`
-              : `/tag?q=${encodeURIComponent(tag.name)}`;
+              : `/tag/${slug}/`;
 
             a.innerText = tag.name;
             a.title = tag.name;
