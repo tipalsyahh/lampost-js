@@ -35,20 +35,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mediaCache = {};
   const editorCache = {};
 
-  let kategoriSlug, currentSlug;
+  // 🔥 TAMBAHAN (TIDAK UBAH LOGIKA LAMA)
+  let kategoriSlug, subKategori, currentSlug;
+  let parentSlug = '';
+  let childSlug = '';
 
   if(window.location.search){
     const query = decodeURIComponent(window.location.search.replace('?', ''));
-    [kategoriSlug, currentSlug] = query.split('/');
+    const parts = query.split('/').filter(Boolean);
+
+    // ✅ SUPPORT SUB KATEGORI
+    if (parts.length >= 3) {
+      kategoriSlug = parts[0];
+      subKategori = parts[1];
+      currentSlug = parts.slice(2).join('/');
+    } else {
+      [kategoriSlug, currentSlug] = parts;
+    }
+
   }else{
     const path = window.location.pathname.replace('.html','').split('/').filter(Boolean);
 
-    if (path[0] === 'index') {
-      kategoriSlug = path[1];
-      currentSlug = path[2];
-    } else {
+    // ✅ SUPPORT SUB KATEGORI
+    if (path.length >= 3) {
       kategoriSlug = path[0];
-      currentSlug = path[1];
+      subKategori = path[1];
+      currentSlug = path.slice(2).join('/');
+    } else {
+      if (path[0] === 'index') {
+        kategoriSlug = path[1];
+        currentSlug = path[2];
+      } else {
+        kategoriSlug = path[0];
+        currentSlug = path[1];
+      }
     }
   }
 
@@ -66,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     kategoriId = catData[0].id;
     kategoriNama = catData[0].name;
+
   } catch {
     return;
   }
@@ -140,8 +161,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let output = '';
 
-      posts.forEach(post => {
-        if (currentSlug && post.slug === currentSlug) return;
+      for (const post of posts) {
+
+        if (currentSlug && post.slug === currentSlug) continue;
 
         const id = `post-${post.id}`;
         const judul = post.title.rendered;
@@ -161,8 +183,36 @@ document.addEventListener('DOMContentLoaded', async () => {
           `${String(d.getMonth() + 1).padStart(2, '0')}/` +
           `${d.getFullYear()}`;
 
+        // 🔥 TAMBAHAN: AMBIL PARENT & CHILD CATEGORY
+        parentSlug = '';
+        childSlug = '';
+
+        try {
+          if (post.categories && post.categories.length) {
+            const catRes = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${post.categories[0]}`);
+            const cat = await catRes.json();
+
+            childSlug = cat.slug;
+
+            if (cat.parent && cat.parent !== 0) {
+              const parentRes = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${cat.parent}`);
+              const parent = await parentRes.json();
+              parentSlug = parent.slug;
+            }
+          }
+        } catch (e) {}
+
+        // 🔥 BUILD URL BARU (TIDAK MENGUBAH YANG LAMA)
+        let finalUrl = `/${kategoriSlug}/${slug}`;
+
+        if (parentSlug && childSlug) {
+          finalUrl = `/${parentSlug}/${childSlug}/${slug}`;
+        } else if (childSlug) {
+          finalUrl = `/${childSlug}/${slug}`;
+        }
+
         output += `
-          <a href="/${kategoriSlug}/${slug}"
+          <a href="${finalUrl}"
              class="item-info"
              id="${id}">
             <img
@@ -181,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </a>
         `;
-      });
+      }
 
       container.insertAdjacentHTML('beforeend', output);
 
