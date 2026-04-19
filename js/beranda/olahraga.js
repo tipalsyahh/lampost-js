@@ -16,6 +16,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   const MEDIA_CACHE = {};
   const TERM_CACHE = {};
 
+  // ✅ ambil kategori + parent
+  async function getCategory(catId) {
+    if (!catId) return { name: 'Berita', slug: 'berita', parent: 0 };
+    if (TERM_CACHE[catId]) return TERM_CACHE[catId];
+
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
+    const data = await res.json();
+
+    return (TERM_CACHE[catId] = {
+      name: data?.name || 'Berita',
+      slug: data?.slug || 'berita',
+      parent: data?.parent || 0
+    });
+  }
+
+  // ✅ ambil parent + child
+  async function getCategoryHierarchy(catId) {
+    const current = await getCategory(catId);
+
+    if (!current.parent || current.parent === 0) {
+      return [current];
+    }
+
+    const parent = await getCategory(current.parent);
+
+    return [parent, current];
+  }
+
   try {
 
     const catRes = await fetch('https://lampost.co/wp-json/wp/v2/categories?slug=olahraga');
@@ -24,7 +52,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!catData.length) return;
 
     const categoryId = catData[0].id;
-    const kategoriSlug = 'olahraga';
 
     const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&orderby=date&order=desc`);
     if (!res.ok) return;
@@ -43,11 +70,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       for (const post of groups[i]) {
 
         const judul = post.title.rendered;
-        const link = `/${kategoriSlug}/${post.slug}`;
+
+        // ✅ ambil kategori hierarchy
+        const kategoriHierarchy = await getCategoryHierarchy(post.categories?.[0]);
+        const slugPath = kategoriHierarchy.map(c => c.slug).join('/');
+        const kategoriName = kategoriHierarchy[kategoriHierarchy.length - 1].name;
+
+        const link = `/${slugPath}/${post.slug}`;
 
         let gambar = 'image/ai.jpg';
-        let kategori = 'Berita';
+        let kategori = kategoriName;
 
+        // ===== IMAGE =====
         if (post.featured_media) {
           if (MEDIA_CACHE[post.featured_media]) {
             gambar = MEDIA_CACHE[post.featured_media];
@@ -64,23 +98,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const imgEl = slider.querySelector(`[data-id="${post.id}"] img`);
                 if (imgEl) imgEl.src = img;
-              });
-          }
-        }
-
-        const termLink = post._links?.['wp:term']?.[0]?.href;
-        if (termLink) {
-          if (TERM_CACHE[termLink]) {
-            kategori = TERM_CACHE[termLink];
-          } else {
-            fetch(termLink)
-              .then(res => res.json())
-              .then(data => {
-                const catName = data?.[0]?.name || kategori;
-                TERM_CACHE[termLink] = catName;
-
-                const el = slider.querySelector(`[data-id="${post.id}"] .kategori`);
-                if (el) el.textContent = catName;
               });
           }
         }

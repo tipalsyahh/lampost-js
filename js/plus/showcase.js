@@ -18,34 +18,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     async function getCategory(catId) {
-        if (!catId) return { name: 'Berita', slug: 'berita' };
+        if (!catId) return { name: 'Berita', slug: 'berita', parent: 0 };
         if (catCache[catId]) return catCache[catId];
 
         const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
         const data = await res.json();
 
         return (catCache[catId] = {
-            name: data.name,
-            slug: data.slug
+            name: data?.name || 'Berita',
+            slug: data?.slug || 'berita',
+            parent: data?.parent || 0
         });
     }
 
-    async function getMedia(mediaId) {
+    // ✅ TAMBAHAN: ambil parent + child
+    async function getCategoryHierarchy(catId) {
+        const current = await getCategory(catId);
+
+        if (!current.parent || current.parent === 0) {
+            return [current];
+        }
+
+        const parent = await getCategory(current.parent);
+
+        return [parent, current];
+    }
+
+    function getMedia(mediaId) {
         if (!mediaId) return 'image/default.jpg';
         if (mediaCache[mediaId]) return mediaCache[mediaId];
 
-        try {
-            const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
-            if (res.ok) {
-                const data = await res.json();
-                mediaCache[mediaId] =
-                    data.media_details?.sizes?.medium?.source_url ||
-                    data.source_url ||
+        return fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                const url =
+                    data?.media_details?.sizes?.medium?.source_url ||
+                    data?.source_url ||
                     'image/default.jpg';
-            }
-        } catch {}
 
-        return mediaCache[mediaId] || 'image/default.jpg';
+                mediaCache[mediaId] = url;
+                return url;
+            })
+            .catch(() => 'image/default.jpg');
     }
 
     function shuffle(array) {
@@ -93,12 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById(`card-${post.id}`);
         if (!el) return;
 
-        const { name: kategori, slug } =
-            await getCategory(post.categories?.[0]);
+        const kategoriHierarchy = await getCategoryHierarchy(post.categories?.[0]);
+
+        const slugPath = kategoriHierarchy.map(c => c.slug).join('/');
+        const kategoriName = kategoriHierarchy[kategoriHierarchy.length - 1].name;
 
         const gambar = await getMedia(post.featured_media);
 
-        el.querySelector('.card-header').textContent = kategori;
+        el.querySelector('.card-header').textContent = kategoriName;
         el.querySelector('.card-img').src = gambar;
 
         let relatedHTML = '';
@@ -107,19 +123,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(API_URL);
             const related = await res.json();
 
-            relatedHTML = shuffle(related)
-                .filter(r => r.id !== post.id)
-                .slice(0, 3)
-                .map(r => {
-                    return `
+            // ✅ ambil kategori masing-masing related post
+            const relatedItems = await Promise.all(
+                shuffle(related)
+                    .filter(r => r.id !== post.id)
+                    .slice(0, 3)
+                    .map(async r => {
+
+                        const rKategoriHierarchy = await getCategoryHierarchy(r.categories?.[0]);
+                        const rSlugPath = rKategoriHierarchy.map(c => c.slug).join('/');
+
+                        return `
             <li>
-              <a href="/${slug}/${r.slug}" class="related-link">
+              <a href="/${rSlugPath}/${r.slug}" class="related-link">
                 ${r.title.rendered}
               </a>
             </li>
           `;
-                })
-                .join('');
+                    })
+            );
+
+            relatedHTML = relatedItems.join('');
 
         } catch {}
 
@@ -131,8 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        // ✅ link utama sudah pakai parent/child
         el.addEventListener('click', () => {
-            window.location.href = `/${slug}/${post.slug}`;
+            window.location.href = `/${slugPath}/${post.slug}`;
         });
     }
 

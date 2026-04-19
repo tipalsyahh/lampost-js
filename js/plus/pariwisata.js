@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
 
   function getCategory(catId) {
-    if (!catId) return Promise.resolve({ name: 'Berita', slug: 'berita' });
+    if (!catId) return Promise.resolve({ name: 'Berita', slug: 'berita', parent: 0 });
     if (catCache[catId]) return Promise.resolve(catCache[catId]);
 
     return fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`)
@@ -15,12 +15,28 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(data => {
         const result = {
           name: data?.name || 'Berita',
-          slug: data?.slug || 'berita'
+          slug: data?.slug || 'berita',
+          parent: data?.parent || 0
         };
         catCache[catId] = result;
         return result;
       })
-      .catch(() => ({ name: 'Berita', slug: 'berita' }));
+      .catch(() => ({ name: 'Berita', slug: 'berita', parent: 0 }));
+  }
+
+  // ✅ TAMBAHAN: ambil parent category (hierarki)
+  async function getCategoryHierarchy(catId) {
+    const current = await getCategory(catId);
+
+    // jika tidak punya parent
+    if (!current.parent || current.parent === 0) {
+      return [current];
+    }
+
+    const parent = await getCategory(current.parent);
+
+    // urutan: parent -> child
+    return [parent, current];
   }
 
   function getMedia(mediaId) {
@@ -54,12 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const judul = post.title.rendered;
 
-        const [imgUrl, kategoriData] = await Promise.all([
+        const [imgUrl, kategoriHierarchy] = await Promise.all([
           getMedia(post.featured_media),
-          getCategory(post.categories?.[0])
+          getCategoryHierarchy(post.categories?.[0])
         ]);
 
-        const link = `/${kategoriData.slug}/${post.slug}`;
+        // ✅ gabungkan slug jadi parent/child
+        const slugPath = kategoriHierarchy.map(c => c.slug).join('/');
+
+        // ambil nama kategori terakhir (child)
+        const kategoriName = kategoriHierarchy[kategoriHierarchy.length - 1].name;
+
+        const link = `/${slugPath}/${post.slug}`;
 
         return `
           <a href="${link}" class="post-item">
@@ -67,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <img src="${imgUrl}" alt="${judul}" loading="lazy" decoding="async">
             </div>
             <div class="post-content">
-              <div class="post-category">${kategoriData.name}</div>
+              <div class="post-category">${kategoriName}</div>
               <div class="post-title">${judul}</div>
             </div>
           </a>
