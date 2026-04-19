@@ -286,13 +286,13 @@ isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(
 
 isi.querySelectorAll('p, blockquote').forEach(el => {
 
-  let text = el.innerText
-    .replace(/\u00A0/g, ' ')      // hapus nbsp
-    .replace(/\s+/g, ' ')         // rapihin spasi
+  let text = el.textContent   // ✅ lebih kuat dari innerText
+    .replace(/\u00A0/g, ' ')  // hapus nbsp
+    .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
 
-  // ✅ super fleksibel: baca juga, baca-juga, bacajuga, dll
+  // ✅ tangkap semua variasi termasuk dalam <strong>
   const isBacaJuga = /baca[\s\-]*juga/.test(text);
 
   if (isBacaJuga) {
@@ -312,7 +312,6 @@ isi.querySelectorAll('p, blockquote').forEach(el => {
     links.forEach(link => {
       const newLink = document.createElement('a');
 
-      // ✅ fix URL biar tidak ikut kategori aktif
       newLink.href = new URL(link.getAttribute('href'), window.location.origin).href;
 
       newLink.innerText = link.innerText;
