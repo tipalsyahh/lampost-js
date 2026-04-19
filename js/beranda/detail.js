@@ -282,36 +282,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.style.margin = '1rem auto';
     });
 
-    isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
+isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
 
-    isi.querySelectorAll('p, blockquote').forEach(el => {
+isi.querySelectorAll('p, blockquote').forEach(el => {
 
-      const text = el.innerText.replace(/\s+/g, ' ').trim().toUpperCase();
+  let text = el.innerText
+    .replace(/\u00A0/g, ' ')      // hapus nbsp
+    .replace(/\s+/g, ' ')         // rapihin spasi
+    .trim()
+    .toLowerCase();
 
-      if (text.includes('BACA JUGA')) {
+  // ✅ super fleksibel: baca juga, baca-juga, bacajuga, dll
+  const isBacaJuga = /baca[\s\-]*juga/.test(text);
 
-        const links = el.querySelectorAll('a');
-        if (!links.length) return;
+  if (isBacaJuga) {
 
-        const wrapper = document.createElement('blockquote');
-        wrapper.className = 'baca-juga';
+    const links = el.querySelectorAll('a');
+    if (!links.length) return;
 
-        const label = document.createElement('span');
-        label.className = 'label';
-        label.innerText = 'BACA JUGA:';
+    const wrapper = document.createElement('blockquote');
+    wrapper.className = 'baca-juga';
 
-        wrapper.appendChild(label);
+    const label = document.createElement('span');
+    label.className = 'label';
+    label.innerText = 'BACA JUGA:';
 
-        links.forEach(link => {
-          const newLink = document.createElement('a');
-          newLink.href = link.href;
-          newLink.innerText = link.innerText;
-          wrapper.appendChild(newLink);
-        });
+    wrapper.appendChild(label);
 
-        el.replaceWith(wrapper);
-      }
+    links.forEach(link => {
+      const newLink = document.createElement('a');
+
+      // ✅ fix URL biar tidak ikut kategori aktif
+      newLink.href = new URL(link.getAttribute('href'), window.location.origin).href;
+
+      newLink.innerText = link.innerText;
+      wrapper.appendChild(newLink);
     });
+
+    el.replaceWith(wrapper);
+  }
+});
 
     const gambar = document.querySelector('.gambar-berita');
     if (gambar && post.featured_media) {
