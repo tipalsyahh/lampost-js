@@ -8,14 +8,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     location.hostname === '127.0.0.1' ||
     location.protocol === 'file:';
 
-  // 🔥 TAMBAHAN: subKategori
+  // ✅ TAMBAHAN
   let kategoriSlug, subKategori, slug;
 
   if (window.location.search) {
     const query = decodeURIComponent(window.location.search.substring(1) || '');
     const parts = query.split('/').filter(Boolean);
 
-    // 🔥 FIX SUPPORT SUB KATEGORI
+    // ✅ SUPPORT SUB KATEGORI
     if (parts.length >= 3) {
       kategoriSlug = parts[0];
       subKategori = parts[1];
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else {
     const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
 
-    // 🔥 FIX SUPPORT SUB KATEGORI
+    // ✅ SUPPORT SUB KATEGORI
     if (path.length >= 3) {
       kategoriSlug = path[0];
       subKategori = path[1];
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 🔥 FIX CLEAN URL (TIDAK MERUBAH LOGIKA, HANYA MENYESUAIKAN)
+  // ✅ FIX CLEAN URL (SUPPORT SUB)
   if (!isLocal && window.location.search && kategoriSlug && slug) {
     try {
       let cleanUrl = `/${kategoriSlug}/`;
@@ -101,12 +101,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    // 🔥 FIX UTAMA: HAPUS VIDEO DARI WP
+    // 🔥 HAPUS VIDEO WP
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
-    /* =========================
-       VIDEO JNEWS AUTO (TETAP)
-    ========================= */
     let videoUsed = false;
 
     try {
@@ -197,6 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!t) p.remove();
     });
 
+    // 🔥 FIX UTAMA DI SINI (LINK INTERNAL)
     isi.querySelectorAll('a[href]').forEach(link => {
       let href = link.getAttribute('href');
       if (!href) return;
@@ -223,14 +221,17 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
+        // 🔥 FIX: JANGAN POTONG JADI 2 SEGMENT
         if (parts.length >= 2) {
-          link.href = `/${parts.at(-2)}/${parts.at(-1)}`;
+          const newPath = '/' + parts.slice(-3).join('/');
+          link.href = newPath;
           link.target = '_self';
           return;
         }
 
         link.href = '/';
         link.target = '_self';
+
       } catch {
         link.href = '/';
         link.target = '_self';
@@ -323,43 +324,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         minute: '2-digit'
       });
       tanggal.innerText = `${tanggalStr} , ${jam} WIB`;
-    }
-
-    const editorEl = document.getElementById('editor');
-    if (editorEl) {
-
-      const termLink = post._links?.['wp:term']?.find(t =>
-        !['category', 'post_tag'].includes(t.taxonomy)
-      )?.href;
-
-      if (!termLink) {
-        editorEl.innerText = 'Editor Redaksi';
-      } else {
-        fetch(termLink)
-          .then(r => r.ok ? r.json() : [])
-          .then(editors => {
-
-            const formatName = (name = '') => {
-              return name
-                .replace(/-/g, ' ')
-                .split(' ')
-                .filter(Boolean)
-                .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-                .join(' ');
-            };
-
-            if (!editors.length) {
-              editorEl.innerText = 'Editor Redaksi';
-            } else if (editors.length === 1) {
-              editorEl.innerText = `Editor ${formatName(editors[0].name)}`;
-            } else {
-              const last = formatName(editors.pop().name);
-              const names = editors.map(e => formatName(e.name)).join(', ');
-              editorEl.innerText = `Editor ${names}, Penulis ${last}`;
-            }
-          })
-          .catch(() => editorEl.innerText = 'Editor Redaksi');
-      }
     }
 
     const kategoriEl = document.getElementById('kategori');
