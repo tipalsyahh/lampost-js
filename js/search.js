@@ -30,13 +30,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function getCategory(post) {
     const id = post.categories?.[post.categories.length - 1];
-    if (!id) return { name: 'Berita', slug: 'berita' };
+    if (!id) return { name: 'Berita', slug: 'berita', parent: 0 };
     if (catCache[id]) return catCache[id];
 
     const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${id}`);
     const data = await res.json();
 
-    return (catCache[id] = { name: data.name, slug: data.slug });
+    return (catCache[id] = { name: data.name, slug: data.slug, parent: data.parent });
+  }
+
+  async function getParentCategory(parentId) {
+    if (!parentId) return null;
+    if (catCache[parentId]) return catCache[parentId];
+
+    try {
+      const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${parentId}`);
+      const data = await res.json();
+      return (catCache[parentId] = { name: data.name, slug: data.slug, parent: data.parent });
+    } catch {
+      return null;
+    }
   }
 
   async function getMedia(id) {
@@ -112,11 +125,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (img) imgEl.src = img;
     else imgEl.remove();
 
-    const { name: kategori, slug } = await getCategory(post);
+    const cat = await getCategory(post);
+    const parent = await getParentCategory(cat.parent);
     const editor = await getEditor(post);
 
-    el.href = `/?${slug}/${post.slug}`;
-    el.querySelector('.kategori').textContent = kategori;
+    // 🔥 BUILD URL SUPPORT SUB KATEGORI
+    let finalUrl = `/${cat.slug}/${post.slug}`;
+
+    if (parent && parent.slug) {
+      finalUrl = `/${parent.slug}/${cat.slug}/${post.slug}`;
+    }
+
+    el.href = finalUrl;
+    el.querySelector('.kategori').textContent = cat.name;
     el.querySelector('.editor').textContent = `By ${editor}`;
   }
 

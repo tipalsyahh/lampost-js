@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function getCategory(catId) {
-    if (!catId) return { name: 'Berita', slug: 'berita' };
+    if (!catId) return { name: 'Berita', slug: 'berita', parent: 0 };
     if (catCache[catId]) return catCache[catId];
 
     const res = await fetch(
@@ -40,8 +40,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return (catCache[catId] = {
       name: data.name,
-      slug: data.slug
+      slug: data.slug,
+      parent: data.parent
     });
+  }
+
+  // 🔥 TAMBAHAN: AMBIL PARENT CATEGORY
+  async function getParentCategory(parentId) {
+    if (!parentId) return null;
+    if (catCache[parentId]) return catCache[parentId];
+
+    try {
+      const res = await fetch(
+        `https://lampost.co/wp-json/wp/v2/categories/${parentId}`
+      );
+      const data = await res.json();
+
+      return (catCache[parentId] = {
+        name: data.name,
+        slug: data.slug,
+        parent: data.parent
+      });
+    } catch {
+      return null;
+    }
   }
 
   async function getMedia(mediaId) {
@@ -113,14 +135,21 @@ document.addEventListener('DOMContentLoaded', () => {
           const judul = post.title.rendered;
           const tanggal = formatTanggal(post.date);
 
-          const { name: kategori, slug: kategoriSlug } =
-            await getCategory(post.categories?.[0]);
+          // 🔥 CATEGORY + SUB CATEGORY
+          const cat = await getCategory(post.categories?.[0]);
+          const parent = await getParentCategory(cat.parent);
+
+          const kategori = cat.name;
+
+          // 🔥 BUILD URL (SUPPORT SUB)
+          let link = `/${cat.slug}/${post.slug}`;
+
+          if (parent && parent.slug) {
+            link = `/${parent.slug}/${cat.slug}/${post.slug}`;
+          }
 
           const gambar = await getMedia(post.featured_media);
           const editor = await getEditor(post);
-
-          // 🔥 PERBAIKAN DI SINI SAJA
-          const link = `/${kategoriSlug}/${post.slug}`;
 
           htmlArr.push(`
             <a href="${link}" class="item-berita">

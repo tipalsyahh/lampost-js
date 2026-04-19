@@ -11,16 +11,48 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.textContent || div.innerText || '';
   };
 
-  function setContent(post, el) {
+  // 🔥 TAMBAHAN CACHE
+  const catCache = {};
+
+  async function getParentCategory(parentId) {
+    if (!parentId) return null;
+    if (catCache[parentId]) return catCache[parentId];
+
+    try {
+      const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${parentId}`);
+      const data = await res.json();
+
+      return (catCache[parentId] = {
+        name: data.name,
+        slug: data.slug,
+        parent: data.parent
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  async function setContent(post, el) {
 
     const judul = post.title.rendered;
 
-    const kategori = post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Kriminal';
-    const kategoriSlug = post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'kriminal';
+    const catData = post._embedded?.['wp:term']?.[0]?.[0];
+    const kategori = catData?.name || 'Kriminal';
+    const kategoriSlug = catData?.slug || 'kriminal';
+    const parentId = catData?.parent || 0;
+
     const editor = post._embedded?.['wp:term']?.[2]?.[0]?.name || 'Redaksi';
     const gambar = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'image/default.jpg';
 
-    const link = `/${kategoriSlug}/${post.slug}`;
+    // 🔥 AMBIL PARENT
+    const parent = await getParentCategory(parentId);
+
+    // 🔥 BUILD URL BARU
+    let link = `/${kategoriSlug}/${post.slug}`;
+
+    if (parent && parent.slug) {
+      link = `/${parent.slug}/${kategoriSlug}/${post.slug}`;
+    }
 
     const tanggal = new Date(post.date).toLocaleDateString('id-ID', {
       day: '2-digit',
@@ -86,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let index = 0;
 
+      // 🔥 PERUBAHAN: jadi async
       setContent(posts[index], el);
 
       el.inner.style.transition = 'opacity 1.2s ease';

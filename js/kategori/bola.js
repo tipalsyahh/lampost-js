@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })();
 
   const getCategory = async id => {
-    if (!id) return { name: 'Opini', slug: 'opini' };
+    if (!id) return { name: 'Opini', slug: 'opini', parent: 0 };
     if (catCache[id]) return catCache[id];
 
     const res = await fetch(
@@ -47,8 +47,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return (catCache[id] = {
       name: data.name,
-      slug: data.slug
+      slug: data.slug,
+      parent: data.parent
     });
+  };
+
+  // 🔥 TAMBAHAN (AMBIL PARENT)
+  const getParentCategory = async id => {
+    if (!id) return null;
+    if (catCache[id]) return catCache[id];
+
+    try {
+      const res = await fetch(
+        `https://lampost.co/wp-json/wp/v2/categories/${id}`
+      );
+      const data = await res.json();
+
+      return (catCache[id] = {
+        name: data.name,
+        slug: data.slug,
+        parent: data.parent
+      });
+    } catch {
+      return null;
+    }
   };
 
   const getMedia = async id => {
@@ -113,8 +135,18 @@ document.addEventListener('DOMContentLoaded', () => {
           const slug = post.slug;
           const tanggal = formatTanggal(post.date);
 
-          const { name: kategori, slug: kategoriSlug } =
-            await getCategory(post.categories?.[0]);
+          // 🔥 CATEGORY + SUB CATEGORY
+          const cat = await getCategory(post.categories?.[0]);
+          const parent = await getParentCategory(cat.parent);
+
+          const kategori = cat.name;
+
+          // 🔥 BUILD URL (SUPPORT SUB)
+          let finalUrl = `/${cat.slug}/${slug}`;
+
+          if (parent && parent.slug) {
+            finalUrl = `/${parent.slug}/${cat.slug}/${slug}`;
+          }
 
           const gambar = await getMedia(post.featured_media);
           const editor = await getEditor(post);
@@ -128,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
             deskripsi = deskripsi.slice(0, 150) + '...';
 
           return `
-            <a href="/${kategoriSlug}/${slug}" class="item-info">
+            <a href="${finalUrl}" class="item-info">
               <img src="${gambar}" alt="${judul}" loading="lazy" class="img-microweb">
               <div class="berita-microweb">
                 <p class="judul">${judul}</p>
