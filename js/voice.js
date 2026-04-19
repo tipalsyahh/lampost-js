@@ -12,10 +12,11 @@ function getText() {
   const tanggal = beritaEl.querySelector("#tanggal")?.innerText || "";
 
   const isiEl = beritaEl.querySelector(".isi-berita");
-  if (!isiEl) return `${judul} ${editor} ${tanggal}`;
+  if (!isiEl) return `${judul}. ${editor}. ${tanggal}.`;
 
   const clone = isiEl.cloneNode(true);
 
+  // hapus elemen tidak perlu
   const removeEls = clone.querySelectorAll(
     "button, a, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
   );
@@ -23,20 +24,37 @@ function getText() {
 
   let isi = "";
 
-  clone.querySelectorAll("p").forEach(p => {
-    const text = p.innerText.trim();
-    if (text) {
-      isi += text + " ";
+  clone.querySelectorAll("h1, h2, h3, h4, p, li").forEach(el => {
+    let text = el.innerText.trim();
+    if (!text) return;
+
+    const tag = el.tagName;
+
+    // 🔥 PENEKANAN HEADING
+    if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "H4") {
+      isi += `Judul: ${text}. `;
+    }
+
+    // 🔥 LIST DENGAN JEDA
+    else if (tag === "LI") {
+      isi += `Poin penting: ${text}. ... `;
+    }
+
+    // 🔥 PARAGRAF NORMAL
+    else {
+      isi += text + ". ";
     }
   });
 
   let finalText = `${judul}. ${editor}. ${tanggal}. ${isi}`;
 
-  if (finalText.includes("BERITA LAINNYA")) {
-    finalText = finalText.replace(/BERITA LAINNYA/g, "");
-  }
+  // bersihin noise
+  finalText = finalText
+    .replace(/BERITA LAINNYA/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
-  return finalText.trim();
+  return finalText;
 }
 
 function setBtnText(btn, text, icon) {
@@ -54,6 +72,11 @@ function playVoice(btn) {
   utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "id-ID";
 
+  // 🔥 sedikit pengaturan biar lebih enak didengar
+  utterance.rate = 1;      // kecepatan
+  utterance.pitch = 1;     // nada
+  utterance.volume = 1;    // volume
+
   utterance.onend = () => {
     isPlaying = false;
     isMuted = true;
@@ -68,6 +91,7 @@ function playVoice(btn) {
 
   synth.speak(utterance);
 
+  // fix pause di browser
   const resumeInterval = setInterval(() => {
     if (!synth.speaking) clearInterval(resumeInterval);
     else if (synth.paused) synth.resume();
