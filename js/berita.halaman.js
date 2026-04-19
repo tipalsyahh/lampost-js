@@ -35,10 +35,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mediaCache = {};
   const editorCache = {};
 
-  // 🔥 TAMBAHAN (TIDAK UBAH LOGIKA LAMA)
+  // 🔥 TAMBAHAN (TIDAK MENGUBAH LOGIKA LAMA)
   let kategoriSlug, subKategori, currentSlug;
-  let parentSlug = '';
-  let childSlug = '';
 
   if(window.location.search){
     const query = decodeURIComponent(window.location.search.replace('?', ''));
@@ -49,8 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       kategoriSlug = parts[0];
       subKategori = parts[1];
       currentSlug = parts.slice(2).join('/');
-    } else {
-      [kategoriSlug, currentSlug] = parts;
+    } else if (parts.length >= 2) {
+      kategoriSlug = parts[0];
+      currentSlug = parts.slice(1).join('/');
     }
 
   }else{
@@ -161,9 +160,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let output = '';
 
-      for (const post of posts) {
-
-        if (currentSlug && post.slug === currentSlug) continue;
+      posts.forEach(post => {
+        if (currentSlug && post.slug === currentSlug) return;
 
         const id = `post-${post.id}`;
         const judul = post.title.rendered;
@@ -183,32 +181,12 @@ document.addEventListener('DOMContentLoaded', async () => {
           `${String(d.getMonth() + 1).padStart(2, '0')}/` +
           `${d.getFullYear()}`;
 
-        // 🔥 TAMBAHAN: AMBIL PARENT & CHILD CATEGORY
-        parentSlug = '';
-        childSlug = '';
-
-        try {
-          if (post.categories && post.categories.length) {
-            const catRes = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${post.categories[0]}`);
-            const cat = await catRes.json();
-
-            childSlug = cat.slug;
-
-            if (cat.parent && cat.parent !== 0) {
-              const parentRes = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${cat.parent}`);
-              const parent = await parentRes.json();
-              parentSlug = parent.slug;
-            }
-          }
-        } catch (e) {}
-
-        // 🔥 BUILD URL BARU (TIDAK MENGUBAH YANG LAMA)
+        // 🔥 FIX: URL TETAP DARI PARAMETER (BUKAN WP)
         let finalUrl = `/${kategoriSlug}/${slug}`;
 
-        if (parentSlug && childSlug) {
-          finalUrl = `/${parentSlug}/${childSlug}/${slug}`;
-        } else if (childSlug) {
-          finalUrl = `/${childSlug}/${slug}`;
+        // 🔥 TAMBAHAN SUB KATEGORI (DARI URL)
+        if (subKategori) {
+          finalUrl = `/${kategoriSlug}/${subKategori}/${slug}`;
         }
 
         output += `
@@ -231,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
           </a>
         `;
-      }
+      });
 
       container.insertAdjacentHTML('beforeend', output);
 
