@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!container) return;
 
   const TERM_CACHE = {};
-  const MEDIA_CACHE = {};
 
   try {
 
@@ -21,13 +20,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kategoriNama = catData[0].name || 'Nasional';
     const kategoriSlug = catData[0].slug || 'nasional';
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&orderby=date&order=desc`);
+    // 🔥 FIX: mulai dari data ke-3 langsung dari server
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&offset=2&orderby=date&order=desc`);
     if (!res.ok) throw new Error();
 
-    let posts = await res.json();
+    const posts = await res.json();
     if (!posts.length) return;
-
-    posts = posts.slice(2);
 
     const htmlArr = [];
 

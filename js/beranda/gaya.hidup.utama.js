@@ -89,7 +89,6 @@ htmlArr.push(`
 <p class="editor-kkn">By ${editor}</p>
 <p class="tanggal" id="tanggal-unila-berita">${tanggal}</p>
 </div>
-<p class="deskripsi-unila-lanjutan">${deskripsi}</p>
 </div>
 </a>
 `);
