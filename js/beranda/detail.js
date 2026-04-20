@@ -13,36 +13,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   let parentSlug = '';
   let childSlug = '';
 
-  if (window.location.search) {
-    const query = decodeURIComponent(window.location.search.substring(1) || '');
-    const parts = query.split('/').filter(Boolean);
+  // 🔥 FIX: ABAIKAN QUERY (?utm dll), PAKAI PATHNAME SAJA
+  const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
 
-    // ✅ SUPPORT SUB KATEGORI
-    if (parts.length >= 3) {
-      kategoriSlug = parts[0];
-      subKategori = parts[1];
-      slug = parts.slice(2).join('/');
-    } else if (parts.length >= 2) {
-      kategoriSlug = parts[0];
-      slug = parts.slice(1).join('/');
-    }
-
-  } else {
-    const path = window.location.pathname.replace('.html', '').split('/').filter(Boolean);
-
-    // ✅ SUPPORT SUB KATEGORI
-    if (path.length >= 3) {
-      kategoriSlug = path[0];
-      subKategori = path[1];
-      slug = path.slice(2).join('/');
-    } else if (path.length >= 2) {
-      kategoriSlug = path[0];
-      slug = path.slice(1).join('/');
-    }
+  // ✅ SUPPORT SUB KATEGORI
+  if (path.length >= 3) {
+    kategoriSlug = path[0];
+    subKategori = path[1];
+    slug = path.slice(2).join('/');
+  } else if (path.length >= 2) {
+    kategoriSlug = path[0];
+    slug = path.slice(1).join('/');
   }
 
-  // 🔥 CLEAN URL AWAL (LOGIKA LAMA — TIDAK DIUBAH)
-  if (!isLocal && window.location.search && kategoriSlug && slug) {
+  // 🔥 CLEAN URL AWAL (LOGIKA LAMA — TIDAK DIUBAH, HANYA DISESUAIKAN)
+  if (!isLocal && kategoriSlug && slug) {
     try {
       const cleanUrl = `/${kategoriSlug}/${slug}`;
       history.replaceState(null, '', cleanUrl);
@@ -217,8 +202,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (gambarFix) gambarFix.style.display = 'none';
     }
 
-    // 🔽 SISANYA 100% SAMA (TIDAK DIUBAH)
-
     isi.querySelectorAll('p').forEach(p => {
       const t = p.innerHTML.replace(/&nbsp;/g, '').replace(/\s+/g, '').trim();
       if (!t) p.remove();
@@ -282,45 +265,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       el.style.margin = '1rem auto';
     });
 
-isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
+    isi.querySelectorAll('figcaption, .wp-caption-text, p.wp-caption-text').forEach(el => el.remove());
 
-isi.querySelectorAll('p, blockquote').forEach(el => {
+    isi.querySelectorAll('p, blockquote').forEach(el => {
 
-  let text = el.textContent   // ✅ lebih kuat dari innerText
-    .replace(/\u00A0/g, ' ')  // hapus nbsp
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+      let text = el.textContent
+        .replace(/\u00A0/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
 
-  // ✅ tangkap semua variasi termasuk dalam <strong>
-  const isBacaJuga = /baca[\s\-]*juga/.test(text);
+      const isBacaJuga = /baca[\s\-]*juga/.test(text);
 
-  if (isBacaJuga) {
+      if (isBacaJuga) {
 
-    const links = el.querySelectorAll('a');
-    if (!links.length) return;
+        const links = el.querySelectorAll('a');
+        if (!links.length) return;
 
-    const wrapper = document.createElement('blockquote');
-    wrapper.className = 'baca-juga';
+        const wrapper = document.createElement('blockquote');
+        wrapper.className = 'baca-juga';
 
-    const label = document.createElement('span');
-    label.className = 'label';
-    label.innerText = 'BACA JUGA:';
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.innerText = 'BACA JUGA:';
 
-    wrapper.appendChild(label);
+        wrapper.appendChild(label);
 
-    links.forEach(link => {
-      const newLink = document.createElement('a');
+        links.forEach(link => {
+          const newLink = document.createElement('a');
 
-      newLink.href = new URL(link.getAttribute('href'), window.location.origin).href;
+          newLink.href = new URL(link.getAttribute('href'), window.location.origin).href;
 
-      newLink.innerText = link.innerText;
-      wrapper.appendChild(newLink);
+          newLink.innerText = link.innerText;
+          wrapper.appendChild(newLink);
+        });
+
+        el.replaceWith(wrapper);
+      }
     });
-
-    el.replaceWith(wrapper);
-  }
-});
 
     const gambar = document.querySelector('.gambar-berita');
     if (gambar && post.featured_media) {
@@ -424,14 +406,12 @@ isi.querySelectorAll('p, blockquote').forEach(el => {
 
             const a = document.createElement("a");
 
-            // 🔥 SLUG SEO
             const slug = tag.name
               .toLowerCase()
               .trim()
               .replace(/[^\w\s-]/g, '')
               .replace(/\s+/g, '-');
 
-            // 🔥 FIX URL (PAKAI SLASH)
             a.href = isLocal
               ? `tag.html?q=${encodeURIComponent(tag.name)}`
               : `/tag/${slug}/`;
