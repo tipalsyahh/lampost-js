@@ -115,8 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 (function () {
 
   const pdfUrl = post.pdf_url;
-  console.log('PDF URL:', pdfUrl);
-
   if (!pdfUrl) return;
 
   const wrapper = document.createElement('div');
@@ -124,7 +122,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     width:100%;
     height:80vh;
     margin:20px 0;
-    position:relative;
   `;
 
   const iframe = document.createElement('iframe');
@@ -135,8 +132,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   wrapper.appendChild(iframe);
   isi.prepend(wrapper);
 
-  // 🔥 langsung coba Google Viewer (lebih aman)
-  iframe.src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`;
+  // 🔥 FETCH → BLOB → DISPLAY
+  fetch(pdfUrl)
+    .then(res => res.blob())
+    .then(blob => {
+      const blobUrl = URL.createObjectURL(blob);
+      iframe.src = blobUrl;
+    })
+    .catch(err => {
+      console.error('PDF gagal load:', err);
+
+      // fallback google viewer
+      iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+    });
 
 })();
 
