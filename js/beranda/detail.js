@@ -112,89 +112,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-// =========================
-// 🔥 FORCE DOWNLOAD PDF (NO REDIRECT)
-// =========================
-(function () {
+    // =========================
+    // 🔥 FORCE DOWNLOAD PDF (SEPARATE FILE)
+    // =========================
+    (function () {
 
-  const pdfUrl = post?.pdf_url;
-  console.log('PDF URL:', pdfUrl);
+      const pdfUrl = post?.pdf_url;
+      console.log('PDF URL:', pdfUrl);
 
-  if (!pdfUrl) return;
+      if (!pdfUrl) return;
 
-  if (!pdfUrl.includes('/wp-content/')) {
-    console.warn('PDF tidak valid:', pdfUrl);
-    return;
-  }
-
-  // 🔥 style
-  if (!document.getElementById('pdf-btn-style')) {
-    const style = document.createElement('style');
-    style.id = 'pdf-btn-style';
-    style.innerHTML = `
-      .btn-pdf-download {
-        display: inline-block;
-        padding: 12px 18px;
-        background: #e11d48;
-        color: #fff;
-        border-radius: 10px;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
+      // filter url aneh
+      if (!pdfUrl.includes('/wp-content/')) {
+        console.warn('PDF tidak valid:', pdfUrl);
+        return;
       }
-    `;
-    document.head.appendChild(style);
-  }
 
-  const btn = document.createElement('button');
-  btn.className = 'btn-pdf-download';
-  btn.innerText = '⬇️ Download PDF';
+      // wrapper
+      const wrapper = document.createElement('div');
+      wrapper.className = 'pdf-download-wrapper';
 
-  isi.prepend(btn);
+      // tombol
+      const btn = document.createElement('button');
+      btn.className = 'btn-pdf-download';
+      btn.innerText = '⬇️ Download PDF';
 
-  // =========================
-  // 🔥 CLICK = FORCE DOWNLOAD
-  // =========================
-  btn.addEventListener('click', () => {
+      wrapper.appendChild(btn);
+      isi.prepend(wrapper);
 
-    btn.innerText = 'Loading...';
+      // =========================
+      // 🔥 CLICK DOWNLOAD
+      // =========================
+      btn.addEventListener('click', () => {
 
-    fetch(pdfUrl)
-      .then(res => {
-        if (!res.ok) throw new Error('Gagal ambil file');
-        return res.blob();
-      })
-      .then(blob => {
+        btn.innerText = 'Loading...';
+        btn.disabled = true;
 
-        const blobUrl = URL.createObjectURL(blob);
+        fetch(pdfUrl)
+          .then(res => {
+            if (!res.ok) throw new Error('Gagal ambil file');
+            return res.blob();
+          })
+          .then(blob => {
 
-        const a = document.createElement('a');
-        a.href = blobUrl;
+            const blobUrl = URL.createObjectURL(blob);
 
-        // 🔥 nama file
-        const fileName = pdfUrl.split('/').pop().split('?')[0];
-        a.download = fileName || 'file.pdf';
+            const a = document.createElement('a');
+            a.href = blobUrl;
 
-        document.body.appendChild(a);
-        a.click();
+            const fileName = pdfUrl.split('/').pop().split('?')[0];
+            a.download = fileName || 'file.pdf';
 
-        URL.revokeObjectURL(blobUrl);
-        a.remove();
+            document.body.appendChild(a);
+            a.click();
 
-        btn.innerText = '⬇️ Download PDF';
+            URL.revokeObjectURL(blobUrl);
+            a.remove();
 
-      })
-      .catch(err => {
-        console.error(err);
-        btn.innerText = 'Gagal download';
+            btn.innerText = '⬇️ Download PDF';
+            btn.disabled = false;
 
-        // fallback buka link
-        window.open(pdfUrl, '_blank');
+          })
+          .catch(err => {
+            console.error(err);
+
+            btn.innerText = 'Gagal, buka file';
+            btn.disabled = false;
+
+            // fallback buka tab
+            window.open(pdfUrl, '_blank');
+          });
+
       });
 
-  });
-
-})();
+    })();
 
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
