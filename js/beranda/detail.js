@@ -113,42 +113,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 FINAL CLEAN PDF VIEWER (SETELAH HTACCESS FIX)
+// 🔥 TAMBAHAN PDF DARI WP
 // =========================
 (function () {
 
-  try {
+  const pdfUrl = post.pdf_url;
+  console.log('PDF URL:', pdfUrl);
 
-    const pdfUrl = post.pdf_url;
-    console.log('PDF URL:', pdfUrl);
+  if (!pdfUrl) return;
 
-    if (!pdfUrl) return;
+  const iframe = document.createElement('iframe');
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'pdf-viewer-wrapper';
-    wrapper.style.cssText = `
-      width:100%;
-      height:80vh;
-      margin:20px 0;
-    `;
+  iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
 
-    const iframe = document.createElement('iframe');
-    iframe.src = pdfUrl;
-    iframe.style.cssText = `
-      width:100%;
-      height:100%;
-      border:none;
-    `;
+  iframe.style.width = '100%';
+  iframe.style.height = '80vh';
+  iframe.style.border = 'none';
 
-    wrapper.appendChild(iframe);
-
-    if (isi) {
-      isi.prepend(wrapper);
-    }
-
-  } catch (err) {
-    console.error('PDF ERROR:', err);
-  }
+  isi.prepend(iframe);
 
 })();
 
