@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 PDF VIEWER ONLY (TANPA TOMBOL)
+// 🔥 FIX FINAL: EMBED PDF TANPA BLOK
 // =========================
 (function () {
 
@@ -129,38 +129,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       margin:1rem 0;
     `;
 
-    const iframe = document.createElement('iframe');
+    // 🔥 embed utama
+    const embed = document.createElement('embed');
+    embed.src = pdfUrl;
+    embed.type = 'application/pdf';
+    embed.style.width = '100%';
+    embed.style.height = '800px';
 
-    // 🔥 pakai Google Viewer dulu (paling kompatibel)
-    iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+    // 🔥 fallback pakai object
+    const object = document.createElement('object');
+    object.data = pdfUrl;
+    object.type = 'application/pdf';
+    object.style.width = '100%';
+    object.style.height = '800px';
 
-    iframe.style.cssText = `
-      width:100%;
-      height:800px;
-      border:none;
-      background:#fff;
-    `;
-
-    iframe.loading = 'lazy';
-
-    wrapper.appendChild(iframe);
-
-    // 🔥 fallback otomatis TANPA tombol
-    let switched = false;
-
-    iframe.onerror = () => {
-      if (switched) return;
-      switched = true;
-      iframe.src = pdfUrl;
+    // 🔥 kalau embed gagal → pakai object
+    embed.onerror = () => {
+      wrapper.innerHTML = '';
+      wrapper.appendChild(object);
     };
 
-    // 🔥 fallback tambahan (kalau Google Viewer blank)
-    setTimeout(() => {
-      if (!switched) {
-        switched = true;
-        iframe.src = pdfUrl;
-      }
-    }, 4000);
+    wrapper.appendChild(embed);
 
     if (isi) {
       isi.prepend(wrapper);
