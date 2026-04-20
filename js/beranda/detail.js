@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 TAMBAHAN PDF DARI WP
+// 🔥 FIX FINAL PDF VIEWER
 // =========================
 (function () {
 
@@ -122,15 +122,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (!pdfUrl) return;
 
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = `
+    width:100%;
+    height:80vh;
+    margin:20px 0;
+  `;
+
   const iframe = document.createElement('iframe');
 
-  iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+  // 🔥 kosongkan dulu (hindari block awal)
+  iframe.src = 'about:blank';
 
   iframe.style.width = '100%';
-  iframe.style.height = '80vh';
+  iframe.style.height = '100%';
   iframe.style.border = 'none';
 
-  isi.prepend(iframe);
+  wrapper.appendChild(iframe);
+  isi.prepend(wrapper);
+
+  // 🔥 delay inject (kunci penting)
+  setTimeout(() => {
+
+    // coba direct dulu
+    iframe.src = pdfUrl;
+
+    // fallback ke google viewer
+    setTimeout(() => {
+      if (!iframe.contentDocument || iframe.contentDocument.body.innerHTML === '') {
+        iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+      }
+    }, 2000);
+
+  }, 300);
 
 })();
 
