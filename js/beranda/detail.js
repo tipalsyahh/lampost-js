@@ -135,7 +135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // tombol
       const btn = document.createElement('button');
       btn.className = 'btn-pdf-download';
-      btn.innerText = '⬇️ Download PDF';
+      btn.innerText = 'Download PDF';
 
       wrapper.appendChild(btn);
       isi.prepend(wrapper);
