@@ -112,38 +112,87 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
+// =========================
+// 🔥 PDF DOWNLOAD BUTTON
+// =========================
 (function () {
 
-  const pdfUrl = post.pdf_url;
+  const pdfUrl = post?.pdf_url;
+  console.log('PDF URL:', pdfUrl);
+
   if (!pdfUrl) return;
 
+  // 🔥 buat style sekali saja
+  if (!document.getElementById('pdf-btn-style')) {
+    const style = document.createElement('style');
+    style.id = 'pdf-btn-style';
+    style.innerHTML = `
+      .pdf-download-wrapper {
+        margin: 20px 0;
+      }
+
+      .btn-pdf-download {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #ef4444, #b91c1c);
+        color: #fff;
+        padding: 12px 18px;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all .25s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+
+      .btn-pdf-download:hover {
+        transform: translateY(-2px);
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+      }
+
+      .btn-pdf-download svg {
+        width: 18px;
+        height: 18px;
+        fill: #fff;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // 🔥 wrapper
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = `
-    width:100%;
-    height:80vh;
-    margin:20px 0;
+  wrapper.className = 'pdf-download-wrapper';
+
+  // 🔥 tombol
+  const btn = document.createElement('a');
+  btn.href = pdfUrl;
+  btn.target = '_blank';
+  btn.rel = 'noopener';
+  btn.className = 'btn-pdf-download';
+
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M12 16l4-5h-3V4h-2v7H8l4 5zm-7 2h14v2H5z"/>
+    </svg>
+    <span>Download File PDF</span>
   `;
 
-  const iframe = document.createElement('iframe');
-  iframe.style.width = '100%';
-  iframe.style.height = '100%';
-  iframe.style.border = 'none';
+  wrapper.appendChild(btn);
 
-  wrapper.appendChild(iframe);
-  isi.prepend(wrapper);
-
-  // 🔥 FETCH → BLOB → DISPLAY
-  fetch(pdfUrl)
-    .then(res => res.blob())
-    .then(blob => {
-      const blobUrl = URL.createObjectURL(blob);
-      iframe.src = blobUrl;
+  // 🔥 cek file ada atau tidak (opsional tapi bagus)
+  fetch(pdfUrl, { method: 'HEAD' })
+    .then(res => {
+      if (res.ok) {
+        isi.prepend(wrapper);
+      } else {
+        console.warn('PDF tidak ditemukan');
+      }
     })
     .catch(err => {
-      console.error('PDF gagal load:', err);
+      console.warn('Gagal cek PDF:', err);
 
-      // fallback google viewer
-      iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+      // tetap tampilkan tombol (fallback)
+      isi.prepend(wrapper);
     });
 
 })();
