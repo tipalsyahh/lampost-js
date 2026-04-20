@@ -112,9 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-// =========================
-// 🔥 FIX FINAL PDF VIEWER
-// =========================
 (function () {
 
   const pdfUrl = post.pdf_url;
@@ -127,13 +124,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     width:100%;
     height:80vh;
     margin:20px 0;
+    position:relative;
   `;
 
   const iframe = document.createElement('iframe');
-
-  // 🔥 kosongkan dulu (hindari block awal)
-  iframe.src = 'about:blank';
-
   iframe.style.width = '100%';
   iframe.style.height = '100%';
   iframe.style.border = 'none';
@@ -141,20 +135,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   wrapper.appendChild(iframe);
   isi.prepend(wrapper);
 
-  // 🔥 delay inject (kunci penting)
-  setTimeout(() => {
-
-    // coba direct dulu
-    iframe.src = pdfUrl;
-
-    // fallback ke google viewer
-    setTimeout(() => {
-      if (!iframe.contentDocument || iframe.contentDocument.body.innerHTML === '') {
-        iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
-      }
-    }, 2000);
-
-  }, 300);
+  // 🔥 langsung coba Google Viewer (lebih aman)
+  iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
 
 })();
 
