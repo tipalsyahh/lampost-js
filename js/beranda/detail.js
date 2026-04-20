@@ -114,49 +114,49 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
-/* =========================
-   VIDEO JNEWS AUTO (FIX DOUBLE)
-========================= */
-let videoUsed = false;
+    /* =========================
+       VIDEO JNEWS AUTO (FIX DOUBLE)
+    ========================= */
+    let videoUsed = false;
 
-try {
-  const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
-  const videoData = await videoRes.json();
+    try {
+      const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
+      const videoData = await videoRes.json();
 
-  let videoUrl =
-    videoData?.video ||
-    videoData?.url ||
-    videoData?.embed ||
-    '';
+      let videoUrl =
+        videoData?.video ||
+        videoData?.url ||
+        videoData?.embed ||
+        '';
 
-  if (typeof videoUrl === 'object' && videoUrl.rendered) {
-    videoUrl = videoUrl.rendered;
-  }
+      if (typeof videoUrl === 'object' && videoUrl.rendered) {
+        videoUrl = videoUrl.rendered;
+      }
 
-  let videoId = null;
+      let videoId = null;
 
-  if (videoUrl.includes('<iframe')) {
-    const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
-    if (match) videoId = match[1];
-  }
+      if (videoUrl.includes('<iframe')) {
+        const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
+        if (match) videoId = match[1];
+      }
 
-  if (!videoId && videoUrl.includes('youtube.com')) {
-    videoId = videoUrl.split('v=')[1]?.split('&')[0];
-  }
+      if (!videoId && videoUrl.includes('youtube.com')) {
+        videoId = videoUrl.split('v=')[1]?.split('&')[0];
+      }
 
-  if (!videoId && videoUrl.includes('youtu.be')) {
-    videoId = videoUrl.split('/').pop();
-  }
+      if (!videoId && videoUrl.includes('youtu.be')) {
+        videoId = videoUrl.split('/').pop();
+      }
 
-  // 🔥 CEK: apakah di konten SUDAH ADA VIDEO
-  const existingVideo = isi.querySelector('iframe[src*="youtube"], iframe[src*="youtu.be"], video');
+      // 🔥 CEK: apakah di konten SUDAH ADA VIDEO
+      const existingVideo = isi.querySelector('iframe[src*="youtube"], iframe[src*="youtu.be"], video');
 
-  if (videoId && !existingVideo) {
+      if (videoId && !existingVideo) {
 
-    videoUsed = true;
+        videoUsed = true;
 
-    const thumbDiv = document.createElement('div');
-    thumbDiv.style.cssText = `
+        const thumbDiv = document.createElement('div');
+        thumbDiv.style.cssText = `
       background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
       width:100%;
       padding-top:56.25%;
@@ -167,9 +167,9 @@ try {
       margin-bottom:1rem;
     `;
 
-    const play = document.createElement('div');
-    play.innerText = '▶';
-    play.style.cssText = `
+        const play = document.createElement('div');
+        play.innerText = '▶';
+        play.style.cssText = `
       position:absolute;
       top:50%;
       left:50%;
@@ -179,10 +179,10 @@ try {
       text-shadow:0 0 10px rgba(0,0,0,.8);
     `;
 
-    thumbDiv.appendChild(play);
+        thumbDiv.appendChild(play);
 
-    thumbDiv.addEventListener('click', () => {
-      thumbDiv.outerHTML = `
+        thumbDiv.addEventListener('click', () => {
+          thumbDiv.outerHTML = `
         <iframe
           width="100%"
           height="400"
@@ -192,19 +192,19 @@ try {
           allowfullscreen>
         </iframe>
       `;
-    });
+        });
 
-    isi.prepend(thumbDiv);
-  }
+        isi.prepend(thumbDiv);
+      }
 
-} catch (e) { }
+    } catch (e) { }
 
-// 🔥 HANYA HAPUS GAMBAR JIKA VIDEO BENAR2 DIPAKAI
-if (videoUsed) {
-  isi.querySelectorAll('img').forEach(img => img.remove());
-  const gambarFix = document.querySelector('.gambar-berita');
-  if (gambarFix) gambarFix.style.display = 'none';
-}
+    // 🔥 HANYA HAPUS GAMBAR JIKA VIDEO BENAR2 DIPAKAI
+    if (videoUsed) {
+      isi.querySelectorAll('img').forEach(img => img.remove());
+      const gambarFix = document.querySelector('.gambar-berita');
+      if (gambarFix) gambarFix.style.display = 'none';
+    }
 
     isi.querySelectorAll('p').forEach(p => {
       const t = p.innerHTML.replace(/&nbsp;/g, '').replace(/\s+/g, '').trim();
@@ -274,12 +274,14 @@ if (videoUsed) {
     isi.querySelectorAll('p, blockquote').forEach(el => {
 
       let text = el.textContent
-        .replace(/\u00A0/g, ' ')
+        .replace(/\u00A0|&nbsp;/gi, ' ')   // 🔥 hapus nbsp
+        .replace(/[\:\-\–\—]/g, ' ')       // 🔥 hapus : - — dll
         .replace(/\s+/g, ' ')
         .trim()
         .toLowerCase();
 
-      const isBacaJuga = /baca[\s\-]*juga/.test(text);
+      // 🔥 SUPER FLEXIBLE DETECTOR
+      const isBacaJuga = /\bbaca\s*juga\b/.test(text);
 
       if (isBacaJuga) {
 
