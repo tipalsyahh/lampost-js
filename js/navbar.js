@@ -36,3 +36,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  function updateJam() {
+    const el = document.querySelector('.jam');
+    if (!el) return;
+
+    const now = new Date();
+
+    const waktuWIB = now.toLocaleTimeString('id-ID', {
+      timeZone: 'Asia/Jakarta',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    el.textContent = waktuWIB + ' WIB';
+  }
+
+  updateJam();
+  setInterval(updateJam, 1000);
+
+});
