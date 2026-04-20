@@ -21,11 +21,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kategoriNama = catData[0].name || 'Nasional';
     const kategoriSlug = catData[0].slug || 'nasional';
 
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=2&orderby=date&order=desc`);
+    // 🔥 FIX: ambil lebih banyak data lalu skip 2 pertama
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=5&orderby=date&order=desc`);
     if (!res.ok) throw new Error();
 
-    const posts = await res.json();
+    let posts = await res.json();
     if (!posts.length) return;
+
+    // 🔥 mulai dari data ke-3
+    posts = posts.slice(2);
 
     const htmlArr = [];
 
@@ -55,44 +59,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      let gambar = 'image/ai.jpg';
-
-      if (post.featured_media) {
-        if (MEDIA_CACHE[post.featured_media]) {
-          gambar = MEDIA_CACHE[post.featured_media];
-        } else {
-          try {
-            const mediaRes = await fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`);
-            if (mediaRes.ok) {
-              const media = await mediaRes.json();
-              gambar =
-                media.media_details?.sizes?.full?.source_url ||
-                media.media_details?.sizes?.large?.source_url ||
-                media.source_url ||
-                gambar;
-              MEDIA_CACHE[post.featured_media] = gambar;
-            }
-          } catch { }
-        }
-      }
-
-      let deskripsi = (post.excerpt?.rendered || '').replace(/<[^>]+>/g, '').trim();
-      if (deskripsi.length > 150) deskripsi = deskripsi.slice(0, 150) + '...';
+      // ❌ gambar dihapus
+      // ❌ deskripsi dihapus
 
       htmlArr.push(`
-<a href="${link}" class="item-info">
-<img src="${gambar}" class="img-unila" loading="lazy" alt="${judul}">
-<div class="berita-unila">
-<p class="judul-unila">${judul}</p>
-<p class="kategori">${kategoriNama}</p>
-<div class="info-microweb">
-<p class="editor-kkn">By ${editor}</p>
-<p class="tanggal" id="tanggal-unila-berita">${tanggal}</p>
-</div>
-<p class="deskripsi-unila-lanjutan">${deskripsi}</p>
-</div>
-</a>
-`);
+      <a href="${link}" class="item-info">
+        <div class="berita-unila">
+        <p class="judul-unila">${judul}</p>
+        <p class="kategori">${kategoriNama}</p>
+        <div class="info-microweb">
+        <p class="editor-kkn">By ${editor}</p>
+        <p class="tanggal" id="tanggal-unila-berita">${tanggal}</p>
+        </div>
+      </div>
+      </a>
+      `);
 
     }
 
