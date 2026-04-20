@@ -113,39 +113,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     // =========================
-    // 🔥 TAMBAHAN: AUTO LOAD PDF DARI CONTENT
-    // =========================
-    (function () {
+// 🔥 TAMBAHAN: SUPPORT SHORTCODE [pdfjs-viewer]
+// =========================
+(function () {
 
-      const contentHTML = post.content.rendered || '';
+  const contentHTML = post.content.rendered || '';
 
-      // 🔍 cari semua link PDF
-      const pdfMatches = contentHTML.match(/https?:\/\/[^\s"'<>]+\.pdf/gi);
+  // 🔍 ambil URL dari shortcode pdfjs-viewer
+  const shortcodeMatches = contentHTML.match(/\[pdfjs-viewer[^\]]*url="([^"]+)"/gi);
 
-      if (!pdfMatches || !pdfMatches.length) return;
+  let pdfUrls = [];
 
-      // 🔥 buat container PDF
-      const pdfWrapper = document.createElement('div');
-      pdfWrapper.className = 'pdf-viewer-wrapper';
-      pdfWrapper.style.margin = '1rem 0';
+  if (shortcodeMatches) {
+    shortcodeMatches.forEach(sc => {
+      const match = sc.match(/url="([^"]+)"/i);
+      if (match && match[1]) {
+        pdfUrls.push(match[1]);
+      }
+    });
+  }
 
-      pdfMatches.forEach(pdfUrl => {
+  // 🔍 fallback: tetap ambil link .pdf biasa
+  const normalPdf = contentHTML.match(/https?:\/\/[^\s"'<>]+\.pdf/gi);
+  if (normalPdf) {
+    pdfUrls = pdfUrls.concat(normalPdf);
+  }
 
-        const viewer = document.createElement('iframe');
-        viewer.src = pdfUrl;
-        viewer.style.width = '100%';
-        viewer.style.height = '600px';
-        viewer.style.border = 'none';
-        viewer.loading = 'lazy';
+  // ❌ tidak ada PDF
+  if (!pdfUrls.length) return;
 
-        pdfWrapper.appendChild(viewer);
+  // 🔥 hapus shortcode dari tampilan (biar gak muncul text mentah)
+  isi.innerHTML = isi.innerHTML.replace(/\[pdfjs-viewer[^\]]+\]/gi, '');
 
-      });
+  // 🔥 buat viewer
+  const pdfWrapper = document.createElement('div');
+  pdfWrapper.className = 'pdf-viewer-wrapper';
+  pdfWrapper.style.margin = '1rem 0';
 
-      // 🔥 tampilkan PDF di atas konten
-      isi.prepend(pdfWrapper);
+  pdfUrls.forEach(pdfUrl => {
 
-    })();
+    const iframe = document.createElement('iframe');
+
+    // ✅ pakai viewer biar lebih kompatibel
+    iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+
+    iframe.style.width = '100%';
+    iframe.style.height = '800px';
+    iframe.style.border = 'none';
+    iframe.loading = 'lazy';
+
+    pdfWrapper.appendChild(iframe);
+
+  });
+
+  // 🔥 tampilkan di atas konten
+  isi.prepend(pdfWrapper);
+
+})();
 
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
