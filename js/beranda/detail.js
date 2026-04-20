@@ -113,16 +113,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 PDF DOWNLOAD BUTTON
+// 🔥 PDF DOWNLOAD BUTTON FINAL FIX
 // =========================
 (function () {
 
   const pdfUrl = post?.pdf_url;
   console.log('PDF URL:', pdfUrl);
 
+  // ❌ tidak ada URL
   if (!pdfUrl) return;
 
-  // 🔥 buat style sekali saja
+  // ❌ filter URL aneh (seperti /05/xxxx.pdf yang 404)
+  if (!pdfUrl.includes('/wp-content/')) {
+    console.warn('PDF tidak valid (bukan wp-content):', pdfUrl);
+    return;
+  }
+
+  // 🔥 inject style sekali saja
   if (!document.getElementById('pdf-btn-style')) {
     const style = document.createElement('style');
     style.id = 'pdf-btn-style';
@@ -179,19 +186,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   wrapper.appendChild(btn);
 
-  // 🔥 cek file ada atau tidak (opsional tapi bagus)
+  // =========================
+  // 🔥 VALIDASI FILE (ANTI 404)
+  // =========================
   fetch(pdfUrl, { method: 'HEAD' })
     .then(res => {
-      if (res.ok) {
+
+      const contentType = res.headers.get('content-type') || '';
+
+      if (res.ok && contentType.includes('pdf')) {
         isi.prepend(wrapper);
       } else {
-        console.warn('PDF tidak ditemukan');
+        console.warn('File bukan PDF atau tidak valid:', pdfUrl);
       }
+
     })
     .catch(err => {
       console.warn('Gagal cek PDF:', err);
 
-      // tetap tampilkan tombol (fallback)
+      // fallback → tetap tampilkan tombol
       isi.prepend(wrapper);
     });
 
