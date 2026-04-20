@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   isi.prepend(wrapper);
 
   // 🔥 langsung coba Google Viewer (lebih aman)
-  iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
+  iframe.src = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`;
 
 })();
 
