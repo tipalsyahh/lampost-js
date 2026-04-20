@@ -65,3 +65,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }, delay);
 
 });
+
+let isDragging = false;
+
+document.addEventListener('mousedown', () => isDragging = false);
+document.addEventListener('mousemove', () => isDragging = true);
+
+document.querySelectorAll('.post-item a').forEach(link => {
+  link.addEventListener('click', e => {
+    if (isDragging) e.preventDefault();
+  });
+});
