@@ -113,57 +113,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 FINAL FIX: PDF.js VIEWER (PASTI TAMPIL)
+// 🔥 FORCE LOAD PDF (DEBUG + RENDER)
 // =========================
-(async () => {
+(function () {
 
   try {
 
-    const pdfUrl = post.pdf_url;
-    if (!pdfUrl) return;
+    // 🔥 DEBUG WAJIB
+    console.log('POST DATA:', post);
+    console.log('PDF URL:', post.pdf_url);
 
-    const container = document.createElement('div');
-    container.id = 'pdfViewer';
-
-    container.style.cssText = `
-      width:100%;
-      margin:1rem 0;
-    `;
-
-    if (isi) isi.prepend(container);
-
-    // 🔥 load PDF
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    const pdf = await loadingTask.promise;
-
-    // 🔥 render semua halaman
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-
-      const page = await pdf.getPage(pageNum);
-
-      const viewport = page.getViewport({ scale: 1.5 });
-
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      canvas.style.width = '100%';
-      canvas.style.height = 'auto';
-      canvas.style.marginBottom = '10px';
-
-      container.appendChild(canvas);
-
-      await page.render({
-        canvasContext: context,
-        viewport: viewport
-      }).promise;
-
+    if (!post.pdf_url) {
+      console.warn('❌ pdf_url kosong / tidak ada');
+      return;
     }
 
+    const pdfUrl = post.pdf_url;
+
+    // 🔥 container langsung inject (tanpa HTML tambahan)
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+      width:100%;
+      height:80vh;
+      margin:20px 0;
+      background:#f5f5f5;
+    `;
+
+    // 🔥 cara paling simpel: iframe langsung
+    const iframe = document.createElement('iframe');
+    iframe.src = pdfUrl;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+
+    wrapper.appendChild(iframe);
+
+    // 🔥 tampilkan PALING ATAS
+    isi.prepend(wrapper);
+
   } catch (err) {
-    console.log('PDF.js error:', err);
+    console.error('PDF ERROR:', err);
   }
 
 })();
