@@ -21,14 +21,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kategoriNama = catData[0].name || 'Nasional';
     const kategoriSlug = catData[0].slug || 'nasional';
 
-    // 🔥 FIX: ambil lebih banyak data lalu skip 2 pertama
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=4&orderby=date&order=desc`);
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&orderby=date&order=desc`);
     if (!res.ok) throw new Error();
 
     let posts = await res.json();
     if (!posts.length) return;
 
-    // 🔥 mulai dari data ke-3
     posts = posts.slice(2);
 
     const htmlArr = [];
@@ -59,14 +57,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // ❌ gambar dihapus
-      // ❌ deskripsi dihapus
-
       htmlArr.push(`
         <a href="${link}" class="list-berita">
           <div class="konten">
             <p class="judul">${judul}</p>
-            <p class="meta">${kategori} ${tanggal}</p>
+            <p class="meta">${kategoriNama} ${tanggal}</p>
           </div>
         </a>
       `);
