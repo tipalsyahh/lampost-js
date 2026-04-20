@@ -113,46 +113,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 FORCE LOAD PDF (DEBUG + RENDER)
+// 🔥 FINAL: FORCE RENDER PDF TANPA IFRAME
 // =========================
-(function () {
+(async () => {
 
   try {
 
-    // 🔥 DEBUG WAJIB
-    console.log('POST DATA:', post);
-    console.log('PDF URL:', post.pdf_url);
+    const pdfUrl = post.pdf_url;
+    console.log('PDF URL:', pdfUrl);
 
-    if (!post.pdf_url) {
-      console.warn('❌ pdf_url kosong / tidak ada');
-      return;
+    if (!pdfUrl) return;
+
+    // 🔥 load library otomatis (tanpa ubah HTML)
+    if (!window.pdfjsLib) {
+      await new Promise(resolve => {
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
     }
 
-    const pdfUrl = post.pdf_url;
+    // 🔥 container
+    const container = document.createElement('div');
+    container.style.width = '100%';
+    container.style.margin = '1rem 0';
 
-    // 🔥 container langsung inject (tanpa HTML tambahan)
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = `
-      width:100%;
-      height:80vh;
-      margin:20px 0;
-      background:#f5f5f5;
-    `;
+    isi.prepend(container);
 
-    // 🔥 cara paling simpel: iframe langsung
-    const iframe = document.createElement('iframe');
-    iframe.src = pdfUrl;
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
+    // 🔥 load PDF
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    const pdf = await loadingTask.promise;
 
-    wrapper.appendChild(iframe);
+    // 🔥 render semua halaman
+    for (let i = 1; i <= pdf.numPages; i++) {
 
-    // 🔥 tampilkan PALING ATAS
-    isi.prepend(wrapper);
+      const page = await pdf.getPage(i);
+      const viewport = page.getViewport({ scale: 1.5 });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
+      canvas.style.marginBottom = '10px';
+
+      container.appendChild(canvas);
+
+      await page.render({
+        canvasContext: ctx,
+        viewport: viewport
+      }).promise;
+
+    }
 
   } catch (err) {
-    console.error('PDF ERROR:', err);
+    console.error('PDF.js ERROR:', err);
   }
 
 })();
