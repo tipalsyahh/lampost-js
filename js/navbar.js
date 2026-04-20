@@ -39,36 +39,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  const el = document.querySelector('.jam');
-  if (!el) return;
+  const atas = document.querySelector('.jam-atas');
+  if (!atas) return;
 
   function updateJam() {
     const now = new Date();
 
-    const waktu = now.toLocaleTimeString('id-ID', {
+    const waktu = now.toLocaleTimeString('en-US', {
       timeZone: 'Asia/Jakarta',
-      hour: '2-digit',
+      hour: 'numeric',
       minute: '2-digit',
-      second: '2-digit'
+      hour12: true
     });
 
-    el.textContent = waktu + ' WIB';
+    atas.textContent = waktu;
   }
 
-  /* jalankan pertama */
   updateJam();
 
-  /* sinkron biar tidak delay */
-  function startClock() {
-    const now = new Date();
-    const delay = 1000 - now.getMilliseconds();
-
-    setTimeout(() => {
-      updateJam();
-      setInterval(updateJam, 1000);
-    }, delay);
-  }
-
-  startClock();
+  // sinkron biar detik pas (tidak delay)
+  const delay = 1000 - new Date().getMilliseconds();
+  setTimeout(() => {
+    updateJam();
+    setInterval(updateJam, 1000);
+  }, delay);
 
 });
