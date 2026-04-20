@@ -113,100 +113,86 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 PDF DOWNLOAD BUTTON FINAL FIX
+// 🔥 FORCE DOWNLOAD PDF (NO REDIRECT)
 // =========================
 (function () {
 
   const pdfUrl = post?.pdf_url;
   console.log('PDF URL:', pdfUrl);
 
-  // ❌ tidak ada URL
   if (!pdfUrl) return;
 
-  // ❌ filter URL aneh (seperti /05/xxxx.pdf yang 404)
   if (!pdfUrl.includes('/wp-content/')) {
-    console.warn('PDF tidak valid (bukan wp-content):', pdfUrl);
+    console.warn('PDF tidak valid:', pdfUrl);
     return;
   }
 
-  // 🔥 inject style sekali saja
+  // 🔥 style
   if (!document.getElementById('pdf-btn-style')) {
     const style = document.createElement('style');
     style.id = 'pdf-btn-style';
     style.innerHTML = `
-      .pdf-download-wrapper {
-        margin: 20px 0;
-      }
-
       .btn-pdf-download {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: linear-gradient(135deg, #ef4444, #b91c1c);
-        color: #fff;
+        display: inline-block;
         padding: 12px 18px;
+        background: #e11d48;
+        color: #fff;
         border-radius: 10px;
         font-weight: 600;
         text-decoration: none;
-        transition: all .25s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      }
-
-      .btn-pdf-download:hover {
-        transform: translateY(-2px);
-        background: linear-gradient(135deg, #dc2626, #991b1b);
-      }
-
-      .btn-pdf-download svg {
-        width: 18px;
-        height: 18px;
-        fill: #fff;
+        cursor: pointer;
       }
     `;
     document.head.appendChild(style);
   }
 
-  // 🔥 wrapper
-  const wrapper = document.createElement('div');
-  wrapper.className = 'pdf-download-wrapper';
-
-  // 🔥 tombol
-  const btn = document.createElement('a');
-  btn.href = pdfUrl;
-  btn.target = '_blank';
-  btn.rel = 'noopener';
+  const btn = document.createElement('button');
   btn.className = 'btn-pdf-download';
+  btn.innerText = '⬇️ Download PDF';
 
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M12 16l4-5h-3V4h-2v7H8l4 5zm-7 2h14v2H5z"/>
-    </svg>
-    <span>Download File PDF</span>
-  `;
-
-  wrapper.appendChild(btn);
+  isi.prepend(btn);
 
   // =========================
-  // 🔥 VALIDASI FILE (ANTI 404)
+  // 🔥 CLICK = FORCE DOWNLOAD
   // =========================
-  fetch(pdfUrl, { method: 'HEAD' })
-    .then(res => {
+  btn.addEventListener('click', () => {
 
-      const contentType = res.headers.get('content-type') || '';
+    btn.innerText = 'Loading...';
 
-      if (res.ok && contentType.includes('pdf')) {
-        isi.prepend(wrapper);
-      } else {
-        console.warn('File bukan PDF atau tidak valid:', pdfUrl);
-      }
+    fetch(pdfUrl)
+      .then(res => {
+        if (!res.ok) throw new Error('Gagal ambil file');
+        return res.blob();
+      })
+      .then(blob => {
 
-    })
-    .catch(err => {
-      console.warn('Gagal cek PDF:', err);
+        const blobUrl = URL.createObjectURL(blob);
 
-      // fallback → tetap tampilkan tombol
-      isi.prepend(wrapper);
-    });
+        const a = document.createElement('a');
+        a.href = blobUrl;
+
+        // 🔥 nama file
+        const fileName = pdfUrl.split('/').pop().split('?')[0];
+        a.download = fileName || 'file.pdf';
+
+        document.body.appendChild(a);
+        a.click();
+
+        URL.revokeObjectURL(blobUrl);
+        a.remove();
+
+        btn.innerText = '⬇️ Download PDF';
+
+      })
+      .catch(err => {
+        console.error(err);
+        btn.innerText = 'Gagal download';
+
+        // fallback buka link
+        window.open(pdfUrl, '_blank');
+      });
+
+  });
 
 })();
 
