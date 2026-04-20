@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const kategoriSlug = catData[0].slug || 'nasional';
 
     // 🔥 FIX: ambil lebih banyak data lalu skip 2 pertama
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=5&orderby=date&order=desc`);
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=4&orderby=date&order=desc`);
     if (!res.ok) throw new Error();
 
     let posts = await res.json();
@@ -63,16 +63,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       // ❌ deskripsi dihapus
 
       htmlArr.push(`
-      <a href="${link}" class="item-info">
-        <div class="berita-unila">
-        <p class="judul-unila">${judul}</p>
-        <p class="kategori">${kategoriNama}</p>
-        <div class="info-microweb">
-        <p class="editor-kkn">By ${editor}</p>
-        <p class="tanggal" id="tanggal-unila-berita">${tanggal}</p>
-        </div>
-      </div>
-      </a>
+        <a href="${link}" class="list-berita">
+          <div class="konten">
+            <p class="judul">${judul}</p>
+            <p class="meta">${kategori} ${tanggal}</p>
+          </div>
+        </a>
       `);
 
     }
