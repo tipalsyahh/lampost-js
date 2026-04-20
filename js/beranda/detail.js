@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             URL.revokeObjectURL(blobUrl);
             a.remove();
 
-            btn.innerText = '⬇️ Download PDF';
+            btn.innerText = 'Download PDF';
             btn.disabled = false;
 
           })
