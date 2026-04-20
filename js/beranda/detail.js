@@ -113,9 +113,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 PDF VIEWER STYLE (FIX REFERRER ISSUE)
+// 🔥 FINAL FIX: PDF.js VIEWER (PASTI TAMPIL)
 // =========================
-(function () {
+(async () => {
 
   try {
 
@@ -123,66 +123,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!pdfUrl) return;
 
     const container = document.createElement('div');
-    container.id = 'pdfContainer';
+    container.id = 'pdfViewer';
+
     container.style.cssText = `
       width:100%;
-      height:calc(100vh * 0.70);
-      margin-bottom:35px;
-      position:relative;
+      margin:1rem 0;
     `;
 
-    // 🔥 tombol fullscreen
-    const btn = document.createElement('button');
-    btn.id = 'fullscreenBtn';
-    btn.innerText = '⛶ Fullscreen';
-    btn.style.cssText = `
-      position:absolute;
-      top:10px;
-      right:10px;
-      z-index:10;
-      background:#000;
-      color:#fff;
-      border:none;
-      padding:6px 10px;
-      cursor:pointer;
-    `;
+    if (isi) isi.prepend(container);
 
-    // 🔥 iframe PDF
-    const iframe = document.createElement('iframe');
-    iframe.id = 'pdfFrame';
+    // 🔥 load PDF
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    const pdf = await loadingTask.promise;
 
-    // 🔥 penting: kosongkan dulu, lalu set src (hindari block)
-    iframe.src = 'about:blank';
+    // 🔥 render semua halaman
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
 
-    iframe.style.cssText = `
-      width:100%;
-      height:100%;
-      border:none;
-    `;
+      const page = await pdf.getPage(pageNum);
 
-    // 🔥 delay inject src (hindari security block)
-    setTimeout(() => {
-      iframe.src = pdfUrl;
-    }, 200);
+      const viewport = page.getViewport({ scale: 1.5 });
 
-    // 🔥 fullscreen logic
-    btn.onclick = () => {
-      if (!document.fullscreenElement) {
-        container.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    };
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
 
-    container.appendChild(btn);
-    container.appendChild(iframe);
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
 
-    if (isi) {
-      isi.prepend(container);
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
+      canvas.style.marginBottom = '10px';
+
+      container.appendChild(canvas);
+
+      await page.render({
+        canvasContext: context,
+        viewport: viewport
+      }).promise;
+
     }
 
   } catch (err) {
-    console.log('PDF error:', err);
+    console.log('PDF.js error:', err);
   }
 
 })();
