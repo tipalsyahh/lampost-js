@@ -112,67 +112,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-// =========================
-// 🔥 FINAL: FORCE RENDER PDF TANPA IFRAME
-// =========================
-(async () => {
+(function () {
 
-  try {
+  const pdfUrl = post.pdf_url;
+  if (!pdfUrl) return;
 
-    const pdfUrl = post.pdf_url;
-    console.log('PDF URL:', pdfUrl);
+  const iframe = document.createElement('iframe');
 
-    if (!pdfUrl) return;
+  iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
 
-    // 🔥 load library otomatis (tanpa ubah HTML)
-    if (!window.pdfjsLib) {
-      await new Promise(resolve => {
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-        script.onload = resolve;
-        document.head.appendChild(script);
-      });
-    }
+  iframe.style.width = '100%';
+  iframe.style.height = '80vh';
+  iframe.style.border = 'none';
 
-    // 🔥 container
-    const container = document.createElement('div');
-    container.style.width = '100%';
-    container.style.margin = '1rem 0';
-
-    isi.prepend(container);
-
-    // 🔥 load PDF
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    const pdf = await loadingTask.promise;
-
-    // 🔥 render semua halaman
-    for (let i = 1; i <= pdf.numPages; i++) {
-
-      const page = await pdf.getPage(i);
-      const viewport = page.getViewport({ scale: 1.5 });
-
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      canvas.style.width = '100%';
-      canvas.style.height = 'auto';
-      canvas.style.marginBottom = '10px';
-
-      container.appendChild(canvas);
-
-      await page.render({
-        canvasContext: ctx,
-        viewport: viewport
-      }).promise;
-
-    }
-
-  } catch (err) {
-    console.error('PDF.js ERROR:', err);
-  }
+  isi.prepend(iframe);
 
 })();
 
