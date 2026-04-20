@@ -112,6 +112,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
+    // =========================
+    // 🔥 TAMBAHAN: AUTO LOAD PDF DARI CONTENT
+    // =========================
+    (function () {
+
+      const contentHTML = post.content.rendered || '';
+
+      // 🔍 cari semua link PDF
+      const pdfMatches = contentHTML.match(/https?:\/\/[^\s"'<>]+\.pdf/gi);
+
+      if (!pdfMatches || !pdfMatches.length) return;
+
+      // 🔥 buat container PDF
+      const pdfWrapper = document.createElement('div');
+      pdfWrapper.className = 'pdf-viewer-wrapper';
+      pdfWrapper.style.margin = '1rem 0';
+
+      pdfMatches.forEach(pdfUrl => {
+
+        const viewer = document.createElement('iframe');
+        viewer.src = pdfUrl;
+        viewer.style.width = '100%';
+        viewer.style.height = '600px';
+        viewer.style.border = 'none';
+        viewer.loading = 'lazy';
+
+        pdfWrapper.appendChild(viewer);
+
+      });
+
+      // 🔥 tampilkan PDF di atas konten
+      isi.prepend(pdfWrapper);
+
+    })();
+
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
     /* =========================
