@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function loadCategory() {
-
         try {
             const res = await fetch("https://lampost.co/wp-json/wp/v2/categories?per_page=100");
             const data = await res.json();
@@ -35,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
             let html = '<option value="">Semua Berita</option>';
 
             data.forEach(cat => {
-                // 🔥 TAMBAHAN: SIMPAN PARENT
                 categoryMap[cat.id] = {
                     name: cat.name,
                     slug: cat.slug,
@@ -51,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function buildDateQuery(url) {
-
         if (!filterDate.value) return url;
 
         const date = new Date(filterDate.value);
@@ -67,7 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function loadMedia(ids) {
-
         const uniqueIds = [...new Set(ids.filter(Boolean))];
 
         await Promise.all(uniqueIds.map(async id => {
@@ -84,7 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function fetchEditorsAsync(posts) {
-
         posts.forEach(async post => {
 
             const termLink = post._links?.['wp:term']?.[2]?.href;
@@ -105,10 +100,38 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (e) {}
 
         });
+    }
 
+    // 🔥 FIX: fungsi ambil kategori utama
+    function getMainCategory(post) {
+
+        if (!post.categories || !post.categories.length) {
+            return { name: "Berita", slug: "berita", parent: 0 };
+        }
+
+        let selected = null;
+
+        post.categories.forEach(id => {
+            const cat = categoryMap[id];
+            if (!cat) return;
+
+            // prioritaskan sub kategori
+            if (cat.parent !== 0) {
+                selected = cat;
+            }
+        });
+
+        if (!selected) {
+            selected = categoryMap[post.categories[0]];
+        }
+
+        return selected || { name: "Berita", slug: "berita", parent: 0 };
     }
 
     async function loadPosts(reset = false) {
+
+        // 🔥 FIX: cegah jalan sebelum kategori siap
+        if (Object.keys(categoryMap).length === 0) return;
 
         if (reset) {
             container.innerHTML = "";
@@ -149,19 +172,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 const title = post.title.rendered;
                 const date = formatTanggal(post.date);
 
-                const catData = categoryMap[post.categories?.[0]] || { name: "Berita", slug: "berita", parent: 0 };
+                // 🔥 FIX DI SINI
+                const catData = getMainCategory(post);
 
                 const catName = catData.name;
                 const catSlug = catData.slug;
 
-                // 🔥 AMBIL PARENT
                 const parentData = categoryMap[catData.parent];
 
                 const img = mediaMap[post.featured_media] || "image/default.jpg";
 
                 const termLink = post._links?.['wp:term']?.[2]?.href;
 
-                // 🔥 BUILD URL (SUPPORT SUB KATEGORI)
                 let link = `/${catSlug}/${post.slug}`;
 
                 if (parentData && parentData.slug) {
@@ -201,7 +223,10 @@ document.addEventListener("DOMContentLoaded", () => {
         loadPosts();
     });
 
-    loadCategory();
-    loadPosts();
+    // 🔥 FIX: tunggu kategori dulu baru load post
+    (async () => {
+        await loadCategory();
+        loadPosts();
+    })();
 
 });
