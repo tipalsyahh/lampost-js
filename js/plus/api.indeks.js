@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterCategory = document.getElementById("filterCategory");
     const filterDate = document.getElementById("filterDate");
 
-    const PER_PAGE = 8;
+    const PER_PAGE = 15;
     let page = 1;
 
     const categoryMap = {};
