@@ -112,62 +112,69 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    // =========================
-// 🔥 TAMBAHAN: SUPPORT SHORTCODE [pdfjs-viewer]
+// =========================
+// 🔥 TAMBAHAN: LOAD PDF DARI REST API (functions.php)
 // =========================
 (function () {
 
-  const contentHTML = post.content.rendered || '';
+  try {
 
-  // 🔍 ambil URL dari shortcode pdfjs-viewer
-  const shortcodeMatches = contentHTML.match(/\[pdfjs-viewer[^\]]*url="([^"]+)"/gi);
+    const pdfUrl = post.pdf_url;
 
-  let pdfUrls = [];
+    // ❌ kalau tidak ada PDF → skip
+    if (!pdfUrl) return;
 
-  if (shortcodeMatches) {
-    shortcodeMatches.forEach(sc => {
-      const match = sc.match(/url="([^"]+)"/i);
-      if (match && match[1]) {
-        pdfUrls.push(match[1]);
-      }
-    });
-  }
+    // 🔥 buat container
+    const wrapper = document.createElement('div');
+    wrapper.className = 'pdf-viewer-wrapper';
+    wrapper.style.cssText = `
+      width:100%;
+      margin:1rem 0;
+    `;
 
-  // 🔍 fallback: tetap ambil link .pdf biasa
-  const normalPdf = contentHTML.match(/https?:\/\/[^\s"'<>]+\.pdf/gi);
-  if (normalPdf) {
-    pdfUrls = pdfUrls.concat(normalPdf);
-  }
-
-  // ❌ tidak ada PDF
-  if (!pdfUrls.length) return;
-
-  // 🔥 hapus shortcode dari tampilan (biar gak muncul text mentah)
-  isi.innerHTML = isi.innerHTML.replace(/\[pdfjs-viewer[^\]]+\]/gi, '');
-
-  // 🔥 buat viewer
-  const pdfWrapper = document.createElement('div');
-  pdfWrapper.className = 'pdf-viewer-wrapper';
-  pdfWrapper.style.margin = '1rem 0';
-
-  pdfUrls.forEach(pdfUrl => {
-
+    // 🔥 iframe viewer
     const iframe = document.createElement('iframe');
 
-    // ✅ pakai viewer biar lebih kompatibel
+    // bisa langsung PDF atau pakai viewer (lebih aman mobile)
     iframe.src = `https://docs.google.com/gview?url=${encodeURIComponent(pdfUrl)}&embedded=true`;
 
-    iframe.style.width = '100%';
-    iframe.style.height = '800px';
-    iframe.style.border = 'none';
+    iframe.style.cssText = `
+      width:100%;
+      height:800px;
+      border:none;
+      border-radius:6px;
+      background:#fff;
+    `;
+
     iframe.loading = 'lazy';
 
-    pdfWrapper.appendChild(iframe);
+    // 🔥 tombol download (optional tapi bagus UX)
+    const downloadBtn = document.createElement('a');
+    downloadBtn.href = pdfUrl;
+    downloadBtn.target = '_blank';
+    downloadBtn.innerText = 'Download PDF';
+    downloadBtn.style.cssText = `
+      display:inline-block;
+      margin-bottom:10px;
+      padding:8px 12px;
+      background:#c00;
+      color:#fff;
+      text-decoration:none;
+      font-size:14px;
+      border-radius:4px;
+    `;
 
-  });
+    wrapper.appendChild(downloadBtn);
+    wrapper.appendChild(iframe);
 
-  // 🔥 tampilkan di atas konten
-  isi.prepend(pdfWrapper);
+    // 🔥 tampilkan di atas konten
+    if (isi) {
+      isi.prepend(wrapper);
+    }
+
+  } catch (err) {
+    console.log('PDF viewer error:', err);
+  }
 
 })();
 
