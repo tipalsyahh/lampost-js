@@ -114,93 +114,97 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     isi.querySelectorAll('iframe, video, embed').forEach(el => el.remove());
 
-    /* =========================
-       VIDEO JNEWS AUTO (TIDAK DIUBAH)
-    ========================= */
-    let videoUsed = false;
+/* =========================
+   VIDEO JNEWS AUTO (FIX DOUBLE)
+========================= */
+let videoUsed = false;
 
-    try {
-      const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
-      const videoData = await videoRes.json();
+try {
+  const videoRes = await fetch(`https://lampost.co/wp-json/custom/v1/video/${post.id}`);
+  const videoData = await videoRes.json();
 
-      let videoUrl =
-        videoData?.video ||
-        videoData?.url ||
-        videoData?.embed ||
-        '';
+  let videoUrl =
+    videoData?.video ||
+    videoData?.url ||
+    videoData?.embed ||
+    '';
 
-      if (typeof videoUrl === 'object' && videoUrl.rendered) {
-        videoUrl = videoUrl.rendered;
-      }
+  if (typeof videoUrl === 'object' && videoUrl.rendered) {
+    videoUrl = videoUrl.rendered;
+  }
 
-      let videoId = null;
+  let videoId = null;
 
-      if (videoUrl.includes('<iframe')) {
-        const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
-        if (match) videoId = match[1];
-      }
+  if (videoUrl.includes('<iframe')) {
+    const match = videoUrl.match(/embed\/([a-zA-Z0-9_-]+)/);
+    if (match) videoId = match[1];
+  }
 
-      if (!videoId && videoUrl.includes('youtube.com')) {
-        videoId = videoUrl.split('v=')[1]?.split('&')[0];
-      }
+  if (!videoId && videoUrl.includes('youtube.com')) {
+    videoId = videoUrl.split('v=')[1]?.split('&')[0];
+  }
 
-      if (!videoId && videoUrl.includes('youtu.be')) {
-        videoId = videoUrl.split('/').pop();
-      }
+  if (!videoId && videoUrl.includes('youtu.be')) {
+    videoId = videoUrl.split('/').pop();
+  }
 
-      if (videoId) {
+  // 🔥 CEK: apakah di konten SUDAH ADA VIDEO
+  const existingVideo = isi.querySelector('iframe[src*="youtube"], iframe[src*="youtu.be"], video');
 
-        videoUsed = true;
+  if (videoId && !existingVideo) {
 
-        const thumbDiv = document.createElement('div');
-        thumbDiv.style.cssText = `
-          background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
-          width:100%;
-          padding-top:56.25%;
-          background-size:cover;
-          background-position:center;
-          position:relative;
-          cursor:pointer;
-          margin-bottom:1rem;
-        `;
+    videoUsed = true;
 
-        const play = document.createElement('div');
-        play.innerText = '▶';
-        play.style.cssText = `
-          position:absolute;
-          top:50%;
-          left:50%;
-          transform:translate(-50%,-50%);
-          font-size:60px;
-          color:white;
-          text-shadow:0 0 10px rgba(0,0,0,.8);
-        `;
+    const thumbDiv = document.createElement('div');
+    thumbDiv.style.cssText = `
+      background-image:url('https://i.ytimg.com/vi/${videoId}/hqdefault.jpg');
+      width:100%;
+      padding-top:56.25%;
+      background-size:cover;
+      background-position:center;
+      position:relative;
+      cursor:pointer;
+      margin-bottom:1rem;
+    `;
 
-        thumbDiv.appendChild(play);
+    const play = document.createElement('div');
+    play.innerText = '▶';
+    play.style.cssText = `
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      font-size:60px;
+      color:white;
+      text-shadow:0 0 10px rgba(0,0,0,.8);
+    `;
 
-        thumbDiv.addEventListener('click', () => {
-          thumbDiv.outerHTML = `
-            <iframe
-              width="100%"
-              height="400"
-              src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
-              frameborder="0"
-              allow="autoplay; encrypted-media"
-              allowfullscreen>
-            </iframe>
-          `;
-        });
+    thumbDiv.appendChild(play);
 
-        isi.prepend(thumbDiv);
-      }
+    thumbDiv.addEventListener('click', () => {
+      thumbDiv.outerHTML = `
+        <iframe
+          width="100%"
+          height="400"
+          src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0"
+          frameborder="0"
+          allow="autoplay; encrypted-media"
+          allowfullscreen>
+        </iframe>
+      `;
+    });
 
-    } catch (e) { }
+    isi.prepend(thumbDiv);
+  }
 
-    if (videoUsed) {
-      isi.querySelectorAll('img').forEach(img => img.remove());
-      const gambarFix = document.querySelector('.gambar-berita');
-      if (gambarFix) gambarFix.style.display = 'none';
-    }
+} catch (e) { }
+
+// 🔥 HANYA HAPUS GAMBAR JIKA VIDEO BENAR2 DIPAKAI
+if (videoUsed) {
+  isi.querySelectorAll('img').forEach(img => img.remove());
+  const gambarFix = document.querySelector('.gambar-berita');
+  if (gambarFix) gambarFix.style.display = 'none';
+}
 
     isi.querySelectorAll('p').forEach(p => {
       const t = p.innerHTML.replace(/&nbsp;/g, '').replace(/\s+/g, '').trim();
