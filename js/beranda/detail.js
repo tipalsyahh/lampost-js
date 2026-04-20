@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
 // =========================
-// 🔥 FIX FINAL: EMBED PDF TANPA BLOK
+// 🔥 PDF VIEWER STYLE (FIX REFERRER ISSUE)
 // =========================
 (function () {
 
@@ -122,37 +122,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pdfUrl = post.pdf_url;
     if (!pdfUrl) return;
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'pdf-viewer-wrapper';
-    wrapper.style.cssText = `
+    const container = document.createElement('div');
+    container.id = 'pdfContainer';
+    container.style.cssText = `
       width:100%;
-      margin:1rem 0;
+      height:calc(100vh * 0.70);
+      margin-bottom:35px;
+      position:relative;
     `;
 
-    // 🔥 embed utama
-    const embed = document.createElement('embed');
-    embed.src = pdfUrl;
-    embed.type = 'application/pdf';
-    embed.style.width = '100%';
-    embed.style.height = '800px';
+    // 🔥 tombol fullscreen
+    const btn = document.createElement('button');
+    btn.id = 'fullscreenBtn';
+    btn.innerText = '⛶ Fullscreen';
+    btn.style.cssText = `
+      position:absolute;
+      top:10px;
+      right:10px;
+      z-index:10;
+      background:#000;
+      color:#fff;
+      border:none;
+      padding:6px 10px;
+      cursor:pointer;
+    `;
 
-    // 🔥 fallback pakai object
-    const object = document.createElement('object');
-    object.data = pdfUrl;
-    object.type = 'application/pdf';
-    object.style.width = '100%';
-    object.style.height = '800px';
+    // 🔥 iframe PDF
+    const iframe = document.createElement('iframe');
+    iframe.id = 'pdfFrame';
 
-    // 🔥 kalau embed gagal → pakai object
-    embed.onerror = () => {
-      wrapper.innerHTML = '';
-      wrapper.appendChild(object);
+    // 🔥 penting: kosongkan dulu, lalu set src (hindari block)
+    iframe.src = 'about:blank';
+
+    iframe.style.cssText = `
+      width:100%;
+      height:100%;
+      border:none;
+    `;
+
+    // 🔥 delay inject src (hindari security block)
+    setTimeout(() => {
+      iframe.src = pdfUrl;
+    }, 200);
+
+    // 🔥 fullscreen logic
+    btn.onclick = () => {
+      if (!document.fullscreenElement) {
+        container.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
     };
 
-    wrapper.appendChild(embed);
+    container.appendChild(btn);
+    container.appendChild(iframe);
 
     if (isi) {
-      isi.prepend(wrapper);
+      isi.prepend(container);
     }
 
   } catch (err) {
