@@ -2,44 +2,7 @@ const synth = window.speechSynthesis;
 let utterance = null;
 let isPlaying = false;
 let isMuted = true;
-let voicesReady = false;
-let voices = [];
 
-// ===============================
-// 🔥 LOAD VOICES (WAJIB)
-// ===============================
-function loadVoices() {
-  voices = synth.getVoices();
-  if (voices.length) {
-    voicesReady = true;
-  }
-}
-
-loadVoices();
-
-if (!voices.length) {
-  synth.onvoiceschanged = () => {
-    loadVoices();
-  };
-}
-
-// ===============================
-// 🔥 PILIH VOICE INDONESIA
-// ===============================
-function getIndonesianVoice() {
-  if (!voices.length) return null;
-
-  // prioritas id-ID
-  let voice =
-    voices.find(v => v.lang === "id-ID") ||
-    voices.find(v => v.lang.startsWith("id"));
-
-  return voice || null;
-}
-
-// ===============================
-// 🔥 AMBIL TEXT
-// ===============================
 function getText() {
   const beritaEl = document.getElementById("berita");
   if (!beritaEl) return "";
@@ -53,13 +16,13 @@ function getText() {
 
   const clone = isiEl.cloneNode(true);
 
-  // ubah <a> jadi text
+  // 🔥 FIX: jangan hapus <a>, tapi ubah jadi text biasa
   clone.querySelectorAll("a").forEach(a => {
     const text = a.innerText;
     a.replaceWith(text);
   });
 
-  // hapus elemen tidak perlu
+  // hapus elemen tidak perlu (tanpa a)
   const removeEls = clone.querySelectorAll(
     "button, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
   );
@@ -71,7 +34,10 @@ function getText() {
     let text = el.innerText.trim();
     if (!text) return;
 
-    if (el.tagName === "LI") {
+    const tag = el.tagName;
+
+    // 🔥 TANPA PENEKANAN HEADING (normal aja)
+    if (tag === "LI") {
       isi += `${text}. ... `;
     } else {
       isi += `${text}. `;
@@ -80,6 +46,7 @@ function getText() {
 
   let finalText = `${judul}. ${editor}. ${tanggal}. ${isi}`;
 
+  // bersihin noise
   finalText = finalText
     .replace(/BERITA LAINNYA/g, "")
     .replace(/\s+/g, " ")
@@ -88,40 +55,20 @@ function getText() {
   return finalText;
 }
 
-// ===============================
-// UI BUTTON
-// ===============================
 function setBtnText(btn, text, icon) {
   btn.innerHTML = `<span>${text}</span> <i class="${icon}"></i>`;
 }
 
-// ===============================
-// 🔥 PLAY VOICE
-// ===============================
 function playVoice(btn) {
   if (isMuted) return;
 
   const text = getText();
   if (!text) return;
 
-  if (!voicesReady) {
-    alert("Voice belum siap, coba lagi...");
-    return;
-  }
-
-  const voice = getIndonesianVoice();
-
-  if (!voice) {
-    alert("Voice Bahasa Indonesia tidak tersedia di browser ini");
-    return;
-  }
-
   if (synth.speaking || synth.pending) synth.cancel();
 
   utterance = new SpeechSynthesisUtterance(text);
-
   utterance.lang = "id-ID";
-  utterance.voice = voice; // 🔥 FIX UTAMA
 
   utterance.rate = 1;
   utterance.pitch = 1;
@@ -141,7 +88,6 @@ function playVoice(btn) {
 
   synth.speak(utterance);
 
-  // 🔥 anti pause bug
   const resumeInterval = setInterval(() => {
     if (!synth.speaking) clearInterval(resumeInterval);
     else if (synth.paused) synth.resume();
@@ -150,9 +96,6 @@ function playVoice(btn) {
   isPlaying = true;
 }
 
-// ===============================
-// STOP
-// ===============================
 function stopVoice(btn) {
   if (synth.speaking || synth.pending) synth.cancel();
   isPlaying = false;
@@ -160,9 +103,6 @@ function stopVoice(btn) {
   setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
 }
 
-// ===============================
-// INIT
-// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("voiceToggle");
   if (!btn) return;
@@ -181,11 +121,12 @@ document.addEventListener("DOMContentLoaded", () => {
       stopVoice(btn);
     }
   });
+
+  if (!synth.getVoices().length) {
+    synth.onvoiceschanged = () => {};
+  }
 });
 
-// ===============================
-// CLEANUP
-// ===============================
 window.addEventListener("beforeunload", () => synth.cancel());
 
 document.addEventListener("visibilitychange", () => {
