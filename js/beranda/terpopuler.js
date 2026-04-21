@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         htmlArr.push(`
           <a href="#" class="item-info" id="${id}">
-            <img src="${post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'image/ai.jpg'}" class="img-microweb" loading="lazy">
+            <img src="${post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://lampost.co/image/ai.jpeg'}" class="img-microweb" loading="lazy">
             <div class="berita-microweb">
               <p class="judul">${post.title.rendered}</p>
               <p class="kategori">Terpopuler</p>

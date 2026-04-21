@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function getMedia(mediaId) {
-    if (!mediaId) return '/image/ai.jpg';
+    if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
     try {
@@ -104,10 +104,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       return (mediaCache[mediaId] =
         data.media_details?.sizes?.medium?.source_url ||
         data.source_url ||
-        '/image/ai.jpg'
+        'https://lampost.co/image/ai.jpeg'
       );
     } catch {
-      return '/image/ai.jpg';
+      return 'https://lampost.co/image/ai.jpeg';
     }
   }
 
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', async () => {
              class="item-info"
              id="${id}">
             <img
-              src="/image/ai.jpg"
+              src="https://lampost.co/image/ai.jpeg"
               data-media="${post.featured_media}"
               class="img-microweb"
               loading="lazy">

@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const gambar =
         post._embedded?.['wp:featuredmedia']?.[0]?.source_url
-        || 'image/ai.jpg';
+        || 'https://lampost.co/image/ai.jpeg';
 
       // 🔥 TAMBAHAN (ambil slug kategori, tanpa ubah logika lain)
       const kategoriSlug =

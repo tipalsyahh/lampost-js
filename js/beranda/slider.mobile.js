@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
     async function getMedia(mediaId) {
-        if (!mediaId) return 'image/ai.jpg';
+        if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
         if (mediaCache[mediaId]) return mediaCache[mediaId];
 
         const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return (mediaCache[mediaId] =
             data.media_details?.sizes?.full?.source_url ||
             data.source_url ||
-            'image/ai.jpg'
+            'https://lampost.co/image/ai.jpeg'
         );
     }
 
@@ -68,18 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const tanggal = formatTanggal(post.date);
 
         el.innerHTML = `
-<img src="image/ai.jpg" alt="${judul}" loading="lazy" decoding="async">
-<a href="#" class="hero-overlay">
-${isMain ? `<span class="hero-category">...</span>` : ``}
-<h3 class="hero-title">${judul}</h3>
-${isMain
-                ? `<div class="hero-meta">
-<span class="hero-editor">By ...</span>
-<span class="hero-date">${tanggal}</span>
-</div>`
-                : ``}
-</a>
-`;
+        <img src="https://lampost.co/image/ai.jpeg" alt="${judul}" loading="lazy" decoding="async">
+        <a href="#" class="hero-overlay">
+        ${isMain ? `<span class="hero-category">...</span>` : ``}
+        <h3 class="hero-title">${judul}</h3>
+        ${isMain
+                        ? `<div class="hero-meta">
+        <span class="hero-editor">By ...</span>
+        <span class="hero-date">${tanggal}</span>
+        </div>`
+                        : ``}
+        </a>
+        `;
     }
 
     function enrich(el, post, isMain = false) {

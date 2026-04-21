@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function getMedia(mediaId) {
-        if (!mediaId) return 'image/ai.jpg';
+        if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
         if (mediaCache[mediaId]) return mediaCache[mediaId];
 
         const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return (mediaCache[mediaId] =
             data.media_details?.sizes?.full?.source_url ||
             data.source_url ||
-            'image/ai.jpg'
+            'https://lampost.co/image/ai.jpeg'
         );
     }
 
@@ -78,19 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const id = `hero-${post.id}`;
 
         el.innerHTML = `
-<a class="hero-link" id="${id}">
-<img src="image/ai.jpg" alt="" loading="lazy" decoding="async">
-<div class="hero-content">
-<p class="hero-category">...</p>
-<h2 class="card-text">${judul}</h2>
-<div class="detail-info">
-<p class="editor-slider">By ...</p>
-<p class="tanggal-slider">${tanggal}</p>
-</div>
-</div>
-</a>
-`;
-
+            <a class="hero-link" id="${id}">
+            <img src="https://lampost.co/image/ai.jpeg" alt="" loading="lazy" decoding="async">
+            <div class="hero-content">
+            <p class="hero-category">...</p>
+            <h2 class="card-text">${judul}</h2>
+            <div class="detail-info">
+            <p class="editor-slider">By ...</p>
+            <p class="tanggal-slider">${tanggal}</p>
+            </div>
+            </div>
+            </a>
+            `;
         const linkEl = el.querySelector('.hero-link');
         killBorder(linkEl);
 

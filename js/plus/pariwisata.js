@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getMedia(mediaId) {
-    if (!mediaId) return Promise.resolve('image/ai.jpg');
+    if (!mediaId) return Promise.resolve('https://lampost.co/image/ai.jpeg');
     if (mediaCache[mediaId]) return Promise.resolve(mediaCache[mediaId]);
 
     return fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`)
@@ -49,12 +49,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const url =
           data?.media_details?.sizes?.full?.source_url ||
           data?.source_url ||
-          'image/ai.jpg';
+          'https://lampost.co/image/ai.jpeg';
 
         mediaCache[mediaId] = url;
         return url;
       })
-      .catch(() => 'image/ai.jpg');
+      .catch(() => 'https://lampost.co/image/ai.jpeg');
   }
 
   fetch(`https://lampost.co/wp-json/wp/v2/posts?per_page=8&_fields=id,slug,title,featured_media,categories`)

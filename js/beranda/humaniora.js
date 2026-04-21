@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       /* 🖼️ GAMBAR */
       const gambar =
         post._embedded?.['wp:featuredmedia']?.[0]?.source_url
-        || 'image/ai.jpg';
+        || 'https://lampost.co/image/ai.jpeg';
 
       html += `
         <a href="${link}" class="item-olahraga">

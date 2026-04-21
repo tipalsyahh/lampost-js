@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getMedia(mediaId) {
-        if (!mediaId) return 'image/default.jpg';
+        if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
         if (mediaCache[mediaId]) return mediaCache[mediaId];
 
         return fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`)
@@ -54,12 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const url =
                     data?.media_details?.sizes?.medium?.source_url ||
                     data?.source_url ||
-                    'image/default.jpg';
+                    'https://lampost.co/image/ai.jpeg';
 
                 mediaCache[mediaId] = url;
                 return url;
             })
-            .catch(() => 'image/default.jpg');
+            .catch(() => 'https://lampost.co/image/ai.jpeg');
     }
 
     function shuffle(array) {
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         <div class="card-header">Populer</div>
 
-        <img src="image/default.jpg" class="card-img">
+        <img src="https://lampost.co/image/ai.jpeg" class="card-img">
 
         <div class="card-body">
           <h3 class="card-title">${judul}</h3>

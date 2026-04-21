@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function getMedia(mediaId) {
-    if (!mediaId) return 'image/ai.jpg';
+    if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
     const res = await fetch(
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return (mediaCache[mediaId] =
       data.media_details?.sizes?.medium?.source_url ||
       data.source_url ||
-      'image/ai.jpg'
+      'https://lampost.co/image/ai.jpeg'
     );
   }
 

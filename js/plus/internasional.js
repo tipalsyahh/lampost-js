@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const gambar =
                 post._embedded?.['wp:featuredmedia']?.[0]?.source_url
-                || 'image/ai.jpg';
+                || 'https://lampost.co/image/ai.jpeg';
 
             const deskripsi = post.excerpt?.rendered
                 ? stripHTML(post.excerpt.rendered).substring(0, 140) + '...'

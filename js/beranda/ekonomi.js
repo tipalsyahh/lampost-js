@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
      AMBIL GAMBAR
   =============================== */
   async function getMedia(mediaId) {
-    if (!mediaId) return 'image/default.jpg';
+    if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
     try {
@@ -56,11 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
         mediaCache[mediaId] =
           data.media_details?.sizes?.medium?.source_url ||
           data.source_url ||
-          'image/default.jpg';
+          'https://lampost.co/image/ai.jpeg';
       }
     } catch (_) {}
 
-    return mediaCache[mediaId] || 'image/default.jpg';
+    return mediaCache[mediaId] || 'https://lampost.co/image/ai.jpeg';
   }
 
   /* ===============================
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return `
       <a href="#" class="item-info" id="${id}">
-        <img src="image/default.jpg" alt="${judul}" class="img-microweb-terbaru" loading="lazy">
+        <img src="https://lampost.co/image/ai.jpeg" alt="${judul}" class="img-microweb-terbaru" loading="lazy">
         <div class="berita-detail">
           <p class="judul-ekonomi">${judul}</p>
           <p class="kategori">...</p>

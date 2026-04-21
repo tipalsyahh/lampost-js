@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const link = `/${slugPath}/${post.slug}`;
 
-        let gambar = 'image/ai.jpg';
+        let gambar = 'https://lampost.co/image/ai.jpeg';
         let kategori = kategoriName;
 
         // ===== IMAGE =====

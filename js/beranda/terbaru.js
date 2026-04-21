@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const parentId = catData?.parent || 0;
 
     const editor = post._embedded?.['wp:term']?.[2]?.[0]?.name || 'Redaksi';
-    const gambar = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'image/default.jpg';
+    const gambar = post._embedded?.['wp:featuredmedia']?.[0]?.source_url || 'https://lampost.co/image/ai.jpeg';
 
     // 🔥 AMBIL PARENT
     const parent = await getParentCategory(parentId);

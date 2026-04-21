@@ -55,7 +55,7 @@ TERM_CACHE[termLink]=editor;
 }
 }
 
-let gambar='image/ai.jpg';
+let gambar='https://lampost.co/image/ai.jpeg';
 
 if(post.featured_media){
 if(MEDIA_CACHE[post.featured_media]){

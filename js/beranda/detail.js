@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             gambar.after(cap);
           }
         })
-        .catch(() => gambar.src = '/index/image/default.jpg');
+        .catch(() => gambar.src = 'https://lampost.co/image/ai.jpeg');
     }
 
     const tanggal = document.getElementById('tanggal');
