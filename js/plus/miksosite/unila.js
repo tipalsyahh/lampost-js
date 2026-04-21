@@ -30,12 +30,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const slug = post.slug;
 
-        const kategoriSlug =
-          post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'uin';
+        const d = new Date(post.date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
 
-        const BASE = 'https://lampost.co/microsite/universitaslampung';
+        const BASE = 'https://lampost.co/microweb/universitaslampung';
 
-        const link = `${BASE}/${kategoriSlug}/${slug}`;
+        const link = `${BASE}/${year}/${month}/${day}/${slug}/`;
 
         output += `
           <li class="item-judul">
