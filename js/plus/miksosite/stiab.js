@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const container = document.querySelector('.data-microsite-staiab');
+  const container = document.querySelector('.data-microsite-stiab');
   if (!container) return;
 
   const PER_PAGE = 2;
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadPosts() {
     try {
       const api =
-        'https://lampost.co/microweb/staiab/wp-json/wp/v2/posts' +
+        'https://lampost.co/microweb/stiab/wp-json/wp/v2/posts' +
         `?per_page=${PER_PAGE}&orderby=date&order=desc&_embed`;
 
       const res = await fetch(api);
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
 
-        const BASE = 'https://lampost.co/microweb/staiab';
+        const BASE = 'https://lampost.co/microweb/stiab';
 
         const link = `${BASE}/${year}/${month}/${day}/${slug}/`;
 
