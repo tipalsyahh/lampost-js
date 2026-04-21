@@ -390,35 +390,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (gambar) {
 
       const fallback = 'https://lampost.co/image/ai.jpeg';
-
-      // 🔥 fallback awal (jaga-jaga kalau tidak ada apa2)
       gambar.src = fallback;
-
       if (post.featured_media) {
-
         fetch(`https://lampost.co/wp-json/wp/v2/media/${post.featured_media}`)
           .then(r => {
             if (!r.ok) throw new Error('Media tidak ditemukan'); // 🔥 paksa masuk catch
             return r.json();
           })
           .then(m => {
-
             if (!m || !m.source_url) {
               gambar.src = fallback;
               return;
             }
-
             gambar.src = m.source_url;
             gambar.style.width = '100%';
             gambar.style.height = 'auto';
-
-            // 🔥 kalau gambar rusak / 404 dari CDN
             gambar.onerror = () => {
               gambar.src = fallback;
             };
-
             document.querySelectorAll('.caption-gambar-utama').forEach(el => el.remove());
-
             if (m.caption?.rendered) {
               const cap = document.createElement('p');
               cap.className = 'caption-gambar-utama';
