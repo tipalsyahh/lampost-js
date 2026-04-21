@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const parentData = categoryMap[catData.parent];
 
-                const img = mediaMap[post.featured_media] || "image/default.jpg";
+                const img = mediaMap[post.featured_media] || "https://lampost.co/image/ai.jpeg";
 
                 const termLink = post._links?.['wp:term']?.[2]?.href;
 
