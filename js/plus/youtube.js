@@ -21,7 +21,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (i >= 10) return;
 
       const title = item.title;
-      const videoId = item.link.split("v=")[1];
+
+      let videoId = "";
+
+      if (item.link.includes("watch?v=")) {
+        videoId = item.link.split("v=")[1];
+      } else if (item.link.includes("shorts/")) {
+        videoId = item.link.split("shorts/")[1];
+      }
+
+      if (videoId.includes("&")) {
+        videoId = videoId.split("&")[0];
+      }
 
       output += `
         <a href="${item.link}" class="video-card">
