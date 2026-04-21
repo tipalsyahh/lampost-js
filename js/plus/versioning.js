@@ -7,9 +7,6 @@
     }
   });
 
-  document.querySelectorAll('script[src]').forEach(el => {
-    if (!el.src.includes('?v=')) {
-      el.src = el.src.split('?')[0] + '?v=' + version;
-    }
-  });
+  // ❌ HAPUS BAGIAN INI
+  // document.querySelectorAll('script[src]')
 })();
