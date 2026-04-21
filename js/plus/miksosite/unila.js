@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       posts.forEach(post => {
 
         let judul = post.title.rendered
-          .replace(/<[^>]+>/g, '') // bersihin tag HTML
+          .replace(/<[^>]+>/g, '')
           .trim();
 
         if (judul.length > 150) {
@@ -33,7 +33,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const kategoriSlug =
           post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'uin';
 
-        const link = `microweb/berita.unila.html?${kategoriSlug}/${slug}`;
+        const BASE = 'https://lampost.co/microsite/universitaslampung';
+
+        const link = `${BASE}/${kategoriSlug}/${slug}`;
 
         output += `
           <li class="item-judul">
