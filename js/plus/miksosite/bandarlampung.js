@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const base = 'https://lampost.co/wp-json/wp/v2';
 
-      // 1. ambil kategori ID dari slug
       const catRes = await fetch(`${base}/categories?slug=bandar-lampung`);
       if (!catRes.ok) throw new Error('Gagal ambil kategori');
 
@@ -18,7 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const categoryId = catData[0].id;
 
-      // 2. ambil post berdasarkan kategori
       const postRes = await fetch(
         `${base}/posts?categories=${categoryId}&per_page=${PER_PAGE}&orderby=date&order=desc&_embed`
       );
@@ -29,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let output = `<ul class="list-judul">`;
 
-      posts.forEach(post => {
+      for (const post of posts) {
 
         let judul = post.title.rendered
           .replace(/<[^>]+>/g, '')
@@ -42,14 +40,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const slug = post.slug;
 
-        const link = `halaman.html?bandar-lampung/${slug}`;
+        let parentSlug = '';
+        let childSlug = '';
+
+        const terms = post._embedded?.['wp:term']?.[0];
+
+        if (terms && terms.length) {
+          const cat = terms[0];
+          childSlug = cat.slug;
+
+          if (cat.parent && cat.parent !== 0) {
+            try {
+              const parentRes = await fetch(`${base}/categories/${cat.parent}`);
+              if (parentRes.ok) {
+                const parent = await parentRes.json();
+                parentSlug = parent.slug;
+              }
+            } catch {}
+          }
+        }
+
+        let link = '/';
+
+        if (parentSlug) link += parentSlug + '/';
+        if (childSlug) link += childSlug + '/';
+
+        link += slug;
 
         output += `
           <li class="item-judul">
             <a href="${link}" class="link-judul">${judul}</a>
           </li>
         `;
-      });
+      }
 
       output += `</ul>`;
 

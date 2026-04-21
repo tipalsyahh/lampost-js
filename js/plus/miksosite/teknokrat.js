@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       posts.forEach(post => {
 
         let judul = post.title.rendered
-          .replace(/<[^>]+>/g, '') // bersihin tag HTML
+          .replace(/<[^>]+>/g, '')
           .trim();
 
         if (judul.length > 150) {
@@ -30,10 +30,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const slug = post.slug;
 
-        const kategoriSlug =
-          post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'teknokrat';
+        const d = new Date(post.date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
 
-        const link = `microweb/berita.teknokrat.html?${kategoriSlug}/${slug}`;
+        const BASE = 'https://lampost.co/microweb/teknokrat';
+
+        const link = `${BASE}/${year}/${month}/${day}/${slug}/`;
 
         output += `
           <li class="item-judul">

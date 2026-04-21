@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const container = document.querySelector('.data-microsite-stiab');
+  const container = document.querySelector('.data-microsite-staiab');
   if (!container) return;
 
   const PER_PAGE = 2;
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadPosts() {
     try {
       const api =
-        'https://lampost.co/microweb/stiab/wp-json/wp/v2/posts' +
+        'https://lampost.co/microweb/staiab/wp-json/wp/v2/posts' +
         `?per_page=${PER_PAGE}&orderby=date&order=desc&_embed`;
 
       const res = await fetch(api);
@@ -25,16 +25,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           .trim();
 
         if (judul.length > 150) {
-          judul = judul.substring(0, 150);
-          judul = judul.substring(0, judul.lastIndexOf(' ')) + '...';
+          judul = judul.substring(0, 150) + '...';
         }
 
         const slug = post.slug;
 
-        const kategoriSlug =
-          post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'stiab';
+        const d = new Date(post.date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
 
-        const link = `microweb/berita.stiab.html?${kategoriSlug}/${slug}`;
+        const BASE = 'https://lampost.co/microweb/staiab';
+
+        const link = `${BASE}/${year}/${month}/${day}/${slug}/`;
 
         output += `
           <li class="item-judul">
