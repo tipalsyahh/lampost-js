@@ -1,9 +1,14 @@
 (function() {
-  const version = "1.0"; // ganti manual kalau update
+  const version = "1.0";
 
   document.querySelectorAll('link[rel="stylesheet"]').forEach(el => {
-    if (!el.href.includes('?v=')) {
-      el.href = el.href.split('?')[0] + '?v=' + version;
-    }
+    // skip kalau sudah ada versi
+    if (el.href.includes('?v=')) return;
+
+    // skip kalau stylesheet sudah selesai load
+    if (el.sheet) return;
+
+    const newHref = el.href.split('?')[0] + '?v=' + version;
+    el.href = newHref;
   });
 })();
