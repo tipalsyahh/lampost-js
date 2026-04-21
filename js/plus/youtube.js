@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       output += `
-        <a href="${item.link}" class="video-card">
+        <a href="https://lampost.co/play?v=${videoId}" class="video-card">
           <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
           <div class="play-center">▶</div>
           <div class="overlay">
