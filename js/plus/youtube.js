@@ -10,24 +10,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
 
   try {
-    const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(RSS_URL)}`);
+    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`);
     const data = await res.json();
 
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(data.contents, "text/xml");
-
-    const items = xml.querySelectorAll("entry");
+    const items = data.items;
 
     let output = "";
 
     items.forEach((item, i) => {
       if (i >= 10) return;
 
-      const title = item.querySelector("title").textContent;
-      const videoId = item.querySelector("yt\\:videoId").textContent;
+      const title = item.title;
+      const videoId = item.link.split("v=")[1];
 
       output += `
-        <a href="https://www.youtube.com/watch?v=${videoId}" class="video-card">
+        <a href="${item.link}" class="video-card">
           <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
           <div class="play-center">▶</div>
           <div class="overlay">
