@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterBtn = document.getElementById("filterBtn");
     const filterCategory = document.getElementById("filterCategory");
     const filterDate = document.getElementById("filterDate");
-    const filterEditor = document.getElementById("filterEditor"); // ✅ tambahan
+    const filterEditor = document.getElementById("filterEditor");
 
     const PER_PAGE = 15;
     let page = 1;
@@ -22,7 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const mediaMap = {};
     const editorCache = {};
 
-    // ✅ tambahan state filter
     let currentFilter = {
         category: "",
         editor: "",
@@ -56,7 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (e) {}
     }
 
-    // ✅ tambahan: ambil semua editor
     async function loadEditors() {
         try {
             const res = await fetch("https://lampost.co/wp-json/wp/v2/coauthors?per_page=100");
@@ -153,6 +151,25 @@ document.addEventListener("DOMContentLoaded", () => {
         return selected || { name: "Berita", slug: "berita", parent: 0 };
     }
 
+    // ✅ VALIDASI EDITOR (FIX UTAMA)
+    async function validateEditor(post, selectedEditorId) {
+
+        const termLink = post._links?.['wp:term']?.[2]?.href;
+        if (!termLink) return false;
+
+        try {
+            const res = await fetch(termLink);
+            const data = await res.json();
+
+            if (Array.isArray(data)) {
+                return data.some(e => String(e.id) === String(selectedEditorId));
+            }
+
+        } catch (e) {}
+
+        return false;
+    }
+
     async function loadPosts(reset = false) {
 
         if (Object.keys(categoryMap).length === 0) return;
@@ -165,12 +182,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let url = `https://lampost.co/wp-json/wp/v2/posts?per_page=${PER_PAGE}&page=${page}`;
 
-        // kategori
         if (currentFilter.category) {
             url += `&categories=${currentFilter.category}`;
         }
 
-        // ✅ FIX: editor langsung API
         if (currentFilter.editor) {
             const editorId = parseInt(currentFilter.editor);
             if (!isNaN(editorId)) {
@@ -178,16 +193,27 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // tanggal
         url = buildDateQuery(url);
 
-        // DEBUG (boleh hapus nanti)
         console.log("FETCH URL:", url);
 
         try {
 
             const res = await fetch(url);
-            const posts = await res.json();
+            let posts = await res.json();
+
+            // ✅ VALIDASI ULANG (BIAR AKURAT)
+            if (currentFilter.editor) {
+
+                const validPosts = [];
+
+                for (const post of posts) {
+                    const ok = await validateEditor(post, currentFilter.editor);
+                    if (ok) validPosts.push(post);
+                }
+
+                posts = validPosts;
+            }
 
             if (!posts.length) {
 
@@ -197,7 +223,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 loadMoreBtn.style.display = "none";
                 return;
-
             }
 
             await loadMedia(posts.map(p => p.featured_media));
@@ -239,7 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 </a>
                 `;
-
             });
 
             container.insertAdjacentHTML("beforeend", html);
@@ -253,7 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     filterBtn.addEventListener("click", () => {
 
-        // simpan state filter
         currentFilter.category = filterCategory.value;
         currentFilter.editor = filterEditor ? filterEditor.value : "";
         currentFilter.date = filterDate.value;
@@ -267,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     (async () => {
         await loadCategory();
-        await loadEditors(); // ✅ tambahan
+        await loadEditors();
         loadPosts();
     })();
 
