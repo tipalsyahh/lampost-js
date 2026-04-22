@@ -6,12 +6,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!track) return;
 
-  const CHANNEL_ID = "UC3APNnaEmws76U7c6HC-DZg";
-  const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
+  // 🔥 pakai proxy sendiri
+  const RSS_URL = "https://lampost.co/youtube.php";
 
   try {
 
-    // 🔥 fetch RSS langsung
     const res = await fetch(RSS_URL);
 
     if (!res.ok) {
@@ -21,14 +20,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const text = await res.text();
 
-    // 🔥 parse XML
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, "text/xml");
 
     const entries = xml.querySelectorAll("entry");
 
     if (!entries.length) {
-      console.error("Tidak ada video ditemukan");
+      console.error("Tidak ada video");
       return;
     }
 
@@ -40,16 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const title = entry.querySelector("title")?.textContent || "";
 
-      // 🔥 ambil video ID dari <yt:videoId>
       let videoId = entry.querySelector("yt\\:videoId")?.textContent;
-
-      // fallback kalau tidak ada
-      if (!videoId) {
-        const link = entry.querySelector("link")?.getAttribute("href") || "";
-        if (link.includes("watch?v=")) {
-          videoId = link.split("v=")[1];
-        }
-      }
 
       if (!videoId) return;
 
@@ -69,7 +58,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     initSlider();
 
   } catch (err) {
-    console.error("ERROR RSS:", err);
+    console.error("ERROR:", err);
   }
 
   function initSlider() {
