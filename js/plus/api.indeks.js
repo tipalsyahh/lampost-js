@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const categoryMap = {};
     const mediaMap = {};
     const editorCache = {};
-    const editorMap = {}; // ✅ TAMBAHAN
+    const editorList = {}; // ✅ simpan semua editor unik
 
     function formatTanggal(date) {
         const d = new Date(date);
@@ -48,27 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             filterCategory.innerHTML = html;
-
-        } catch (e) {}
-    }
-
-    // ✅ TAMBAHAN: LOAD EDITOR
-    async function loadEditor() {
-        try {
-
-            const res = await fetch("https://lampost.co/wp-json/wp/v2/users?per_page=100");
-            const data = await res.json();
-
-            let html = '<option value="">Semua Editor</option>';
-
-            data.forEach(user => {
-                editorMap[user.id] = user.name;
-                html += `<option value="${user.id}">${user.name}</option>`;
-            });
-
-            if (filterEditor) {
-                filterEditor.innerHTML = html;
-            }
 
         } catch (e) {}
     }
@@ -117,14 +96,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (res.ok) {
                     const data = await res.json();
                     const name = data?.[0]?.name || "Redaksi";
+
                     editorCache[termLink] = name;
+
+                    // ✅ simpan untuk dropdown
+                    editorList[name] = name;
 
                     document.querySelectorAll(`[data-editor="${termLink}"]`)
                         .forEach(el => el.textContent = `By ${name}`);
+
+                    // ✅ isi dropdown editor
+                    buildEditorDropdown();
+
                 }
             } catch (e) {}
 
         });
+    }
+
+    // ✅ TAMBAHAN
+    function buildEditorDropdown() {
+        if (!filterEditor) return;
+
+        let html = '<option value="">Semua Editor</option>';
+
+        Object.keys(editorList).forEach(name => {
+            html += `<option value="${name}">${name}</option>`;
+        });
+
+        filterEditor.innerHTML = html;
     }
 
     function getMainCategory(post) {
@@ -167,17 +167,43 @@ document.addEventListener("DOMContentLoaded", () => {
             url += `&categories=${filterCategory.value}`;
         }
 
-        // ✅ TAMBAHAN FILTER EDITOR
-        if (filterEditor && filterEditor.value) {
-            url += `&author=${filterEditor.value}`;
-        }
-
         url = buildDateQuery(url);
 
         try {
 
             const res = await fetch(url);
-            const posts = await res.json();
+            let posts = await res.json();
+
+            // ✅ FILTER EDITOR DI SINI (IMPORTANT)
+            if (filterEditor && filterEditor.value) {
+
+                const selectedEditor = filterEditor.value;
+
+                const filtered = [];
+
+                for (const post of posts) {
+
+                    const termLink = post._links?.['wp:term']?.[2]?.href;
+                    if (!termLink) continue;
+
+                    let name = editorCache[termLink];
+
+                    if (!name) {
+                        try {
+                            const r = await fetch(termLink);
+                            const d = await r.json();
+                            name = d?.[0]?.name || "Redaksi";
+                            editorCache[termLink] = name;
+                        } catch (e) {}
+                    }
+
+                    if (name === selectedEditor) {
+                        filtered.push(post);
+                    }
+                }
+
+                posts = filtered;
+            }
 
             if (!posts.length) {
 
@@ -251,7 +277,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     (async () => {
         await loadCategory();
-        await loadEditor(); // ✅ TAMBAHAN
         loadPosts();
     })();
 
