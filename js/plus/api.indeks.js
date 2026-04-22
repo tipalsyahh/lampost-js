@@ -14,12 +14,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterCategory = document.getElementById("filterCategory");
     const filterDate = document.getElementById("filterDate");
 
+    // ✅ TAMBAHAN
+    const filterEditor = document.getElementById("filterEditor");
+
     const PER_PAGE = 15;
     let page = 1;
 
     const categoryMap = {};
     const mediaMap = {};
     const editorCache = {};
+    const editorMap = {}; // ✅ TAMBAHAN
 
     function formatTanggal(date) {
         const d = new Date(date);
@@ -44,6 +48,27 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             filterCategory.innerHTML = html;
+
+        } catch (e) {}
+    }
+
+    // ✅ TAMBAHAN: LOAD EDITOR
+    async function loadEditor() {
+        try {
+
+            const res = await fetch("https://lampost.co/wp-json/wp/v2/users?per_page=100");
+            const data = await res.json();
+
+            let html = '<option value="">Semua Editor</option>';
+
+            data.forEach(user => {
+                editorMap[user.id] = user.name;
+                html += `<option value="${user.id}">${user.name}</option>`;
+            });
+
+            if (filterEditor) {
+                filterEditor.innerHTML = html;
+            }
 
         } catch (e) {}
     }
@@ -102,7 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 🔥 FIX: fungsi ambil kategori utama
     function getMainCategory(post) {
 
         if (!post.categories || !post.categories.length) {
@@ -115,7 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const cat = categoryMap[id];
             if (!cat) return;
 
-            // prioritaskan sub kategori
             if (cat.parent !== 0) {
                 selected = cat;
             }
@@ -130,7 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function loadPosts(reset = false) {
 
-        // 🔥 FIX: cegah jalan sebelum kategori siap
         if (Object.keys(categoryMap).length === 0) return;
 
         if (reset) {
@@ -143,6 +165,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (filterCategory.value) {
             url += `&categories=${filterCategory.value}`;
+        }
+
+        // ✅ TAMBAHAN FILTER EDITOR
+        if (filterEditor && filterEditor.value) {
+            url += `&author=${filterEditor.value}`;
         }
 
         url = buildDateQuery(url);
@@ -172,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const title = post.title.rendered;
                 const date = formatTanggal(post.date);
 
-                // 🔥 FIX DI SINI
                 const catData = getMainCategory(post);
 
                 const catName = catData.name;
@@ -223,9 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
         loadPosts();
     });
 
-    // 🔥 FIX: tunggu kategori dulu baru load post
     (async () => {
         await loadCategory();
+        await loadEditor(); // ✅ TAMBAHAN
         loadPosts();
     })();
 
