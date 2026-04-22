@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterCategory = document.getElementById("filterCategory");
     const filterDate = document.getElementById("filterDate");
 
-    // ✅ TAMBAHAN
+    // ✅ FIX
     const filterEditor = document.getElementById("filterEditor");
 
     const PER_PAGE = 15;
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const categoryMap = {};
     const mediaMap = {};
     const editorCache = {};
-    const editorList = {}; // ✅ simpan semua editor unik
+    const editorMap = {}; // ✅ FIX
 
     function formatTanggal(date) {
         const d = new Date(date);
@@ -48,6 +48,26 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             filterCategory.innerHTML = html;
+
+        } catch (e) {}
+    }
+
+    // ✅ FIX TOTAL: ambil semua editor dari API
+    async function loadEditors() {
+        try {
+            const res = await fetch("https://lampost.co/wp-json/wp/v2/coauthors?per_page=100");
+            const data = await res.json();
+
+            let html = '<option value="">Semua Editor</option>';
+
+            data.forEach(editor => {
+                editorMap[editor.id] = editor.name;
+                html += `<option value="${editor.id}">${editor.name}</option>`;
+            });
+
+            if (filterEditor) {
+                filterEditor.innerHTML = html;
+            }
 
         } catch (e) {}
     }
@@ -99,32 +119,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     editorCache[termLink] = name;
 
-                    // ✅ simpan untuk dropdown
-                    editorList[name] = name;
-
                     document.querySelectorAll(`[data-editor="${termLink}"]`)
                         .forEach(el => el.textContent = `By ${name}`);
-
-                    // ✅ isi dropdown editor
-                    buildEditorDropdown();
-
                 }
             } catch (e) {}
 
         });
-    }
-
-    // ✅ TAMBAHAN
-    function buildEditorDropdown() {
-        if (!filterEditor) return;
-
-        let html = '<option value="">Semua Editor</option>';
-
-        Object.keys(editorList).forEach(name => {
-            html += `<option value="${name}">${name}</option>`;
-        });
-
-        filterEditor.innerHTML = html;
     }
 
     function getMainCategory(post) {
@@ -174,10 +174,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(url);
             let posts = await res.json();
 
-            // ✅ FILTER EDITOR DI SINI (IMPORTANT)
+            // ✅ FIX FILTER EDITOR (coauthors)
             if (filterEditor && filterEditor.value) {
 
-                const selectedEditor = filterEditor.value;
+                const selectedEditorId = filterEditor.value;
 
                 const filtered = [];
 
@@ -186,18 +186,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     const termLink = post._links?.['wp:term']?.[2]?.href;
                     if (!termLink) continue;
 
-                    let name = editorCache[termLink];
+                    let data = editorCache[termLink];
 
-                    if (!name) {
+                    if (!data) {
                         try {
                             const r = await fetch(termLink);
                             const d = await r.json();
-                            name = d?.[0]?.name || "Redaksi";
-                            editorCache[termLink] = name;
+                            data = d?.[0] || {};
+                            editorCache[termLink] = data;
                         } catch (e) {}
                     }
 
-                    if (name === selectedEditor) {
+                    if (data?.id == selectedEditorId) {
                         filtered.push(post);
                     }
                 }
@@ -277,6 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     (async () => {
         await loadCategory();
+        await loadEditors(); // ✅ FIX
         loadPosts();
     })();
 
