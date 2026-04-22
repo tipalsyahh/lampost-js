@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".info");
     if (!container) return;
 
+    // ✅ indikator jumlah
     container.insertAdjacentHTML(
         "beforebegin",
         '<div id="postCount" style="padding:10px;font-size:14px;">Memuat...</div>'
@@ -27,11 +28,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const mediaMap = {};
     const editorCache = {};
 
+    // ✅ state filter
     let currentFilter = {
         category: "",
         editor: "",
         date: ""
     };
+
+    // ✅ state jumlah
+    let totalPosts = 0;
+    let shownPosts = 0;
 
     function formatTanggal(date) {
         const d = new Date(date);
@@ -134,7 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
 
                     } else {
-                        // ✅ tampil semua editor kalau tidak filter
                         name = data.map(e => e.name).join(", ");
                     }
                 }
@@ -150,7 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (res.ok) {
                     const data = await res.json();
 
-                    // ✅ simpan full data
                     editorCache[termLink] = data;
 
                     let name = "Redaksi";
@@ -168,7 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             }
 
                         } else {
-                            // ✅ tampil semua editor kalau tidak filter
                             name = data.map(e => e.name).join(", ");
                         }
                     }
@@ -205,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return selected || { name: "Berita", slug: "berita", parent: 0 };
     }
 
-    // ✅ VALIDASI EDITOR (FIX UTAMA)
     async function validateEditor(post, selectedEditorId) {
 
         const termLink = post._links?.['wp:term']?.[2]?.href;
@@ -232,6 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
             container.innerHTML = "";
             page = 1;
             loadMoreBtn.style.display = "block";
+            shownPosts = 0; // ✅ reset counter
         }
 
         let url = `https://lampost.co/wp-json/wp/v2/posts?per_page=${PER_PAGE}&page=${page}`;
@@ -249,16 +252,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         url = buildDateQuery(url);
 
-        console.log("FETCH URL:", url);
-
         try {
 
             const res = await fetch(url);
+
+            // ✅ ambil total
+            const total = res.headers.get('X-WP-Total');
+            if (total) totalPosts = parseInt(total);
+
             let posts = await res.json();
 
-            // ✅ VALIDASI ULANG (BIAR AKURAT)
             if (currentFilter.editor) {
-
                 const validPosts = [];
 
                 for (const post of posts) {
@@ -323,6 +327,14 @@ document.addEventListener("DOMContentLoaded", () => {
             container.insertAdjacentHTML("beforeend", html);
 
             fetchEditorsAsync(posts);
+
+            // ✅ update jumlah
+            shownPosts += posts.length;
+
+            const countEl = document.getElementById("postCount");
+            if (countEl) {
+                countEl.innerHTML = `<b>${shownPosts}</b> / ${totalPosts} berita`;
+            }
 
             page++;
 
