@@ -10,29 +10,48 @@ document.addEventListener("DOMContentLoaded", async () => {
   const RSS_URL = `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`;
 
   try {
-    const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`);
-    const data = await res.json();
 
-    const items = data.items;
+    // 🔥 fetch RSS langsung
+    const res = await fetch(RSS_URL);
+
+    if (!res.ok) {
+      console.error("RSS gagal:", res.status);
+      return;
+    }
+
+    const text = await res.text();
+
+    // 🔥 parse XML
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "text/xml");
+
+    const entries = xml.querySelectorAll("entry");
+
+    if (!entries.length) {
+      console.error("Tidak ada video ditemukan");
+      return;
+    }
 
     let output = "";
 
-    items.forEach((item, i) => {
+    entries.forEach((entry, i) => {
+
       if (i >= 10) return;
 
-      const title = item.title;
+      const title = entry.querySelector("title")?.textContent || "";
 
-      let videoId = "";
+      // 🔥 ambil video ID dari <yt:videoId>
+      let videoId = entry.querySelector("yt\\:videoId")?.textContent;
 
-      if (item.link.includes("watch?v=")) {
-        videoId = item.link.split("v=")[1];
-      } else if (item.link.includes("shorts/")) {
-        videoId = item.link.split("shorts/")[1];
+      // fallback kalau tidak ada
+      if (!videoId) {
+        const link = entry.querySelector("link")?.getAttribute("href") || "";
+        if (link.includes("watch?v=")) {
+          videoId = link.split("v=")[1];
+        }
       }
 
-      if (videoId.includes("&")) {
-        videoId = videoId.split("&")[0];
-      }
+      if (!videoId) return;
 
       output += `
         <a href="https://lampost.co/play?v=${videoId}" class="video-card">
@@ -50,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     initSlider();
 
   } catch (err) {
-    console.error(err);
+    console.error("ERROR RSS:", err);
   }
 
   function initSlider() {
