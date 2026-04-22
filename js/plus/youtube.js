@@ -6,7 +6,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (!track) return;
 
-  // 🔥 pakai proxy sendiri
   const RSS_URL = "https://lampost.co/youtube.php";
 
   try {
@@ -23,22 +22,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, "text/xml");
 
-    const entries = xml.querySelectorAll("entry");
+    const entries = xml.getElementsByTagName("entry");
 
     if (!entries.length) {
-      console.error("Tidak ada video");
+      console.error("Tidak ada video ditemukan");
       return;
     }
 
     let output = "";
 
-    entries.forEach((entry, i) => {
+    Array.from(entries).forEach((entry, i) => {
 
       if (i >= 10) return;
 
-      const title = entry.querySelector("title")?.textContent || "";
+      const title =
+        entry.getElementsByTagName("title")[0]?.textContent || "";
 
-      let videoId = entry.querySelector("yt\\:videoId")?.textContent;
+      // 🔥 FIX UTAMA DI SINI
+      const videoId =
+        entry.getElementsByTagName("yt:videoId")[0]?.textContent;
 
       if (!videoId) return;
 
