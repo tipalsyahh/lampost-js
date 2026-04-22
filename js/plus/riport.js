@@ -4,6 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) return;
 
     container.insertAdjacentHTML(
+        "beforebegin",
+        '<div id="postCount" style="padding:10px;font-size:14px;">Memuat...</div>'
+    );
+
+    container.insertAdjacentHTML(
         "afterend",
         '<center><button id="loadMore" class="load-more">LOAD MORE</button></center>'
     );
