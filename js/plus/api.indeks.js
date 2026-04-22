@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             filterCategory.innerHTML = html;
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     // ✅ FIX TOTAL: ambil semua editor dari API
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 filterEditor.innerHTML = html;
             }
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function buildDateQuery(url) {
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await res.json();
                     mediaMap[id] = data.source_url;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }));
     }
 
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.querySelectorAll(`[data-editor="${termLink}"]`)
                         .forEach(el => el.textContent = `By ${name}`);
                 }
-            } catch (e) {}
+            } catch (e) { }
 
         });
     }
@@ -174,10 +174,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch(url);
             let posts = await res.json();
 
-            // ✅ FIX FILTER EDITOR (coauthors)
             if (filterEditor && filterEditor.value) {
 
-                const selectedEditorId = filterEditor.value;
+                const selectedEditorId = String(filterEditor.value);
 
                 const filtered = [];
 
@@ -186,18 +185,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     const termLink = post._links?.['wp:term']?.[2]?.href;
                     if (!termLink) continue;
 
-                    let data = editorCache[termLink];
+                    let editorData = editorCache[termLink];
 
-                    if (!data) {
+                    if (!editorData) {
                         try {
                             const r = await fetch(termLink);
                             const d = await r.json();
-                            data = d?.[0] || {};
-                            editorCache[termLink] = data;
-                        } catch (e) {}
+
+                            // ✅ FIX: pastikan array & isi
+                            if (Array.isArray(d) && d.length > 0) {
+                                editorData = d[0];
+                                editorCache[termLink] = editorData;
+                            } else {
+                                continue; // skip kalau kosong
+                            }
+
+                        } catch (e) {
+                            continue;
+                        }
                     }
 
-                    if (data?.id == selectedEditorId) {
+                    // ✅ FIX: pastikan string compare
+                    if (String(editorData.id) === selectedEditorId) {
                         filtered.push(post);
                     }
                 }
@@ -264,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             page++;
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     filterBtn.addEventListener("click", () => {
