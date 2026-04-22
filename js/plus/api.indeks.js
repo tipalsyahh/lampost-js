@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             filterCategory.innerHTML = html;
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     async function loadEditors() {
@@ -70,7 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 filterEditor.innerHTML = html;
             }
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function buildDateQuery(url) {
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await res.json();
                     mediaMap[id] = data.source_url;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }));
     }
 
@@ -110,19 +110,68 @@ document.addEventListener("DOMContentLoaded", () => {
             const termLink = post._links?.['wp:term']?.[2]?.href;
             if (!termLink) return;
 
-            if (editorCache[termLink]) return;
+            if (editorCache[termLink]) {
+
+                const data = editorCache[termLink];
+
+                let name = "Redaksi";
+
+                if (Array.isArray(data) && data.length > 0) {
+
+                    if (currentFilter.editor) {
+
+                        const found = data.find(e => String(e.id) === String(currentFilter.editor));
+
+                        if (found) {
+                            name = found.name;
+                        } else {
+                            name = data.map(e => e.name).join(", ");
+                        }
+
+                    } else {
+                        // ✅ tampil semua editor kalau tidak filter
+                        name = data.map(e => e.name).join(", ");
+                    }
+                }
+
+                document.querySelectorAll(`[data-editor="${termLink}"]`)
+                    .forEach(el => el.textContent = `By ${name}`);
+
+                return;
+            }
 
             try {
                 const res = await fetch(termLink);
                 if (res.ok) {
                     const data = await res.json();
-                    const name = data?.[0]?.name || "Redaksi";
-                    editorCache[termLink] = name;
+
+                    // ✅ simpan full data
+                    editorCache[termLink] = data;
+
+                    let name = "Redaksi";
+
+                    if (Array.isArray(data) && data.length > 0) {
+
+                        if (currentFilter.editor) {
+
+                            const found = data.find(e => String(e.id) === String(currentFilter.editor));
+
+                            if (found) {
+                                name = found.name;
+                            } else {
+                                name = data.map(e => e.name).join(", ");
+                            }
+
+                        } else {
+                            // ✅ tampil semua editor kalau tidak filter
+                            name = data.map(e => e.name).join(", ");
+                        }
+                    }
 
                     document.querySelectorAll(`[data-editor="${termLink}"]`)
                         .forEach(el => el.textContent = `By ${name}`);
                 }
-            } catch (e) {}
+            } catch (e) { }
 
         });
     }
@@ -165,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return data.some(e => String(e.id) === String(selectedEditorId));
             }
 
-        } catch (e) {}
+        } catch (e) { }
 
         return false;
     }
@@ -272,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             page++;
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     filterBtn.addEventListener("click", () => {
