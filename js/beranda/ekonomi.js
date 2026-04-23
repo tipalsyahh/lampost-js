@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const termCache = {};
 
+  const FALLBACK_IMG = 'https://lampost.co/image/ai.jpeg';
+
   /* ===============================
      FORMAT TANGGAL
   =============================== */
@@ -41,26 +43,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ===============================
-     AMBIL GAMBAR
+     🔥 AMBIL GAMBAR HD
   =============================== */
   async function getMedia(mediaId) {
-    if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
+    if (!mediaId) return FALLBACK_IMG;
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
     try {
       const res = await fetch(
         `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
       );
+
       if (res.ok) {
         const data = await res.json();
+
+        // 🔥 PRIORITAS HD
         mediaCache[mediaId] =
-          data.media_details?.sizes?.medium?.source_url ||
-          data.source_url ||
-          'https://lampost.co/image/ai.jpeg';
+          data?.media_details?.sizes?.full?.source_url ||   // paling HD
+          data?.media_details?.sizes?.large?.source_url ||
+          data?.media_details?.sizes?.medium_large?.source_url ||
+          data?.source_url ||
+          FALLBACK_IMG;
       }
+
     } catch (_) {}
 
-    return mediaCache[mediaId] || 'https://lampost.co/image/ai.jpeg';
+    return mediaCache[mediaId] || FALLBACK_IMG;
   }
 
   /* ===============================
@@ -86,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ===============================
-     RENDER CEPAT (TANPA BLOCKING)
+     RENDER CEPAT
   =============================== */
   function renderFast(post) {
     const judul = post.title.rendered;
@@ -100,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return `
       <a href="#" class="item-info" id="${id}">
-        <img src="https://lampost.co/image/ai.jpeg" alt="${judul}" class="img-microweb-terbaru" loading="lazy">
+        <img src="${FALLBACK_IMG}" alt="${judul}" class="img-microweb-terbaru" loading="lazy">
         <div class="berita-detail">
           <p class="judul-ekonomi">${judul}</p>
           <p class="kategori">...</p>
@@ -115,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ===============================
-     LENGKAPI DATA (ASYNC)
+     LENGKAPI DATA
   =============================== */
   async function enrich(post) {
     const el = document.getElementById(`ekonomi-${post.id}`);
@@ -123,13 +131,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const { name: kategori, slug } =
       await getCategory(post.categories?.[0]);
+
     const editor = await getEditor(post);
     const gambar = await getMedia(post.featured_media);
+
+    const imgEl = el.querySelector('img');
+
+    // 🔥 optimasi
+    imgEl.setAttribute('decoding', 'async');
+
+    // 🔥 fallback kalau error
+    imgEl.onerror = () => {
+      imgEl.src = FALLBACK_IMG;
+    };
+
+    imgEl.src = gambar;
 
     el.href = `/${slug}/${post.slug}`;
     el.querySelector('.kategori').textContent = kategori;
     el.querySelector('.editor').textContent = `Oleh ${editor}`;
-    el.querySelector('img').src = gambar;
   }
 
   /* ===============================
@@ -137,11 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
   =============================== */
   async function init() {
     try {
-      // ambil ID kategori ekonomi
       const catRes = await fetch(
         'https://lampost.co/wp-json/wp/v2/categories?slug=ekonomi-dan-bisnis'
       );
+
       const catData = await catRes.json();
+
       if (!catData[0]) {
         container.innerHTML = 'Kategori tidak ditemukan';
         return;
@@ -149,19 +170,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const ekonomiID = catData[0].id;
 
-      // ambil post
       const res = await fetch(
         `${API_BASE}&categories=${ekonomiID}&per_page=${PER_PAGE}`
       );
+
       if (!res.ok) throw new Error();
 
       const posts = await res.json();
       if (!posts.length) return;
 
-      // 🔥 render instan
       container.innerHTML = posts.map(renderFast).join('');
 
-      // ⏳ lengkapi data paralel
       posts.forEach(post => enrich(post));
 
     } catch (err) {
