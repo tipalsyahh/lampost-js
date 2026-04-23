@@ -9,10 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const categoryCache = {};
 
   // ======================
-  // GET GAMBAR
+  // GET GAMBAR (HD)
   // ======================
   async function getMedia(mediaId) {
-    if (!mediaId) return 'image/ai.jpg';
+    if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
     try {
@@ -22,33 +22,36 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       return (mediaCache[mediaId] =
-        data.media_details?.sizes?.medium?.source_url ||
-        data.source_url ||
-        'image/ai.jpg'
+        data?.media_details?.sizes?.full?.source_url ||
+        data?.media_details?.sizes?.large?.source_url ||
+        data?.media_details?.sizes?.medium_large?.source_url ||
+        data?.source_url ||
+        'https://lampost.co/image/ai.jpeg'
       );
     } catch {
-      return 'image/ai.jpg';
+      return 'https://lampost.co/image/ai.jpeg';
     }
   }
 
   // ======================
-  // GET KATEGORI
+  // GET KATEGORI NAMA
   // ======================
   async function getCategoryName(catIds) {
-
     if (!catIds || !catIds.length) return 'Umum';
 
-    const id = catIds[0];
-
-    if (categoryCache[id]) return categoryCache[id];
-
     try {
+      const ids = catIds.join(',');
       const res = await fetch(
-        `https://lampost.co/wp-json/wp/v2/categories/${id}`
+        `https://lampost.co/wp-json/wp/v2/categories?include=${ids}`
       );
       const data = await res.json();
 
-      return (categoryCache[id] = data.name || 'Umum');
+      if (!data.length) return 'Umum';
+
+      const child = data.find(c => c.parent !== 0);
+      const selected = child || data[data.length - 1];
+
+      return selected.name || 'Umum';
 
     } catch {
       return 'Umum';
@@ -56,7 +59,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ======================
-  // HITUNG SKOR TRENDING
+  // 🔥 GET KATEGORI SLUG (UNTUK URL)
+  // ======================
+  async function getCategorySlug(catIds) {
+    if (!catIds || !catIds.length) return 'berita';
+
+    try {
+      const ids = catIds.join(',');
+      const res = await fetch(
+        `https://lampost.co/wp-json/wp/v2/categories?include=${ids}`
+      );
+      const data = await res.json();
+
+      if (!data.length) return 'berita';
+
+      const child = data.find(c => c.parent !== 0);
+      const selected = child || data[data.length - 1];
+
+      return selected.slug || 'berita';
+
+    } catch {
+      return 'berita';
+    }
+  }
+
+  // ======================
+  // HITUNG TRENDING
   // ======================
   function getTrendingScore(post) {
 
@@ -65,13 +93,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const hoursDiff = (now - postDate) / (1000 * 60 * 60);
 
-    // semakin baru → skor tinggi
     const freshness = Math.max(0, 100 - hoursDiff);
-
-    // komentar (kalau ada)
     const comments = post.comment_count || 0;
 
-    // formula gabungan
     return freshness + (comments * 5);
   }
 
@@ -93,23 +117,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // 🔥 SORTING TRENDING
       posts.sort((a, b) => getTrendingScore(b) - getTrendingScore(a));
-
-      // ambil 6 terbaik
       posts = posts.slice(0, 6);
 
       const htmlArr = [];
 
-      posts.forEach((post, index) => {
+      posts.forEach((post) => {
 
         const id = `alink-${post.id}`;
         const judul = post.title.rendered;
-        const slug = post.slug;
 
         htmlArr.push(`
-          <a href="/tajuk-lampung-post/${slug}" class="alink-item" id="${id}">
-            <img src="image/ai.jpg" class="alink-img" loading="lazy">
+          <a href="#" class="alink-item" id="${id}">
+            <img src="https://lampost.co/image/ai.jpeg" class="alink-img" loading="lazy">
             <div class="alink-content">
               <p class="alink-title">${judul}</p>
               <p class="alink-category">Loading...</p>
@@ -121,11 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const img = await getMedia(post.featured_media);
           const kategori = await getCategoryName(post.categories);
+          const kategoriSlug = await getCategorySlug(post.categories);
 
           const el = document.getElementById(id);
           if (!el) return;
 
-          el.querySelector('img').src = img;
+          const imgEl = el.querySelector('img');
+
+          // fallback aman
+          imgEl.onerror = () => {
+            imgEl.src = 'https://lampost.co/image/ai.jpeg';
+          };
+
+          imgEl.src = img;
+
+          // 🔥 FIX URL DINAMIS
+          el.href = `/${kategoriSlug}/${post.slug}`;
+
           el.querySelector('.alink-category').textContent = kategori;
 
         })();
