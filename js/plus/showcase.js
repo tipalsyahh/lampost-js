@@ -45,13 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return [parent, current];
     }
 
-    // 🔥 convert ke webp
-    function toWebp(url) {
-        if (!url) return FALLBACK_IMG;
-        if (url.includes('.webp')) return url;
-        return url.replace(/\.(jpg|jpeg|png)/i, '.webp');
-    }
-
+    // ✅ FIX: ambil gambar HD TANPA WEBP
     function getMedia(mediaId) {
         if (!mediaId) return Promise.resolve(FALLBACK_IMG);
         if (mediaCache[mediaId]) return Promise.resolve(mediaCache[mediaId]);
@@ -60,14 +54,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.ok ? res.json() : null)
             .then(data => {
 
-                let url =
-                    data?.media_details?.sizes?.large?.source_url || // HD
-                    data?.media_details?.sizes?.full?.source_url ||
+                const url =
+                    data?.media_details?.sizes?.full?.source_url ||   // HD utama
+                    data?.media_details?.sizes?.large?.source_url ||
                     data?.media_details?.sizes?.medium_large?.source_url ||
                     data?.source_url ||
                     FALLBACK_IMG;
-
-                url = toWebp(url);
 
                 mediaCache[mediaId] = url;
                 return url;
@@ -95,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         <div class="card-header">Populer</div>
 
-        <!-- ⚠️ tetap pakai fallback awal -->
+        <!-- ❗ TIDAK DIUBAH (fallback tetap) -->
         <img src="${FALLBACK_IMG}" class="card-img">
 
         <div class="card-body">
@@ -128,19 +120,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const imgEl = el.querySelector('.card-img');
 
-        // 🔥 optimasi img
+        // ✅ optimasi tanpa ubah HTML awal
         imgEl.setAttribute('loading', 'lazy');
         imgEl.setAttribute('decoding', 'async');
 
-        // 🔥 handle error fallback
+        // ✅ fallback jika gagal load
         imgEl.onerror = () => {
             imgEl.src = FALLBACK_IMG;
         };
 
-        // 🔥 ambil HD + webp
+        // ✅ ambil HD image
         const gambar = await getMedia(post.featured_media);
 
-        // 🔥 swap gambar
+        // ✅ set gambar
         imgEl.src = gambar;
 
         el.querySelector('.card-header').textContent = kategoriName;
