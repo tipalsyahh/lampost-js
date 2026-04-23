@@ -111,7 +111,7 @@ const SIDEBAR = `
                     <ul class="dropdown-sidebar">
                         <li><a href="https://lampost.co/microweb/teknokrat">Universitas Teknokrat Indonesia</a></li>
                         <li><a href="https://lampost.co/microweb/uinlampung">UIN Lampung</a></li>
-                        <li><a href="https://lampost.co/microweb/ubl">UBL</a></li>
+                        <li><a href="https://lampost.co/microweb/bankindonesialampung">Bank Indonesia Lampung</a></li>
                         <li><a href="https://lampost.co/microweb/stiab">STIAB</a></li>
                     </ul>
                 </li>
