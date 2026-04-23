@@ -35,14 +35,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mediaCache = {};
   const editorCache = {};
 
-  // 🔥 TAMBAHAN (TIDAK MENGUBAH LOGIKA LAMA)
   let kategoriSlug, subKategori, currentSlug;
 
   if(window.location.search){
     const query = decodeURIComponent(window.location.search.replace('?', ''));
     const parts = query.split('/').filter(Boolean);
 
-    // ✅ SUPPORT SUB KATEGORI
     if (parts.length >= 3) {
       kategoriSlug = parts[0];
       subKategori = parts[1];
@@ -55,7 +53,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }else{
     const path = window.location.pathname.replace('.html','').split('/').filter(Boolean);
 
-    // ✅ SUPPORT SUB KATEGORI
     if (path.length >= 3) {
       kategoriSlug = path[0];
       subKategori = path[1];
@@ -90,6 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // 🔥 FIX HD IMAGE (TANPA UBAH LOGIKA)
   async function getMedia(mediaId) {
     if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
     if (mediaCache[mediaId]) return mediaCache[mediaId];
@@ -101,11 +99,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!res.ok) throw 0;
 
       const data = await res.json();
+
       return (mediaCache[mediaId] =
-        data.media_details?.sizes?.medium?.source_url ||
-        data.source_url ||
+        data?.media_details?.sizes?.full?.source_url ||   // HD utama
+        data?.media_details?.sizes?.large?.source_url ||
+        data?.media_details?.sizes?.medium_large?.source_url ||
+        data?.source_url ||
         'https://lampost.co/image/ai.jpeg'
       );
+
     } catch {
       return 'https://lampost.co/image/ai.jpeg';
     }
@@ -181,10 +183,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           `${String(d.getMonth() + 1).padStart(2, '0')}/` +
           `${d.getFullYear()}`;
 
-        // 🔥 FIX: URL TETAP DARI PARAMETER (BUKAN WP)
         let finalUrl = `/${kategoriSlug}/${slug}`;
 
-        // 🔥 TAMBAHAN SUB KATEGORI (DARI URL)
         if (subKategori) {
           finalUrl = `/${kategoriSlug}/${subKategori}/${slug}`;
         }
@@ -223,6 +223,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const img = el.querySelector('.img-microweb');
         const editorEl = el.querySelector('.editor');
+
+        // 🔥 tambahan aman (tidak ubah logic)
+        img.setAttribute('decoding', 'async');
+
+        img.onerror = () => {
+          img.src = 'https://lampost.co/image/ai.jpeg';
+        };
 
         getMedia(post.featured_media).then(src => {
           img.src = src;
