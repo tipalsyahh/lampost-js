@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const catCache = {};
     const mediaCache = {};
 
+    const FALLBACK_IMG = 'https://lampost.co/image/ai.jpeg';
+
     const formatTanggal = dateString =>
         new Date(dateString).toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -31,7 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ✅ TAMBAHAN: ambil parent + child
     async function getCategoryHierarchy(catId) {
         const current = await getCategory(catId);
 
@@ -44,22 +45,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return [parent, current];
     }
 
+    // 🔥 convert ke webp
+    function toWebp(url) {
+        if (!url) return FALLBACK_IMG;
+        if (url.includes('.webp')) return url;
+        return url.replace(/\.(jpg|jpeg|png)/i, '.webp');
+    }
+
     function getMedia(mediaId) {
-        if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
-        if (mediaCache[mediaId]) return mediaCache[mediaId];
+        if (!mediaId) return Promise.resolve(FALLBACK_IMG);
+        if (mediaCache[mediaId]) return Promise.resolve(mediaCache[mediaId]);
 
         return fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`)
             .then(res => res.ok ? res.json() : null)
             .then(data => {
-                const url =
-                    data?.media_details?.sizes?.medium?.source_url ||
+
+                let url =
+                    data?.media_details?.sizes?.large?.source_url || // HD
+                    data?.media_details?.sizes?.full?.source_url ||
+                    data?.media_details?.sizes?.medium_large?.source_url ||
                     data?.source_url ||
-                    'https://lampost.co/image/ai.jpeg';
+                    FALLBACK_IMG;
+
+                url = toWebp(url);
 
                 mediaCache[mediaId] = url;
                 return url;
             })
-            .catch(() => 'https://lampost.co/image/ai.jpeg');
+            .catch(() => FALLBACK_IMG);
     }
 
     function shuffle(array) {
@@ -82,7 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         <div class="card-header">Populer</div>
 
-        <img src="https://lampost.co/image/ai.jpeg" class="card-img">
+        <!-- ⚠️ tetap pakai fallback awal -->
+        <img src="${FALLBACK_IMG}" class="card-img">
 
         <div class="card-body">
           <h3 class="card-title">${judul}</h3>
@@ -112,10 +126,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const slugPath = kategoriHierarchy.map(c => c.slug).join('/');
         const kategoriName = kategoriHierarchy[kategoriHierarchy.length - 1].name;
 
+        const imgEl = el.querySelector('.card-img');
+
+        // 🔥 optimasi img
+        imgEl.setAttribute('loading', 'lazy');
+        imgEl.setAttribute('decoding', 'async');
+
+        // 🔥 handle error fallback
+        imgEl.onerror = () => {
+            imgEl.src = FALLBACK_IMG;
+        };
+
+        // 🔥 ambil HD + webp
         const gambar = await getMedia(post.featured_media);
 
+        // 🔥 swap gambar
+        imgEl.src = gambar;
+
         el.querySelector('.card-header').textContent = kategoriName;
-        el.querySelector('.card-img').src = gambar;
 
         let relatedHTML = '';
 
@@ -123,7 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(API_URL);
             const related = await res.json();
 
-            // ✅ ambil kategori masing-masing related post
             const relatedItems = await Promise.all(
                 shuffle(related)
                     .filter(r => r.id !== post.id)
@@ -155,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // ✅ link utama sudah pakai parent/child
         el.addEventListener('click', () => {
             window.location.href = `/${slugPath}/${post.slug}`;
         });
