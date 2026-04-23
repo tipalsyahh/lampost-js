@@ -75,7 +75,7 @@ const SIDEBAR = `
             <li id="link-mobile"><a href="https://lampost.co/kategori/breaking-news">Breaking-news</a></li>
             <li id="link-mobile"><a href="https://lampost.co/kategori/lampung">Lampung</a></li>
             <li id="link-mobile"><a href="https://lampost.co/kategori/teknologi">Teknologi</a></li>
-            <li class="has-sub"><a href="https://lampost.co/kategori/iklan-pengumuman">Iklan Pengumuman</a></li>
+            <li class="iklan-pengumuman"><a href="https://lampost.co/kategori/iklan-pengumuman">Iklan Pengumuman</a></li>
             <li><a href="https://lampost.co/indeks">Indeks</a></li>
         </ul>
     </nav>
