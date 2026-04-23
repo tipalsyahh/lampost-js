@@ -75,7 +75,7 @@ const SIDEBAR = `
             <li id="link-mobile"><a href="https://lampost.co/kategori/breaking-news">Breaking-news</a></li>
             <li id="link-mobile"><a href="https://lampost.co/kategori/lampung">Lampung</a></li>
             <li id="link-mobile"><a href="https://lampost.co/kategori/teknologi">Teknologi</a></li>
-            <li><a href="https://lampost.co/kategori/iklan-pengumuman">Iklan Pengumuman</a></li>
+            <li class="has-sub"><a href="https://lampost.co/kategori/iklan-pengumuman">Iklan Pengumuman</a></li>
             <li><a href="https://lampost.co/indeks">Indeks</a></li>
         </ul>
     </nav>
@@ -175,7 +175,7 @@ const SIDEBAR = `
                     <li><a href="https://lampost.co/kategori/lampung/pesisir-barat">Pesisir Barat</a></li>
                     </ul>
                 </li>
-                <li class="has-sub"><a href="https://lampost.co/kategori/iklan-pengumuman"><i class="bi bi-megaphone"></i> Iklan Pengumuman</a></li>
+                <li><a href="https://lampost.co/kategori/iklan-pengumuman"><i class="bi bi-megaphone"></i> Iklan Pengumuman</a></li>
             </ul>
         </div>
     </div>
