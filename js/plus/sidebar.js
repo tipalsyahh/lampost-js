@@ -38,6 +38,7 @@ const SIDEBAR = `
                     <li><a href="https://lampost.co/kategori/nuansa">Nuansa</a></li>
                     <li><a href="https://lampost.co/kategori/tajuk-lampung-post">Tajuk</a></li>
                     <li><a href="https://lampost.co/kategori/forum-guru">Forum Guru</a></li>
+                    <li><a href="https://lampost.co/kategori/otomotif">Otomotif</a></li>
                 </ul>
             </li>
             <li class="has-sub">
@@ -129,6 +130,7 @@ const SIDEBAR = `
                         <li><a href="https://lampost.co/kategori/nuansa">Nuansa</a></li>
                         <li><a href="https://lampost.co/kategori/tajuk-lampung-post">Tajuk</a></li>
                         <li><a href="https://lampost.co/kategori/forum-guru">Forum Guru</a></li>
+                        <li><a href="https://lampost.co/kategori/otomotif">Otomotif</a></li>
                     </ul>
                 </li>
                 <li class="menu-sidebar">
