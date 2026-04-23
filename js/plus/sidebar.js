@@ -175,7 +175,7 @@ const SIDEBAR = `
                     <li><a href="https://lampost.co/kategori/lampung/pesisir-barat">Pesisir Barat</a></li>
                     </ul>
                 </li>
-                <li><a href="https://lampost.co/kategori/iklan-pengumuman"><i class="bi bi-megaphone"></i> Iklan Pengumuman</a></li>
+                <li class="has-sub"><a href="https://lampost.co/kategori/iklan-pengumuman"><i class="bi bi-megaphone"></i> Iklan Pengumuman</a></li>
             </ul>
         </div>
     </div>
