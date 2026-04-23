@@ -8,10 +8,39 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const RSS_URL = "https://lampost.co/youtube.php";
 
+  // 🔥 FORMAT TANGGAL YOUTUBE
+  function formatTanggal(text) {
+    if (!text) return "";
+
+    const now = new Date();
+
+    const match = text.match(/(\d+)\s+(minute|hour|day|week|month|year)/);
+
+    if (!match) return text;
+
+    const value = parseInt(match[1]);
+    const unit = match[2];
+
+    if (unit === "minute") now.setMinutes(now.getMinutes() - value);
+    if (unit === "hour") now.setHours(now.getHours() - value);
+    if (unit === "day") now.setDate(now.getDate() - value);
+    if (unit === "week") now.setDate(now.getDate() - (value * 7));
+    if (unit === "month") now.setMonth(now.getMonth() - value);
+    if (unit === "year") now.setFullYear(now.getFullYear() - value);
+
+    return now.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
   async function loadVideos(retry = 0) {
     try {
 
-      const res = await fetch(RSS_URL + "?t=" + Date.now()); // 🔥 anti cache
+      const res = await fetch(RSS_URL + "?t=" + Date.now(), {
+        cache: "no-store"
+      });
 
       if (!res.ok) {
         throw new Error("RSS gagal: " + res.status);
@@ -26,15 +55,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       const parser = new DOMParser();
       const xml = parser.parseFromString(text, "text/xml");
 
-      // 🔥 cek error XML
       if (xml.querySelector("parsererror")) {
         throw new Error("XML rusak / tidak valid");
       }
 
-      // 🔥 FIX: pakai querySelectorAll
       let entries = xml.querySelectorAll("entry");
 
-      // 🔥 fallback kalau gagal
       if (!entries.length) {
         entries = xml.getElementsByTagName("entry");
       }
@@ -52,10 +78,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         const title =
           entry.querySelector("title")?.textContent || "";
 
-        // 🔥 FIX UTAMA (namespace aman)
         const videoId =
           entry.querySelector("yt\\:videoId")?.textContent ||
           entry.getElementsByTagName("yt:videoId")[0]?.textContent;
+
+        // 🔥 AMBIL TANGGAL
+        const published =
+          entry.querySelector("published")?.textContent || "";
+
+        const tanggal = formatTanggal(published);
 
         if (!videoId) return;
 
@@ -63,8 +94,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           <a href="https://lampost.co/play?v=${videoId}" class="video-card">
             <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
             <div class="play-center">▶</div>
+
             <div class="overlay">
               <h3>${title}</h3>
+              <span class="video-date">${tanggal}</span>
             </div>
           </a>
         `;
@@ -82,7 +115,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       console.error("ERROR:", err.message);
 
-      // 🔥 retry max 2x (ini solusi biar tidak random kosong)
       if (retry < 2) {
         console.log("Retry ke:", retry + 1);
         setTimeout(() => loadVideos(retry + 1), 1000);
