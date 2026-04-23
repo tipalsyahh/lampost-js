@@ -8,60 +8,90 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const RSS_URL = "https://lampost.co/youtube.php";
 
-  try {
+  async function loadVideos(retry = 0) {
+    try {
 
-    const res = await fetch(RSS_URL);
+      const res = await fetch(RSS_URL + "?t=" + Date.now()); // 🔥 anti cache
 
-    if (!res.ok) {
-      console.error("RSS gagal:", res.status);
-      return;
+      if (!res.ok) {
+        throw new Error("RSS gagal: " + res.status);
+      }
+
+      const text = await res.text();
+
+      if (!text || text.length < 50) {
+        throw new Error("XML kosong");
+      }
+
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(text, "text/xml");
+
+      // 🔥 cek error XML
+      if (xml.querySelector("parsererror")) {
+        throw new Error("XML rusak / tidak valid");
+      }
+
+      // 🔥 FIX: pakai querySelectorAll
+      let entries = xml.querySelectorAll("entry");
+
+      // 🔥 fallback kalau gagal
+      if (!entries.length) {
+        entries = xml.getElementsByTagName("entry");
+      }
+
+      if (!entries.length) {
+        throw new Error("Tidak ada video ditemukan");
+      }
+
+      let output = "";
+
+      Array.from(entries).forEach((entry, i) => {
+
+        if (i >= 10) return;
+
+        const title =
+          entry.querySelector("title")?.textContent || "";
+
+        // 🔥 FIX UTAMA (namespace aman)
+        const videoId =
+          entry.querySelector("yt\\:videoId")?.textContent ||
+          entry.getElementsByTagName("yt:videoId")[0]?.textContent;
+
+        if (!videoId) return;
+
+        output += `
+          <a href="https://lampost.co/play?v=${videoId}" class="video-card">
+            <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
+            <div class="play-center">▶</div>
+            <div class="overlay">
+              <h3>${title}</h3>
+            </div>
+          </a>
+        `;
+      });
+
+      if (!output) {
+        throw new Error("Video kosong setelah parsing");
+      }
+
+      track.innerHTML = output;
+
+      initSlider();
+
+    } catch (err) {
+
+      console.error("ERROR:", err.message);
+
+      // 🔥 retry max 2x (ini solusi biar tidak random kosong)
+      if (retry < 2) {
+        console.log("Retry ke:", retry + 1);
+        setTimeout(() => loadVideos(retry + 1), 1000);
+      }
+
     }
-
-    const text = await res.text();
-
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "text/xml");
-
-    const entries = xml.getElementsByTagName("entry");
-
-    if (!entries.length) {
-      console.error("Tidak ada video ditemukan");
-      return;
-    }
-
-    let output = "";
-
-    Array.from(entries).forEach((entry, i) => {
-
-      if (i >= 10) return;
-
-      const title =
-        entry.getElementsByTagName("title")[0]?.textContent || "";
-
-      // 🔥 FIX UTAMA DI SINI
-      const videoId =
-        entry.getElementsByTagName("yt:videoId")[0]?.textContent;
-
-      if (!videoId) return;
-
-      output += `
-        <a href="https://lampost.co/play?v=${videoId}" class="video-card">
-          <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
-          <div class="play-center">▶</div>
-          <div class="overlay">
-            <h3>${title}</h3>
-          </div>
-        </a>
-      `;
-    });
-
-    track.innerHTML = output;
-
-    initSlider();
-
-  } catch (err) {
-    console.error("ERROR:", err);
   }
+
+  loadVideos();
 
   function initSlider() {
     if (window.innerWidth <= 768) {
