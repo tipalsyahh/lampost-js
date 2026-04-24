@@ -113,6 +113,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     // =========================
+    // 🔥 IKLAN SETELAH CAPTION & PARAGRAF KE-3
+    // =========================
+    (function () {
+
+      const paragraphs = isi.querySelectorAll('p');
+      if (!paragraphs.length) return;
+
+      // 🔥 TEMPLATE IKLAN
+      const createAds = () => {
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+      <a href="#" class="iklan-beranda" target="_blank">
+        <img src="https://lampost.co/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
+      </a>
+
+      <a href="#" class="iklan-beranda" target="_blank">
+        <img src="https://lampost.co/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
+      </a>
+    `;
+        return wrapper;
+      };
+
+      // =========================
+      // 🔥 1. SETELAH CAPTION GAMBAR
+      // =========================
+      const caption = isi.querySelector('figcaption');
+      if (caption) {
+        const ads = createAds();
+        caption.insertAdjacentElement('afterend', ads);
+      }
+
+      // =========================
+      // 🔥 2. SETELAH PARAGRAF KE-3
+      // =========================
+      if (paragraphs.length >= 3) {
+        const ads = createAds();
+        paragraphs[2].insertAdjacentElement('afterend', ads);
+      }
+
+    })();
+    
+    // =========================
     // 🔥 FORCE DOWNLOAD PDF (SEPARATE FILE)
     // =========================
     (function () {
