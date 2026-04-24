@@ -113,47 +113,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     // =========================
-    // 🔥 IKLAN SETELAH CAPTION & PARAGRAF KE-3
+    // 🔥 IKLAN FIX POSISI
     // =========================
     (function () {
 
+      const isi = document.querySelector('.isi-berita');
+      if (!isi) return;
+
       const paragraphs = isi.querySelectorAll('p');
-      if (!paragraphs.length) return;
 
-      // 🔥 TEMPLATE IKLAN
-      const createAds = () => {
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `
-      <a href="#" class="iklan-beranda" target="_blank">
-        <img src="https://lampost.co/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
-      </a>
+      // 🔥 IKLAN 1 (caption)
+      const ads1 = document.createElement('a');
+      ads1.href = '#';
+      ads1.className = 'iklan-beranda';
+      ads1.target = '_blank';
+      ads1.innerHTML = `
+    <img src="https://lampost.co//index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
+  `;
 
-      <a href="#" class="iklan-beranda" target="_blank">
-        <img src="https://lampost.co/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
-      </a>
-    `;
-        return wrapper;
-      };
+      // 🔥 IKLAN 2 (paragraf 3)
+      const ads2 = document.createElement('a');
+      ads2.href = '#';
+      ads2.className = 'iklan-beranda';
+      ads2.target = '_blank';
+      ads2.innerHTML = `
+    <img src="https://lampost.co//index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
+  `;
 
       // =========================
-      // 🔥 1. SETELAH CAPTION GAMBAR
+      // ✅ 1. SETELAH CAPTION UTAMA
       // =========================
-      const caption = isi.querySelector('figcaption');
-      if (caption) {
-        const ads = createAds();
-        caption.insertAdjacentElement('afterend', ads);
+      const captionUtama = document.querySelector('.caption-gambar-utama');
+
+      if (captionUtama) {
+        captionUtama.insertAdjacentElement('afterend', ads1);
       }
 
       // =========================
-      // 🔥 2. SETELAH PARAGRAF KE-3
+      // ✅ 2. SETELAH PARAGRAF KE-3
       // =========================
       if (paragraphs.length >= 3) {
-        const ads = createAds();
-        paragraphs[2].insertAdjacentElement('afterend', ads);
+        paragraphs[2].insertAdjacentElement('afterend', ads2);
       }
 
     })();
-    
     // =========================
     // 🔥 FORCE DOWNLOAD PDF (SEPARATE FILE)
     // =========================
