@@ -16,13 +16,16 @@ function getText() {
 
   const clone = isiEl.cloneNode(true);
 
-  // 🔥 FIX: jangan hapus <a>, tapi ubah jadi text biasa
+  // 🔥 FIX IKLAN & GAMBAR (PENTING)
+  clone.querySelectorAll("img, .iklan-beranda, picture, source").forEach(el => el.remove());
+
+  // 🔥 tetap ubah <a> jadi text
   clone.querySelectorAll("a").forEach(a => {
     const text = a.innerText;
     a.replaceWith(text);
   });
 
-  // hapus elemen tidak perlu (tanpa a)
+  // hapus elemen tidak perlu
   const removeEls = clone.querySelectorAll(
     "button, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
   );
@@ -36,7 +39,6 @@ function getText() {
 
     const tag = el.tagName;
 
-    // 🔥 TANPA PENEKANAN HEADING (normal aja)
     if (tag === "LI") {
       isi += `${text}. ... `;
     } else {
@@ -46,7 +48,6 @@ function getText() {
 
   let finalText = `${judul}. ${editor}. ${tanggal}. ${isi}`;
 
-  // bersihin noise
   finalText = finalText
     .replace(/BERITA LAINNYA/g, "")
     .replace(/\s+/g, " ")
@@ -88,9 +89,21 @@ function playVoice(btn) {
 
   synth.speak(utterance);
 
+  // 🔥 AUTO RESUME KUAT (ANTI MATI SAAT LOCK / BACKGROUND)
   const resumeInterval = setInterval(() => {
-    if (!synth.speaking) clearInterval(resumeInterval);
-    else if (synth.paused) synth.resume();
+    if (!isPlaying) return clearInterval(resumeInterval);
+
+    if (synth.paused) {
+      try { synth.resume(); } catch(e){}
+    }
+
+    // 🔥 jika benar-benar berhenti paksa
+    if (!synth.speaking && isPlaying) {
+      try {
+        synth.speak(utterance);
+      } catch(e){}
+    }
+
   }, 1000);
 
   isPlaying = true;
@@ -129,8 +142,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.addEventListener("beforeunload", () => synth.cancel());
 
+// 🔥 FIX BACKGROUND / LAYAR MATI
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && synth.paused && isPlaying) {
-    synth.resume();
+  if (isPlaying) {
+    setTimeout(() => {
+      try { synth.resume(); } catch(e){}
+    }, 300);
   }
 });
