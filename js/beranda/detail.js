@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     // =========================
-    // 🔥 IKLAN SUPER STABIL
+    // 🔥 IKLAN FIX URUTAN + STABIL
     // =========================
     (function () {
 
@@ -121,6 +121,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!isi) return;
 
       const paragraphs = isi.querySelectorAll('p');
+
+      let ads2Inserted = false;
+      let ads2Ref = null;
 
       // 🔥 IKLAN 1
       const ads1 = document.createElement('a');
@@ -134,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // 🔥 IKLAN 2
       const ads2 = document.createElement('a');
       ads2.href = '#';
-      ads2.className = 'iklan-beranda';
+      ads2.className = 'iklan-beranda iklan-paragraf';
       ads2.target = '_blank';
       ads2.innerHTML = `
     <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
@@ -145,44 +148,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       // =========================
       if (paragraphs.length >= 3) {
         paragraphs[2].insertAdjacentElement('afterend', ads2);
+        ads2Inserted = true;
+        ads2Ref = ads2;
       }
 
       // =========================
-      // 🔥 IKLAN 1 (SMART TARGET)
+      // 🔥 IKLAN 1 (SMART + JAGA URUTAN)
       // =========================
-      const insertAds = () => {
+      const insertAds1 = () => {
 
-        // ❌ jangan dobel
         if (document.querySelector('.iklan-caption')) return true;
 
-        // 1. caption utama
-        let target = document.querySelector('.caption-gambar-utama');
+        let target =
+          document.querySelector('.caption-gambar-utama') ||
+          isi.querySelector('figcaption') ||
+          isi.querySelector('img');
 
-        // 2. figcaption WP
-        if (!target) {
-          target = isi.querySelector('figcaption');
+        if (!target) return false;
+
+        target.insertAdjacentElement('afterend', ads1);
+
+        // 🔥 FIX URUTAN (PASTIKAN IKLAN 1 DI ATAS IKLAN 2)
+        if (ads2Inserted && ads2Ref) {
+          const pos1 = ads1.getBoundingClientRect().top;
+          const pos2 = ads2Ref.getBoundingClientRect().top;
+
+          if (pos1 > pos2) {
+            ads2Ref.parentNode.insertBefore(ads1, ads2Ref);
+          }
         }
 
-        // 3. fallback: gambar pertama
-        if (!target) {
-          const firstImg = isi.querySelector('img');
-          if (firstImg) target = firstImg;
-        }
-
-        if (target) {
-          target.insertAdjacentElement('afterend', ads1);
-          return true;
-        }
-
-        return false;
+        return true;
       };
 
-      // 🔥 coba langsung
-      if (insertAds()) return;
+      // coba langsung
+      if (insertAds1()) return;
 
-      // 🔥 tunggu async
+      // observer async
       const observer = new MutationObserver(() => {
-        if (insertAds()) {
+        if (insertAds1()) {
           observer.disconnect();
         }
       });
