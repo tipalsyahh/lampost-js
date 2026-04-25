@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     // =========================
-    // 🔥 IKLAN FIX POSISI
+    // 🔥 IKLAN SUPER STABIL
     // =========================
     (function () {
 
@@ -122,39 +122,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const paragraphs = isi.querySelectorAll('p');
 
-      // 🔥 IKLAN 1 (caption)
+      // 🔥 IKLAN 1
       const ads1 = document.createElement('a');
       ads1.href = '#';
-      ads1.className = 'iklan-beranda';
+      ads1.className = 'iklan-beranda iklan-caption';
       ads1.target = '_blank';
       ads1.innerHTML = `
-    <img src="https://lampost.co//index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
+    <img src="/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
   `;
 
-      // 🔥 IKLAN 2 (paragraf 3)
+      // 🔥 IKLAN 2
       const ads2 = document.createElement('a');
       ads2.href = '#';
       ads2.className = 'iklan-beranda';
       ads2.target = '_blank';
       ads2.innerHTML = `
-    <img src="https://lampost.co//index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
+    <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
   `;
 
       // =========================
-      // ✅ 1. SETELAH CAPTION UTAMA
-      // =========================
-      const captionUtama = document.querySelector('.caption-gambar-utama');
-
-      if (captionUtama) {
-        captionUtama.insertAdjacentElement('afterend', ads1);
-      }
-
-      // =========================
-      // ✅ 2. SETELAH PARAGRAF KE-3
+      // ✅ IKLAN 2 (PARAGRAF 3)
       // =========================
       if (paragraphs.length >= 3) {
         paragraphs[2].insertAdjacentElement('afterend', ads2);
       }
+
+      // =========================
+      // 🔥 IKLAN 1 (SMART TARGET)
+      // =========================
+      const insertAds = () => {
+
+        // ❌ jangan dobel
+        if (document.querySelector('.iklan-caption')) return true;
+
+        // 1. caption utama
+        let target = document.querySelector('.caption-gambar-utama');
+
+        // 2. figcaption WP
+        if (!target) {
+          target = isi.querySelector('figcaption');
+        }
+
+        // 3. fallback: gambar pertama
+        if (!target) {
+          const firstImg = isi.querySelector('img');
+          if (firstImg) target = firstImg;
+        }
+
+        if (target) {
+          target.insertAdjacentElement('afterend', ads1);
+          return true;
+        }
+
+        return false;
+      };
+
+      // 🔥 coba langsung
+      if (insertAds()) return;
+
+      // 🔥 tunggu async
+      const observer = new MutationObserver(() => {
+        if (insertAds()) {
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(isi, {
+        childList: true,
+        subtree: true
+      });
 
     })();
     // =========================
