@@ -113,31 +113,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     isi.innerHTML = post.content.rendered;
 
     // =========================
-    // 🔥 IKLAN FIX URUTAN + STABIL
+    // 🔥 IKLAN FINAL (SESUAI RULE FIX)
     // =========================
     (function () {
 
       const isi = document.querySelector('.isi-berita');
+      const gambar = document.querySelector('.gambar-berita');
+
       if (!isi) return;
 
       const paragraphs = isi.querySelectorAll('p');
 
-      let ads2Inserted = false;
-      let ads2Ref = null;
-
-      // 🔥 IKLAN 1
+      // =========================
+      // 🔥 IKLAN 1 (LUAR ISI)
+      // =========================
       const ads1 = document.createElement('a');
       ads1.href = '#';
-      ads1.className = 'iklan-beranda iklan-caption';
+      ads1.className = 'iklan-beranda iklan-atas';
       ads1.target = '_blank';
       ads1.innerHTML = `
     <img src="/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
   `;
 
-      // 🔥 IKLAN 2
+      // =========================
+      // 🔥 IKLAN 2 (DALAM ISI)
+      // =========================
       const ads2 = document.createElement('a');
       ads2.href = '#';
-      ads2.className = 'iklan-beranda iklan-paragraf';
+      ads2.className = 'iklan-beranda iklan-bawah';
       ads2.target = '_blank';
       ads2.innerHTML = `
     <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
@@ -148,50 +151,44 @@ document.addEventListener('DOMContentLoaded', async () => {
       // =========================
       if (paragraphs.length >= 3) {
         paragraphs[2].insertAdjacentElement('afterend', ads2);
-        ads2Inserted = true;
-        ads2Ref = ads2;
       }
 
       // =========================
-      // 🔥 IKLAN 1 (SMART + JAGA URUTAN)
+      // 🔥 IKLAN 1 (SMART TARGET - LUAR ISI)
       // =========================
       const insertAds1 = () => {
 
-        if (document.querySelector('.iklan-caption')) return true;
+        // ❌ cegah dobel
+        if (document.querySelector('.iklan-atas')) return true;
 
-        let target =
-          document.querySelector('.caption-gambar-utama') ||
-          isi.querySelector('figcaption') ||
-          isi.querySelector('img');
+        const caption = document.querySelector('.caption-gambar-utama');
 
-        if (!target) return false;
-
-        target.insertAdjacentElement('afterend', ads1);
-
-        // 🔥 FIX URUTAN (PASTIKAN IKLAN 1 DI ATAS IKLAN 2)
-        if (ads2Inserted && ads2Ref) {
-          const pos1 = ads1.getBoundingClientRect().top;
-          const pos2 = ads2Ref.getBoundingClientRect().top;
-
-          if (pos1 > pos2) {
-            ads2Ref.parentNode.insertBefore(ads1, ads2Ref);
-          }
+        // ✅ PRIORITAS 1: caption
+        if (caption) {
+          caption.insertAdjacentElement('afterend', ads1);
+          return true;
         }
 
-        return true;
+        // ✅ PRIORITAS 2: gambar utama
+        if (gambar) {
+          gambar.insertAdjacentElement('afterend', ads1);
+          return true;
+        }
+
+        return false;
       };
 
       // coba langsung
       if (insertAds1()) return;
 
-      // observer async
+      // 🔥 observer untuk async caption
       const observer = new MutationObserver(() => {
         if (insertAds1()) {
           observer.disconnect();
         }
       });
 
-      observer.observe(isi, {
+      observer.observe(document.body, {
         childList: true,
         subtree: true
       });
