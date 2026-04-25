@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!videoId) return;
 
         output += `
-          <a href="https://lampost.co/play?v=${videoId}" class="video-card">
+          <a href="https://lampost.co/play?v=${videoId}" class="video-card" target="_blank" rel="noopener">
             <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
             <div class="play-center">▶</div>
 
@@ -197,7 +197,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!link) return;
 
       e.preventDefault();
-      window.open(link.href, '_blank');
+
+      // 🔥 paksa buka tab baru (anti popup block)
+      const newTab = window.open(link.href, '_blank');
+      if (newTab) newTab.opener = null;
     });
   }
 
