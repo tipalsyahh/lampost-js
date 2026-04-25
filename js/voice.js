@@ -16,16 +16,16 @@ function getText() {
 
   const clone = isiEl.cloneNode(true);
 
-  // 🔥 FIX IKLAN & GAMBAR (PENTING)
+  // 🔥 hapus iklan & gambar biar tidak kebaca
   clone.querySelectorAll("img, .iklan-beranda, picture, source").forEach(el => el.remove());
 
-  // 🔥 tetap ubah <a> jadi text
+  // 🔥 ubah link jadi text
   clone.querySelectorAll("a").forEach(a => {
     const text = a.innerText;
     a.replaceWith(text);
   });
 
-  // hapus elemen tidak perlu
+  // 🔥 hapus elemen tidak penting
   const removeEls = clone.querySelectorAll(
     "button, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
   );
@@ -37,9 +37,7 @@ function getText() {
     let text = el.innerText.trim();
     if (!text) return;
 
-    const tag = el.tagName;
-
-    if (tag === "LI") {
+    if (el.tagName === "LI") {
       isi += `${text}. ... `;
     } else {
       isi += `${text}. `;
@@ -48,8 +46,11 @@ function getText() {
 
   let finalText = `${judul}. ${editor}. ${tanggal}. ${isi}`;
 
+  // 🔥 ritme baca biar lebih natural
   finalText = finalText
     .replace(/BERITA LAINNYA/g, "")
+    .replace(/\./g, ". ... ")
+    .replace(/,/g, ", ")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -68,42 +69,60 @@ function playVoice(btn) {
 
   if (synth.speaking || synth.pending) synth.cancel();
 
-  utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "id-ID";
+  // 🔥 pecah kalimat biar natural
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
 
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  utterance.volume = 1;
+  let index = 0;
 
-  utterance.onend = () => {
-    isPlaying = false;
-    isMuted = true;
-    setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
-  };
+  function speakNext() {
+    if (index >= sentences.length) {
+      isPlaying = false;
+      isMuted = true;
+      setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
+      return;
+    }
 
-  utterance.onerror = () => {
-    isPlaying = false;
-    isMuted = true;
-    setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
-  };
+    let part = sentences[index].trim();
+    if (!part) {
+      index++;
+      return speakNext();
+    }
 
-  synth.speak(utterance);
+    utterance = new SpeechSynthesisUtterance(part);
+    utterance.lang = "id-ID";
 
-  // 🔥 AUTO RESUME KUAT (ANTI MATI SAAT LOCK / BACKGROUND)
+    // 🔥 variasi biar tidak robot
+    utterance.rate = 0.9 + Math.random() * 0.15;
+    utterance.pitch = 0.9 + Math.random() * 0.2;
+    utterance.volume = 1;
+
+    // 🔥 pilih suara terbaik (jika ada)
+    const voices = synth.getVoices();
+    const indoVoice = voices.find(v => v.lang.includes("id"));
+    if (indoVoice) utterance.voice = indoVoice;
+
+    utterance.onend = () => {
+      index++;
+      setTimeout(speakNext, 250); // jeda natural
+    };
+
+    utterance.onerror = () => {
+      index++;
+      speakNext();
+    };
+
+    synth.speak(utterance);
+  }
+
+  speakNext();
+
+  // 🔥 anti mati saat background / layar mati
   const resumeInterval = setInterval(() => {
     if (!isPlaying) return clearInterval(resumeInterval);
 
     if (synth.paused) {
       try { synth.resume(); } catch(e){}
     }
-
-    // 🔥 jika benar-benar berhenti paksa
-    if (!synth.speaking && isPlaying) {
-      try {
-        synth.speak(utterance);
-      } catch(e){}
-    }
-
   }, 1000);
 
   isPlaying = true;
@@ -142,11 +161,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 window.addEventListener("beforeunload", () => synth.cancel());
 
-// 🔥 FIX BACKGROUND / LAYAR MATI
+// 🔥 tetap hidup saat balik ke tab / layar mati
 document.addEventListener("visibilitychange", () => {
-  if (isPlaying) {
-    setTimeout(() => {
-      try { synth.resume(); } catch(e){}
-    }, 300);
+  if (!document.hidden && synth.paused && isPlaying) {
+    try { synth.resume(); } catch(e){}
   }
 });
