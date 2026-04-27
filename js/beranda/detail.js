@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         paragraphs[2].insertAdjacentElement('afterend', ads2);
       }
 
-      if (paragraphs.length >= 5) {
+      if (paragraphs.length >= 6) {
         paragraphs[4].insertAdjacentElement('afterend', ads3);
       }
 
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
     })();
-    
+
     // =========================
     // 🔥 FORCE DOWNLOAD PDF (SEPARATE FILE)
     // =========================
