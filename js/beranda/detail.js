@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const paragraphs = isi.querySelectorAll('p');
 
         // =========================
-        // 🔥 HELPER LOAD IKLAN
+        // 🔥 HELPER LOAD IKLAN (FIX)
         // =========================
         const loadAd = async (el) => {
           const slot = el.dataset.slot;
@@ -135,27 +135,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const base = "/index/uploads/" + folder + "/" + slot;
 
-          const testImage = (url) => {
-            return new Promise(resolve => {
-              const img = new Image();
-              img.onload = () => resolve(url);
-              img.onerror = () => resolve(null);
-              img.src = url;
-            });
+          // 🔥 LANGSUNG SET WEBP
+          imgTag.src = base + ".webp";
+
+          // 🔥 FALLBACK KE GIF
+          imgTag.onerror = function () {
+            this.onerror = null;
+            this.src = base + ".gif";
           };
 
-          const webp = await testImage(base + ".webp");
-          const gif = await testImage(base + ".gif");
-
-          const finalImg = webp || gif;
-
-          if (!finalImg) {
-            el.style.display = "none";
-            return;
-          }
-
-          imgTag.src = finalImg;
-
+          // =========================
+          // 🔥 LINK
+          // =========================
           try {
             const res = await fetch(base + ".txt");
             const link = await res.text();
@@ -176,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads1.dataset.slot = "artikel-1";
         ads1.dataset.folder = "detail-berita";
         ads1.style.display = "none";
-        ads1.innerHTML = `<img src="" loading="lazy">`;
+        ads1.innerHTML = `<img loading="lazy">`;
 
         // =========================
         // 🔥 IKLAN 2
@@ -187,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads2.dataset.slot = "artikel-2";
         ads2.dataset.folder = "detail-berita";
         ads2.style.display = "none";
-        ads2.innerHTML = `<img src="" loading="lazy">`;
+        ads2.innerHTML = `<img loading="lazy">`;
 
         // =========================
         // 🔥 IKLAN 3
@@ -198,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads3.dataset.slot = "artikel-3";
         ads3.dataset.folder = "detail-berita";
         ads3.style.display = "none";
-        ads3.innerHTML = `<img src="" loading="lazy">`;
+        ads3.innerHTML = `<img loading="lazy">`;
 
         // =========================
         // INSERT IKLAN
