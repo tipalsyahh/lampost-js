@@ -22,6 +22,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const base = "/index/uploads/" + folder + "/" + slot;
 
+    // 🔥 TAMBAHAN CEK STATUS
+    try {
+      const statusRes = await fetch(base + ".status");
+      const status = (await statusRes.text()).trim();
+
+      if (status === "0") {
+        el.style.display = "none";
+        return;
+      }
+    } catch {}
+
     const webp = await testImage(base + ".webp");
     const gif  = await testImage(base + ".gif");
 
