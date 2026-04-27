@@ -112,136 +112,147 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    (function () {
+(function () {
 
-      const isi = document.querySelector('.isi-berita');
-      const gambar = document.querySelector('.gambar-berita');
+  const isi = document.querySelector('.isi-berita');
+  const gambar = document.querySelector('.gambar-berita');
 
-      if (!isi) return;
+  if (!isi) return;
 
-      const paragraphs = isi.querySelectorAll('p');
+  const paragraphs = isi.querySelectorAll('p');
 
-      // =========================
-      // 🔥 HELPER AMBIL LINK
-      // =========================
-      const setLink = async (el, file) => {
-        try {
-          const res = await fetch("/index/uploads/" + file + ".txt");
-          const link = await res.text();
-          el.href = link.trim() || "#";
-        } catch {
-          el.href = "#";
-        }
-      };
+  // =========================
+  // HELPER LINK
+  // =========================
+  const setLink = async (el, file) => {
+    try {
+      const res = await fetch("/index/uploads/" + file + ".txt?t=" + Date.now(), {
+        cache: "no-store"
+      });
+      const link = await res.text();
+      el.href = link.trim() || "#";
+    } catch {
+      el.href = "#";
+    }
+  };
 
-      // =========================
-      // 🔥 HELPER CEK STATUS
-      // =========================
-      const checkStatus = async (file) => {
-        try {
-          const res = await fetch("/index/uploads/" + file + ".status");
-          const status = (await res.text()).trim();
-          return status !== "off";
-        } catch {
-          return true;
-        }
-      };
+  // =========================
+  // HELPER STATUS (ANTI CACHE)
+  // =========================
+  const checkStatus = async (file) => {
+    try {
+      const res = await fetch("/index/uploads/" + file + ".status?t=" + Date.now(), {
+        cache: "no-store"
+      });
+      const status = (await res.text()).trim();
+      return status !== "off";
+    } catch {
+      return true;
+    }
+  };
 
-      (async () => {
+  (async () => {
 
-        // =========================
-        // 🔥 IKLAN 1
-        // =========================
-        let ads1 = null;
-        if (await checkStatus("detail-berita/artikel-1")) {
-          ads1 = document.createElement('a');
-          ads1.className = 'iklan-beranda iklan-atas';
-          ads1.target = '_blank';
-          ads1.innerHTML = `
+    // =========================
+    // AMBIL STATUS DULU (FIX BUG)
+    // =========================
+    const status1 = await checkStatus("detail-berita/artikel-1");
+    const status2 = await checkStatus("detail-berita/artikel-2");
+    const status3 = await checkStatus("detail-berita/artikel-3");
+
+    // =========================
+    // IKLAN 1
+    // =========================
+    let ads1 = null;
+    if (status1) {
+      ads1 = document.createElement('a');
+      ads1.className = 'iklan-beranda iklan-atas';
+      ads1.target = '_blank';
+      ads1.innerHTML = `
         <img src="/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
       `;
-          setLink(ads1, "detail-berita/artikel-1");
-        }
+      setLink(ads1, "detail-berita/artikel-1");
+    }
 
-        // =========================
-        // 🔥 IKLAN 2
-        // =========================
-        let ads2 = null;
-        if (await checkStatus("detail-berita/artikel-2")) {
-          ads2 = document.createElement('a');
-          ads2.className = 'iklan-beranda iklan-bawah';
-          ads2.target = '_blank';
-          ads2.innerHTML = `
+    // =========================
+    // IKLAN 2
+    // =========================
+    let ads2 = null;
+    if (status2) {
+      ads2 = document.createElement('a');
+      ads2.className = 'iklan-beranda iklan-bawah';
+      ads2.target = '_blank';
+      ads2.innerHTML = `
         <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
       `;
-          setLink(ads2, "detail-berita/artikel-2");
-        }
+      setLink(ads2, "detail-berita/artikel-2");
+    }
 
-        // =========================
-        // 🔥 IKLAN 3
-        // =========================
-        let ads3 = null;
-        if (await checkStatus("detail-berita/artikel-3")) {
-          ads3 = document.createElement('a');
-          ads3.className = 'iklan-beranda iklan-tengah';
-          ads3.target = '_blank';
-          ads3.innerHTML = `
+    // =========================
+    // IKLAN 3
+    // =========================
+    let ads3 = null;
+    if (status3) {
+      ads3 = document.createElement('a');
+      ads3.className = 'iklan-beranda iklan-tengah';
+      ads3.target = '_blank';
+      ads3.innerHTML = `
         <img src="/index/image.php?file=detail-berita/artikel-3.webp" loading="lazy">
       `;
-          setLink(ads3, "detail-berita/artikel-3");
-        }
+      setLink(ads3, "detail-berita/artikel-3");
+    }
 
-        // =========================
-        // INSERT IKLAN
-        // =========================
-        if (ads2 && paragraphs.length >= 3) {
-          paragraphs[2].insertAdjacentElement('afterend', ads2);
-        }
+    // =========================
+    // INSERT IKLAN
+    // =========================
+    if (ads2 && paragraphs.length >= 3) {
+      paragraphs[2].insertAdjacentElement('afterend', ads2);
+    }
 
-        if (ads3 && paragraphs.length >= 6) {
-          paragraphs[5].insertAdjacentElement('afterend', ads3);
-        }
+    if (ads3 && paragraphs.length >= 6) {
+      paragraphs[5].insertAdjacentElement('afterend', ads3);
+    }
 
-        // =========================
-        // IKLAN ATAS
-        // =========================
-        const insertAds1 = () => {
+    // =========================
+    // IKLAN ATAS
+    // =========================
+    const insertAds1 = () => {
 
-          if (!ads1) return true;
+      if (!ads1) return true;
 
-          if (document.querySelector('.iklan-atas')) return true;
+      if (document.querySelector('.iklan-atas')) return true;
 
-          const caption = document.querySelector('.caption-gambar-utama');
+      const caption = document.querySelector('.caption-gambar-utama');
 
-          if (caption) {
-            caption.insertAdjacentElement('afterend', ads1);
-            return true;
-          }
+      if (caption) {
+        caption.insertAdjacentElement('afterend', ads1);
+        return true;
+      }
 
-          if (gambar) {
-            gambar.insertAdjacentElement('afterend', ads1);
-            return true;
-          }
+      if (gambar) {
+        gambar.insertAdjacentElement('afterend', ads1);
+        return true;
+      }
 
-          return false;
-        };
+      return false;
+    };
 
-        if (insertAds1()) return;
+    if (insertAds1()) return;
 
-        const observer = new MutationObserver(() => {
-          if (insertAds1()) {
-            observer.disconnect();
-          }
-        });
+    const observer = new MutationObserver(() => {
+      if (insertAds1()) {
+        observer.disconnect();
+      }
+    });
 
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true
-        });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
 
-      })();
+  })();
 
-    })();
+})();
 
     // =========================
     // 🔥 FORCE DOWNLOAD PDF (SEPARATE FILE)
