@@ -135,83 +135,111 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       // =========================
-      // 🔥 IKLAN 1
+      // 🔥 HELPER CEK STATUS
       // =========================
-      const ads1 = document.createElement('a');
-      ads1.className = 'iklan-beranda iklan-atas';
-      ads1.target = '_blank';
-      ads1.innerHTML = `
-    <img src="/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
-  `;
-      setLink(ads1, "detail-berita/artikel-1");
-
-      // =========================
-      // 🔥 IKLAN 2
-      // =========================
-      const ads2 = document.createElement('a');
-      ads2.className = 'iklan-beranda iklan-bawah';
-      ads2.target = '_blank';
-      ads2.innerHTML = `
-    <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
-  `;
-      setLink(ads2, "detail-berita/artikel-2");
-
-      // =========================
-      // 🔥 IKLAN 3
-      // =========================
-      const ads3 = document.createElement('a');
-      ads3.className = 'iklan-beranda iklan-tengah';
-      ads3.target = '_blank';
-      ads3.innerHTML = `
-    <img src="/index/image.php?file=detail-berita/artikel-3.webp" loading="lazy">
-  `;
-      setLink(ads3, "detail-berita/artikel-3");
-
-      // =========================
-      // INSERT IKLAN
-      // =========================
-      if (paragraphs.length >= 3) {
-        paragraphs[2].insertAdjacentElement('afterend', ads2);
-      }
-
-      if (paragraphs.length >= 6) {
-        paragraphs[5].insertAdjacentElement('afterend', ads3);
-      }
-
-      // =========================
-      // IKLAN ATAS
-      // =========================
-      const insertAds1 = () => {
-
-        if (document.querySelector('.iklan-atas')) return true;
-
-        const caption = document.querySelector('.caption-gambar-utama');
-
-        if (caption) {
-          caption.insertAdjacentElement('afterend', ads1);
+      const checkStatus = async (file) => {
+        try {
+          const res = await fetch("/index/uploads/" + file + ".status");
+          const status = (await res.text()).trim();
+          return status !== "off";
+        } catch {
           return true;
         }
-
-        if (gambar) {
-          gambar.insertAdjacentElement('afterend', ads1);
-          return true;
-        }
-
-        return false;
       };
 
-      if (insertAds1()) return;
+      (async () => {
 
-      const observer = new MutationObserver(() => {
-        if (insertAds1()) {
-          observer.disconnect();
+        // =========================
+        // 🔥 IKLAN 1
+        // =========================
+        let ads1 = null;
+        if (await checkStatus("detail-berita/artikel-1")) {
+          ads1 = document.createElement('a');
+          ads1.className = 'iklan-beranda iklan-atas';
+          ads1.target = '_blank';
+          ads1.innerHTML = `
+        <img src="/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
+      `;
+          setLink(ads1, "detail-berita/artikel-1");
         }
-      });
 
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true
-      });
+        // =========================
+        // 🔥 IKLAN 2
+        // =========================
+        let ads2 = null;
+        if (await checkStatus("detail-berita/artikel-2")) {
+          ads2 = document.createElement('a');
+          ads2.className = 'iklan-beranda iklan-bawah';
+          ads2.target = '_blank';
+          ads2.innerHTML = `
+        <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
+      `;
+          setLink(ads2, "detail-berita/artikel-2");
+        }
+
+        // =========================
+        // 🔥 IKLAN 3
+        // =========================
+        let ads3 = null;
+        if (await checkStatus("detail-berita/artikel-3")) {
+          ads3 = document.createElement('a');
+          ads3.className = 'iklan-beranda iklan-tengah';
+          ads3.target = '_blank';
+          ads3.innerHTML = `
+        <img src="/index/image.php?file=detail-berita/artikel-3.webp" loading="lazy">
+      `;
+          setLink(ads3, "detail-berita/artikel-3");
+        }
+
+        // =========================
+        // INSERT IKLAN
+        // =========================
+        if (ads2 && paragraphs.length >= 3) {
+          paragraphs[2].insertAdjacentElement('afterend', ads2);
+        }
+
+        if (ads3 && paragraphs.length >= 6) {
+          paragraphs[5].insertAdjacentElement('afterend', ads3);
+        }
+
+        // =========================
+        // IKLAN ATAS
+        // =========================
+        const insertAds1 = () => {
+
+          if (!ads1) return true;
+
+          if (document.querySelector('.iklan-atas')) return true;
+
+          const caption = document.querySelector('.caption-gambar-utama');
+
+          if (caption) {
+            caption.insertAdjacentElement('afterend', ads1);
+            return true;
+          }
+
+          if (gambar) {
+            gambar.insertAdjacentElement('afterend', ads1);
+            return true;
+          }
+
+          return false;
+        };
+
+        if (insertAds1()) return;
+
+        const observer = new MutationObserver(() => {
+          if (insertAds1()) {
+            observer.disconnect();
+          }
+        });
+
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+
+      })();
 
     })();
 
