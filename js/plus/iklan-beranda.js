@@ -12,45 +12,22 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   ads.forEach(async (el) => {
-
     const slot = el.dataset.slot;
-    const folder = el.dataset.folder;
+    const folder = el.dataset.folder || "iklan-beranda";
 
-    // 🔥 WAJIB ADA (biar tidak global)
-    if (!slot || !folder) {
-      el.style.display = "none";
-      return;
-    }
+    if (!slot) return;
 
     const imgTag = el.querySelector("img");
     if (!imgTag) return;
 
     const base = "/index/uploads/" + folder + "/" + slot;
 
-    // =========================
-    // 🔥 CEK OFF PER SLOT
-    // =========================
-    try {
-      const res = await fetch(base + ".off", { method: "HEAD" });
-
-      if (res.ok) {
-        // slot ini saja yang mati
-        el.style.display = "none";
-        return;
-      }
-
-    } catch (e) {
-      // kalau error, lanjut normal
-    }
-
-    // =========================
-    // 🔥 LOAD GAMBAR
-    // =========================
     const webp = await testImage(base + ".webp");
     const gif  = await testImage(base + ".gif");
 
     const finalImg = webp || gif;
 
+    // kalau tidak ada gambar → sembunyikan
     if (!finalImg) {
       el.style.display = "none";
       return;
@@ -58,9 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     imgTag.src = finalImg;
 
-    // =========================
-    // 🔥 LOAD LINK
-    // =========================
+    // ambil link
     try {
       const res = await fetch(base + ".txt");
       const link = await res.text();
@@ -69,12 +44,9 @@ document.addEventListener("DOMContentLoaded", function () {
       el.href = "#";
     }
 
-    // =========================
-    // 🔥 POPUP KHUSUS
-    // =========================
+    // 🔥 KHUSUS POPUP → tampilkan
     if (el.classList.contains("iklan-popup")) {
-      const popup = document.getElementById("popup-ads");
-      if (popup) popup.style.display = "block";
+      document.getElementById("popup-ads").style.display = "block";
     }
 
   });
