@@ -112,9 +112,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const isi = document.querySelector('.isi-berita');
     isi.innerHTML = post.content.rendered;
 
-    // =========================
-    // 🔥 IKLAN FINAL (SESUAI RULE FIX)
-    // =========================
     (function () {
 
       const isi = document.querySelector('.isi-berita');
@@ -129,47 +126,59 @@ document.addEventListener('DOMContentLoaded', async () => {
       // =========================
       const ads1 = document.createElement('a');
       ads1.href = '#';
-      ads1.className = 'iklan-beranda iklan-atas';
+      ads1.className = 'iklan-detail iklan-atas';
       ads1.target = '_blank';
-      ads1.innerHTML = `
-    <img src="/index/image.php?file=detail-berita/artikel-1.webp" loading="lazy">
-  `;
+      ads1.dataset.slot = "artikel-1";
+      ads1.dataset.folder = "detail-berita";
+      ads1.innerHTML = `<img src="" loading="lazy">`;
 
       // =========================
-      // 🔥 IKLAN 2 (DALAM ISI)
+      // 🔥 IKLAN 2 (PARAGRAF 3)
       // =========================
       const ads2 = document.createElement('a');
       ads2.href = '#';
-      ads2.className = 'iklan-beranda iklan-bawah';
+      ads2.className = 'iklan-detail iklan-bawah';
       ads2.target = '_blank';
-      ads2.innerHTML = `
-    <img src="/index/image.php?file=detail-berita/artikel-2.webp" loading="lazy">
-  `;
+      ads2.dataset.slot = "artikel-2";
+      ads2.dataset.folder = "detail-berita";
+      ads2.innerHTML = `<img src="" loading="lazy">`;
 
       // =========================
-      // ✅ IKLAN 2 (PARAGRAF 3)
+      // 🔥 IKLAN 3 (PARAGRAF 5)
+      // =========================
+      const ads3 = document.createElement('a');
+      ads3.href = '#';
+      ads3.className = 'iklan-detail iklan-tengah';
+      ads3.target = '_blank';
+      ads3.dataset.slot = "artikel-3";
+      ads3.dataset.folder = "detail-berita";
+      ads3.innerHTML = `<img src="" loading="lazy">`;
+
+      // =========================
+      // INSERT IKLAN DALAM ISI
       // =========================
       if (paragraphs.length >= 3) {
         paragraphs[2].insertAdjacentElement('afterend', ads2);
       }
 
+      if (paragraphs.length >= 5) {
+        paragraphs[4].insertAdjacentElement('afterend', ads3);
+      }
+
       // =========================
-      // 🔥 IKLAN 1 (SMART TARGET - LUAR ISI)
+      // IKLAN 1 (LUAR ISI)
       // =========================
       const insertAds1 = () => {
 
-        // ❌ cegah dobel
         if (document.querySelector('.iklan-atas')) return true;
 
         const caption = document.querySelector('.caption-gambar-utama');
 
-        // ✅ PRIORITAS 1: caption
         if (caption) {
           caption.insertAdjacentElement('afterend', ads1);
           return true;
         }
 
-        // ✅ PRIORITAS 2: gambar utama
         if (gambar) {
           gambar.insertAdjacentElement('afterend', ads1);
           return true;
@@ -178,10 +187,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return false;
       };
 
-      // coba langsung
       if (insertAds1()) return;
 
-      // 🔥 observer untuk async caption
       const observer = new MutationObserver(() => {
         if (insertAds1()) {
           observer.disconnect();
@@ -194,6 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
     })();
+
     // =========================
     // 🔥 FORCE DOWNLOAD PDF (SEPARATE FILE)
     // =========================
