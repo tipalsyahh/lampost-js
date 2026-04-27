@@ -116,15 +116,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       document.addEventListener("DOMContentLoaded", function () {
 
+        console.log("IKLAN DETAIL AKTIF");
+
         const isi = document.querySelector('.isi-berita');
         const gambar = document.querySelector('.gambar-berita');
 
-        if (!isi) return;
+        if (!isi) {
+          console.log("❌ .isi-berita tidak ditemukan");
+          return;
+        }
 
         const paragraphs = isi.querySelectorAll('p');
+        console.log("Jumlah paragraf:", paragraphs.length);
 
         // =========================
-        // 🔥 HELPER LOAD IKLAN (FIX)
+        // 🔥 HELPER LOAD IKLAN
         // =========================
         const loadAd = async (el) => {
           const slot = el.dataset.slot;
@@ -135,18 +141,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const base = "/index/uploads/" + folder + "/" + slot;
 
-          // 🔥 LANGSUNG SET WEBP
+          // load webp
           imgTag.src = base + ".webp";
 
-          // 🔥 FALLBACK KE GIF
+          // fallback gif
           imgTag.onerror = function () {
             this.onerror = null;
             this.src = base + ".gif";
           };
 
-          // =========================
-          // 🔥 LINK
-          // =========================
+          // ambil link
           try {
             const res = await fetch(base + ".txt");
             const link = await res.text();
@@ -159,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         // =========================
-        // 🔥 IKLAN 1
+        // 🔥 IKLAN 1 (ATAS)
         // =========================
         const ads1 = document.createElement('a');
         ads1.className = 'iklan-detail iklan-atas';
@@ -167,10 +171,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads1.dataset.slot = "artikel-1";
         ads1.dataset.folder = "detail-berita";
         ads1.style.display = "none";
-        ads1.innerHTML = `<img loading="lazy">`;
+        ads1.innerHTML = `<img loading="lazy" style="width:100%">`;
 
         // =========================
-        // 🔥 IKLAN 2
+        // 🔥 IKLAN 2 (PARAGRAF 3)
         // =========================
         const ads2 = document.createElement('a');
         ads2.className = 'iklan-detail iklan-bawah';
@@ -178,10 +182,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads2.dataset.slot = "artikel-2";
         ads2.dataset.folder = "detail-berita";
         ads2.style.display = "none";
-        ads2.innerHTML = `<img loading="lazy">`;
+        ads2.innerHTML = `<img loading="lazy" style="width:100%">`;
 
         // =========================
-        // 🔥 IKLAN 3
+        // 🔥 IKLAN 3 (PARAGRAF 5)
         // =========================
         const ads3 = document.createElement('a');
         ads3.className = 'iklan-detail iklan-tengah';
@@ -189,57 +193,44 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads3.dataset.slot = "artikel-3";
         ads3.dataset.folder = "detail-berita";
         ads3.style.display = "none";
-        ads3.innerHTML = `<img loading="lazy">`;
+        ads3.innerHTML = `<img loading="lazy" style="width:100%">`;
 
         // =========================
-        // INSERT IKLAN
+        // INSERT IKLAN DALAM ARTIKEL
         // =========================
         if (paragraphs.length >= 3) {
-          paragraphs[2].insertAdjacentElement('afterend', ads2);
+          paragraphs[2].after(ads2);
           loadAd(ads2);
         }
 
         if (paragraphs.length >= 5) {
-          paragraphs[4].insertAdjacentElement('afterend', ads3);
+          paragraphs[4].after(ads3);
           loadAd(ads3);
         }
 
         // =========================
-        // IKLAN ATAS
+        // IKLAN ATAS (SMART + FALLBACK)
         // =========================
         const insertAds1 = () => {
 
-          if (document.querySelector('.iklan-atas')) return true;
+          if (document.querySelector('.iklan-atas')) return;
 
           const caption = document.querySelector('.caption-gambar-utama');
 
           if (caption) {
-            caption.insertAdjacentElement('afterend', ads1);
-            loadAd(ads1);
-            return true;
+            caption.after(ads1);
+          } else if (gambar) {
+            gambar.after(ads1);
+          } else {
+            // 🔥 fallback terakhir (PASTI MASUK)
+            isi.prepend(ads1);
           }
 
-          if (gambar) {
-            gambar.insertAdjacentElement('afterend', ads1);
-            loadAd(ads1);
-            return true;
-          }
-
-          return false;
+          loadAd(ads1);
         };
 
-        if (insertAds1()) return;
-
-        const observer = new MutationObserver(() => {
-          if (insertAds1()) {
-            observer.disconnect();
-          }
-        });
-
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true
-        });
+        // jalankan langsung
+        insertAds1();
 
       });
 
