@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-  const ads = document.querySelectorAll(".iklan-detail");
+  const ads = document.querySelectorAll(".iklan-detail,.iklan-parallax");
 
   ads.forEach(async (el) => {
 
