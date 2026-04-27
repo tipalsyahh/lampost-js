@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (paragraphs.length >= 6) {
-        paragraphs[4].insertAdjacentElement('afterend', ads3);
+        paragraphs[5].insertAdjacentElement('afterend', ads3);
       }
 
       // =========================
