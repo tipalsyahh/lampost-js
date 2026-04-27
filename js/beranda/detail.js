@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads1.target = '_blank';
         ads1.dataset.slot = "artikel-1";
         ads1.dataset.folder = "detail-berita";
-        ads1.style.display = "none";
         ads1.innerHTML = `<img loading="lazy" style="width:100%">`;
 
         // =========================
@@ -181,7 +180,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads2.target = '_blank';
         ads2.dataset.slot = "artikel-2";
         ads2.dataset.folder = "detail-berita";
-        ads2.style.display = "none";
         ads2.innerHTML = `<img loading="lazy" style="width:100%">`;
 
         // =========================
@@ -192,7 +190,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         ads3.target = '_blank';
         ads3.dataset.slot = "artikel-3";
         ads3.dataset.folder = "detail-berita";
-        ads3.style.display = "none";
         ads3.innerHTML = `<img loading="lazy" style="width:100%">`;
 
         // =========================
