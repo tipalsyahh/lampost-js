@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  ads.forEach((el) => {
+  ads.forEach(async (el) => {
 
     const slot = el.dataset.slot;
     const folder = el.dataset.folder;
@@ -32,6 +32,25 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("LOAD:", base);
 
     // =========================
+    // 🔥 CEK STATUS
+    // =========================
+    let status = "on";
+
+    try {
+      const resStatus = await fetch(base + ".status");
+      status = (await resStatus.text()).trim();
+    } catch {
+      status = "on";
+    }
+
+    // 🔥 jika OFF → sembunyikan
+    if (status === "off") {
+      console.log("⛔ iklan OFF:", base);
+      el.style.display = "none";
+      return;
+    }
+
+    // =========================
     // 🔥 LOAD GAMBAR
     // =========================
     img.src = base + ".webp";
@@ -39,7 +58,6 @@ document.addEventListener("DOMContentLoaded", function () {
     img.onerror = function () {
       this.onerror = null;
 
-      // fallback ke gif
       this.src = base + ".gif";
 
       this.onerror = function () {

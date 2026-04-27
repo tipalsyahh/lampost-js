@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   ads.forEach(async (el) => {
+
     const slot = el.dataset.slot;
     const folder = el.dataset.folder || "iklan-beranda";
 
@@ -23,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const base = "/index/uploads/" + folder + "/" + slot;
 
     // =========================
-    // 🔥 CEK STATUS IKLAN
+    // 🔥 CEK STATUS
     // =========================
     let status = "on";
 
@@ -31,33 +32,51 @@ document.addEventListener("DOMContentLoaded", function () {
       const resStatus = await fetch(base + ".status");
       status = (await resStatus.text()).trim();
     } catch {
-      status = "on"; // default tetap aktif kalau file tidak ada
+      status = "on";
     }
 
-    // jika OFF → sembunyikan langsung
+    // =========================
+    // 🔥 JIKA OFF
+    // =========================
     if (status === "off") {
-      el.style.display = "none";
+
+      if (el.classList.contains("iklan-popup")) {
+        const parent = el.closest(".popup-overlay");
+        if (parent) parent.style.display = "none";
+      } else {
+        el.style.display = "none";
+      }
+
       return;
     }
 
     // =========================
-    // LOAD GAMBAR
+    // 🔥 LOAD GAMBAR
     // =========================
     const webp = await testImage(base + ".webp");
     const gif  = await testImage(base + ".gif");
 
     const finalImg = webp || gif;
 
-    // kalau tidak ada gambar → sembunyikan
+    // =========================
+    // 🔥 JIKA GAMBAR TIDAK ADA
+    // =========================
     if (!finalImg) {
-      el.style.display = "none";
+
+      if (el.classList.contains("iklan-popup")) {
+        const parent = el.closest(".popup-overlay");
+        if (parent) parent.style.display = "none";
+      } else {
+        el.style.display = "none";
+      }
+
       return;
     }
 
     imgTag.src = finalImg;
 
     // =========================
-    // AMBIL LINK
+    // 🔥 AMBIL LINK
     // =========================
     try {
       const res = await fetch(base + ".txt");
@@ -68,21 +87,24 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================
-    // 🔥 KHUSUS POPUP
+    // 🔥 KHUSUS POPUP → TAMPILKAN
     // =========================
     if (el.classList.contains("iklan-popup")) {
-      document.getElementById("popup-ads").style.display = "block";
+      const parent = el.closest(".popup-overlay");
+      if (parent) parent.style.display = "flex";
     }
 
   });
 
   // =========================
-  // CLOSE POPUP
+  // 🔥 CLOSE POPUP
   // =========================
-  const closeBtn = document.getElementById("close-popup");
+  const closeBtn = document.getElementById("popupClose");
+
   if (closeBtn) {
     closeBtn.onclick = function () {
-      document.getElementById("popup-ads").style.display = "none";
+      const popup = document.getElementById("popupIklan");
+      if (popup) popup.style.display = "none";
     };
   }
 

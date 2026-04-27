@@ -2,7 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const ads = document.querySelectorAll(".iklan-detail");
 
-  ads.forEach((el) => {
+  ads.forEach(async (el) => {
+
     const slot = el.dataset.slot;
     const folder = el.dataset.folder || "detail-berita";
 
@@ -13,24 +14,47 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const base = "/index/uploads/" + folder + "/" + slot;
 
-    // 🔥 langsung load
+    // =========================
+    // 🔥 CEK STATUS
+    // =========================
+    let status = "on";
+
+    try {
+      const resStatus = await fetch(base + ".status");
+      status = (await resStatus.text()).trim();
+    } catch {
+      status = "on";
+    }
+
+    // 🔥 jika OFF → sembunyikan
+    if (status === "off") {
+      el.style.display = "none";
+      return;
+    }
+
+    // =========================
+    // 🔥 LOAD WEBP
+    // =========================
     imgTag.src = base + ".webp";
 
-    // 🔥 fallback ke gif
+    // =========================
+    // 🔥 FALLBACK GIF
+    // =========================
     imgTag.onerror = function () {
       this.onerror = null;
       this.src = base + ".gif";
     };
 
-    // 🔥 ambil link
-    fetch(base + ".txt")
-      .then(res => res.text())
-      .then(link => {
-        el.href = link.trim() || "#";
-      })
-      .catch(() => {
-        el.href = "#";
-      });
+    // =========================
+    // 🔥 AMBIL LINK
+    // =========================
+    try {
+      const res = await fetch(base + ".txt");
+      const link = await res.text();
+      el.href = link.trim() || "#";
+    } catch {
+      el.href = "#";
+    }
 
   });
 
