@@ -22,23 +22,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const base = "/index/uploads/" + folder + "/" + slot;
 
-    // 🔥 TAMBAHAN CEK STATUS
+    // =========================
+    // 🔥 CEK NONAKTIF (.off)
+    // =========================
     try {
-      const statusRes = await fetch(base + ".status");
-      const status = (await statusRes.text()).trim();
-
-      if (status === "0") {
+      const off = await fetch(base + ".off");
+      if (off.ok) {
         el.style.display = "none";
         return;
       }
     } catch {}
 
+    // =========================
+    // 🔥 LOAD GAMBAR
+    // =========================
     const webp = await testImage(base + ".webp");
     const gif  = await testImage(base + ".gif");
 
     const finalImg = webp || gif;
 
-    // kalau tidak ada gambar → sembunyikan
     if (!finalImg) {
       el.style.display = "none";
       return;
@@ -46,7 +48,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     imgTag.src = finalImg;
 
-    // ambil link
+    // =========================
+    // 🔥 LINK
+    // =========================
     try {
       const res = await fetch(base + ".txt");
       const link = await res.text();
@@ -55,14 +59,16 @@ document.addEventListener("DOMContentLoaded", function () {
       el.href = "#";
     }
 
-    // 🔥 KHUSUS POPUP → tampilkan
+    // =========================
+    // 🔥 POPUP
+    // =========================
     if (el.classList.contains("iklan-popup")) {
       document.getElementById("popup-ads").style.display = "block";
     }
 
   });
 
-  // tombol close popup
+  // close popup
   const closeBtn = document.getElementById("close-popup");
   if (closeBtn) {
     closeBtn.onclick = function () {
