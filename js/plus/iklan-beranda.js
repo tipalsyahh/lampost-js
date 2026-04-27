@@ -12,10 +12,15 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   ads.forEach(async (el) => {
-    const slot = el.dataset.slot;
-    const folder = el.dataset.folder || "iklan-beranda";
 
-    if (!slot) return;
+    const slot = el.dataset.slot;
+    const folder = el.dataset.folder;
+
+    // 🔥 WAJIB ADA (biar tidak global)
+    if (!slot || !folder) {
+      el.style.display = "none";
+      return;
+    }
 
     const imgTag = el.querySelector("img");
     if (!imgTag) return;
@@ -23,15 +28,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const base = "/index/uploads/" + folder + "/" + slot;
 
     // =========================
-    // 🔥 CEK NONAKTIF (.off)
+    // 🔥 CEK OFF PER SLOT
     // =========================
     try {
-      const off = await fetch(base + ".off");
-      if (off.ok) {
+      const res = await fetch(base + ".off", { method: "HEAD" });
+
+      if (res.ok) {
+        // slot ini saja yang mati
         el.style.display = "none";
         return;
       }
-    } catch {}
+
+    } catch (e) {
+      // kalau error, lanjut normal
+    }
 
     // =========================
     // 🔥 LOAD GAMBAR
@@ -49,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
     imgTag.src = finalImg;
 
     // =========================
-    // 🔥 LINK
+    // 🔥 LOAD LINK
     // =========================
     try {
       const res = await fetch(base + ".txt");
@@ -60,15 +70,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================
-    // 🔥 POPUP
+    // 🔥 POPUP KHUSUS
     // =========================
     if (el.classList.contains("iklan-popup")) {
-      document.getElementById("popup-ads").style.display = "block";
+      const popup = document.getElementById("popup-ads");
+      if (popup) popup.style.display = "block";
     }
 
   });
 
-  // close popup
+  // tombol close popup
   const closeBtn = document.getElementById("close-popup");
   if (closeBtn) {
     closeBtn.onclick = function () {
