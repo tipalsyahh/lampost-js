@@ -2,12 +2,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const ads = document.querySelectorAll(".iklan-beranda, .iklan-header, .iklan-popup");
 
+  const cacheBust = () => "?t=" + Date.now();
+
   const testImage = (url) => {
     return new Promise(resolve => {
       const img = new Image();
       img.onload = () => resolve(url);
       img.onerror = () => resolve(null);
-      img.src = url;
+      img.src = url + cacheBust(); // 🔥 ANTI CACHE
     });
   };
 
@@ -24,12 +26,14 @@ document.addEventListener("DOMContentLoaded", function () {
     const base = "/index/uploads/" + folder + "/" + slot;
 
     // =========================
-    // 🔥 CEK STATUS
+    // 🔥 CEK STATUS (ANTI CACHE)
     // =========================
     let status = "on";
 
     try {
-      const resStatus = await fetch(base + ".status");
+      const resStatus = await fetch(base + ".status" + cacheBust(), {
+        cache: "no-store"
+      });
       status = (await resStatus.text()).trim();
     } catch {
       status = "on";
@@ -51,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================
-    // 🔥 LOAD GAMBAR
+    // 🔥 LOAD GAMBAR (ANTI CACHE)
     // =========================
     const webp = await testImage(base + ".webp");
     const gif  = await testImage(base + ".gif");
@@ -73,13 +77,16 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    imgTag.src = finalImg;
+    // 🔥 SET GAMBAR TANPA CACHE
+    imgTag.src = finalImg + cacheBust();
 
     // =========================
-    // 🔥 AMBIL LINK
+    // 🔥 AMBIL LINK (ANTI CACHE)
     // =========================
     try {
-      const res = await fetch(base + ".txt");
+      const res = await fetch(base + ".txt" + cacheBust(), {
+        cache: "no-store"
+      });
       const link = await res.text();
       el.href = link.trim() || "#";
     } catch {
