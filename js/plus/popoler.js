@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.querySelector('.terpopuler');
   if (!container) return;
 
-  const PER_PAGE = 10;
+  const PER_PAGE = 8;
 
   async function getMedia(mediaId) {
     if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
