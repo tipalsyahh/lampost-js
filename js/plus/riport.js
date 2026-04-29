@@ -118,7 +118,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function fetchEditorsAsync(posts) {
         posts.forEach(async post => {
 
-            const termLink = post._links?.['wp:term']?.[2]?.href;
+            const termLink = post._links?.['wp:term']?.find(
+                t => t.taxonomy === 'author' || t.taxonomy === 'coauthor' || t.taxonomy === 'coauthors'
+            )?.href;
             if (!termLink) return;
 
             if (editorCache[termLink]) {
@@ -210,7 +212,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function validateEditor(post, selectedEditorId) {
 
-        const termLink = post._links?.['wp:term']?.[2]?.href;
+        const termLink = post._links?.['wp:term']?.find(
+            t => t.taxonomy === 'author' || t.taxonomy === 'coauthor' || t.taxonomy === 'coauthors'
+        )?.href;
         if (!termLink) return false;
 
         try {
@@ -301,7 +305,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const img = mediaMap[post.featured_media] || "https://lampost.co/image/ai.jpeg";
 
-                const termLink = post._links?.['wp:term']?.[2]?.href;
+                const termLink = post._links?.['wp:term']?.find(
+                    t => t.taxonomy === 'author' || t.taxonomy === 'coauthor' || t.taxonomy === 'coauthors'
+                )?.href;
 
                 let link = `/${catSlug}/${post.slug}`;
 
