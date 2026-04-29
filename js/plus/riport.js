@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.querySelector(".info");
     if (!container) return;
 
+    // ✅ indikator jumlah
     container.insertAdjacentHTML(
         "beforebegin",
         '<div id="postCount" style="padding:10px;font-size:14px;">Memuat...</div>'
@@ -27,12 +28,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const mediaMap = {};
     const editorCache = {};
 
+    // ✅ state filter
     let currentFilter = {
         category: "",
         editor: "",
         date: ""
     };
 
+    // ✅ state jumlah
     let totalPosts = 0;
     let shownPosts = 0;
 
@@ -49,12 +52,18 @@ document.addEventListener("DOMContentLoaded", () => {
             let html = '<option value="">Semua Berita</option>';
 
             data.forEach(cat => {
-                categoryMap[cat.id] = cat;
+                categoryMap[cat.id] = {
+                    name: cat.name,
+                    slug: cat.slug,
+                    parent: cat.parent
+                };
+
                 html += `<option value="${cat.id}">${cat.name}</option>`;
             });
 
             filterCategory.innerHTML = html;
-        } catch (e) {}
+
+        } catch (e) { }
     }
 
     async function loadEditors() {
@@ -68,9 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 html += `<option value="${editor.id}">${editor.name}</option>`;
             });
 
-            if (filterEditor) filterEditor.innerHTML = html;
+            if (filterEditor) {
+                filterEditor.innerHTML = html;
+            }
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
     function buildDateQuery(url) {
@@ -78,8 +89,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const date = new Date(currentFilter.date);
 
-        const after = date.toISOString().split("T")[0] + "T00:00:00";
-        const before = date.toISOString().split("T")[0] + "T23:59:59";
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+
+        const after = `${year}-${month}-${day}T00:00:00`;
+        const before = `${year}-${month}-${day}T23:59:59`;
 
         return url + `&after=${after}&before=${before}`;
     }
@@ -96,81 +111,82 @@ document.addEventListener("DOMContentLoaded", () => {
                     const data = await res.json();
                     mediaMap[id] = data.source_url;
                 }
-            } catch (e) {}
+            } catch (e) { }
         }));
     }
 
-    // ✅ FIX UTAMA DI SINI
-    function getCoauthorLink(post) {
-        const terms = post._links?.['wp:term'];
-        if (!terms) return null;
-
-        const coauthor = terms.find(t =>
-            t.taxonomy === 'coauthors' ||
-            t.taxonomy === 'author' ||
-            t.taxonomy === 'coauthor'
-        );
-
-        return coauthor?.href || null;
-    }
-
     function fetchEditorsAsync(posts) {
-
         posts.forEach(async post => {
 
-            const termLink = getCoauthorLink(post);
+            const termLink = post._links?.['wp:term']?.[2]?.href;
             if (!termLink) return;
 
-            // cache hit
             if (editorCache[termLink]) {
-                renderEditor(termLink, editorCache[termLink]);
+
+                const data = editorCache[termLink];
+
+                let name = "Redaksi";
+
+                if (Array.isArray(data) && data.length > 0) {
+
+                    if (currentFilter.editor) {
+
+                        const found = data.find(e => String(e.id) === String(currentFilter.editor));
+
+                        if (found) {
+                            name = found.name;
+                        } else {
+                            name = data.map(e => e.name).join(", ");
+                        }
+
+                    } else {
+                        name = data.map(e => e.name).join(", ");
+                    }
+                }
+
+                document.querySelectorAll(`[data-editor="${termLink}"]`)
+                    .forEach(el => el.textContent = `By ${name}`);
+
                 return;
             }
 
             try {
                 const res = await fetch(termLink);
-                if (!res.ok) return;
+                if (res.ok) {
+                    const data = await res.json();
 
-                const data = await res.json();
+                    editorCache[termLink] = data;
 
-                if (!Array.isArray(data)) return;
+                    let name = "Redaksi";
 
-                editorCache[termLink] = data;
-                renderEditor(termLink, data);
+                    if (Array.isArray(data) && data.length > 0) {
 
-            } catch (e) {}
+                        if (currentFilter.editor) {
+
+                            const found = data.find(e => String(e.id) === String(currentFilter.editor));
+
+                            if (found) {
+                                name = found.name;
+                            } else {
+                                name = data.map(e => e.name).join(", ");
+                            }
+
+                        } else {
+                            name = data.map(e => e.name).join(", ");
+                        }
+                    }
+
+                    document.querySelectorAll(`[data-editor="${termLink}"]`)
+                        .forEach(el => el.textContent = `By ${name}`);
+                }
+            } catch (e) { }
 
         });
     }
 
-    function renderEditor(termLink, data) {
-
-        let name = "Redaksi";
-
-        if (data.length > 0) {
-
-            if (currentFilter.editor) {
-
-                const found = data.find(e => String(e.id) === String(currentFilter.editor));
-
-                if (found) {
-                    name = found.name;
-                } else {
-                    name = data.map(e => e.name).join(", ");
-                }
-
-            } else {
-                name = data.map(e => e.name).join(", ");
-            }
-        }
-
-        document.querySelectorAll(`[data-editor="${termLink}"]`)
-            .forEach(el => el.textContent = `By ${name}`);
-    }
-
     function getMainCategory(post) {
 
-        if (!post.categories?.length) {
+        if (!post.categories || !post.categories.length) {
             return { name: "Berita", slug: "berita", parent: 0 };
         }
 
@@ -178,10 +194,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
         post.categories.forEach(id => {
             const cat = categoryMap[id];
-            if (cat && cat.parent !== 0) selected = cat;
+            if (!cat) return;
+
+            if (cat.parent !== 0) {
+                selected = cat;
+            }
         });
 
-        return selected || categoryMap[post.categories[0]];
+        if (!selected) {
+            selected = categoryMap[post.categories[0]];
+        }
+
+        return selected || { name: "Berita", slug: "berita", parent: 0 };
+    }
+
+    async function validateEditor(post, selectedEditorId) {
+
+        const termLink = post._links?.['wp:term']?.[2]?.href;
+        if (!termLink) return false;
+
+        try {
+            const res = await fetch(termLink);
+            const data = await res.json();
+
+            if (Array.isArray(data)) {
+                return data.some(e => String(e.id) === String(selectedEditorId));
+            }
+
+        } catch (e) { }
+
+        return false;
     }
 
     async function loadPosts(reset = false) {
@@ -192,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
             container.innerHTML = "";
             page = 1;
             loadMoreBtn.style.display = "block";
-            shownPosts = 0;
+            shownPosts = 0; // ✅ reset counter
         }
 
         let url = `https://lampost.co/wp-json/wp/v2/posts?per_page=${PER_PAGE}&page=${page}`;
@@ -202,7 +244,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (currentFilter.editor) {
-            url += `&coauthors=${currentFilter.editor}`;
+            const editorId = parseInt(currentFilter.editor);
+            if (!isNaN(editorId)) {
+                url += `&coauthors=${editorId}`;
+            }
         }
 
         url = buildDateQuery(url);
@@ -211,15 +256,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const res = await fetch(url);
 
+            // ✅ ambil total
             const total = res.headers.get('X-WP-Total');
             if (total) totalPosts = parseInt(total);
 
-            const posts = await res.json();
+            let posts = await res.json();
+
+            if (currentFilter.editor) {
+                const validPosts = [];
+
+                for (const post of posts) {
+                    const ok = await validateEditor(post, currentFilter.editor);
+                    if (ok) validPosts.push(post);
+                }
+
+                posts = validPosts;
+            }
 
             if (!posts.length) {
+
                 if (page === 1) {
                     container.innerHTML = `<p style="padding:20px;text-align:center;">Berita tidak ditemukan</p>`;
                 }
+
                 loadMoreBtn.style.display = "none";
                 return;
             }
@@ -235,21 +294,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const catData = getMainCategory(post);
 
+                const catName = catData.name;
+                const catSlug = catData.slug;
+
+                const parentData = categoryMap[catData.parent];
+
                 const img = mediaMap[post.featured_media] || "https://lampost.co/image/ai.jpeg";
 
-                const termLink = getCoauthorLink(post);
+                const termLink = post._links?.['wp:term']?.[2]?.href;
+
+                let link = `/${catSlug}/${post.slug}`;
+
+                if (parentData && parentData.slug) {
+                    link = `/${parentData.slug}/${catSlug}/${post.slug}`;
+                }
 
                 html += `
-                <a href="/${catData.slug}/${post.slug}" class="item-berita">
-                    <img src="${img}">
-                    <div class="info-berita">
-                        <p class="judul">${title}</p>
-                        <p class="kategori">${catData.name}</p>
-                        <div class="detail-info">
-                            <p class="editor" data-editor="${termLink}">By Redaksi</p>
-                            <p class="tanggal">${date}</p>
-                        </div>
-                    </div>
+                <a href="${link}" class="item-berita">
+                <img src="${img}">
+                <div class="info-berita">
+                <p class="judul">${title}</p>
+                <p class="kategori">${catName}</p>
+                <div class="detail-info">
+                <p class="editor" data-editor="${termLink}">By Redaksi</p>
+                <p class="tanggal">${date}</p>
+                </div>
+                </div>
                 </a>
                 `;
             });
@@ -258,6 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             fetchEditorsAsync(posts);
 
+            // ✅ update jumlah
             shownPosts += posts.length;
 
             const countEl = document.getElementById("postCount");
@@ -267,12 +338,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             page++;
 
-        } catch (e) {}
+        } catch (e) { }
     }
 
-    filterBtn?.addEventListener("click", () => {
+    filterBtn.addEventListener("click", () => {
+
         currentFilter.category = filterCategory.value;
-        currentFilter.editor = filterEditor?.value || "";
+        currentFilter.editor = filterEditor ? filterEditor.value : "";
         currentFilter.date = filterDate.value;
 
         loadPosts(true);
