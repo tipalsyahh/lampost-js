@@ -4,6 +4,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const ads = document.querySelectorAll(".sidebar-kategori-detail");
 
+  const cacheBust = () => "?t=" + Date.now();
+
+  const testImage = (url) => {
+    return new Promise(resolve => {
+      const img = new Image();
+      img.onload = () => resolve(url);
+      img.onerror = () => resolve(null);
+      img.src = url + cacheBust(); // 🔥 anti cache
+      img.decoding = "async";
+      img.loading = "eager";
+    });
+  };
+
   if (!ads.length) {
     console.log("❌ tidak ada elemen sidebar-kategori-detail");
     return;
@@ -20,8 +33,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    const img = el.querySelector("img");
-    if (!img) {
+    const imgTag = el.querySelector("img");
+    if (!imgTag) {
       console.log("❌ img tidak ditemukan:", el);
       el.style.display = "none";
       return;
@@ -32,18 +45,22 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("LOAD:", base);
 
     // =========================
-    // 🔥 CEK STATUS
+    // 🔥 CEK STATUS (ANTI CACHE)
     // =========================
     let status = "on";
 
     try {
-      const resStatus = await fetch(base + ".status");
+      const resStatus = await fetch(base + ".status" + cacheBust(), {
+        cache: "no-store"
+      });
       status = (await resStatus.text()).trim();
     } catch {
       status = "on";
     }
 
-    // 🔥 jika OFF → sembunyikan
+    // =========================
+    // 🔥 JIKA OFF
+    // =========================
     if (status === "off") {
       console.log("⛔ iklan OFF:", base);
       el.style.display = "none";
@@ -51,33 +68,46 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // =========================
-    // 🔥 LOAD GAMBAR
+    // 🔥 LOAD GAMBAR (WEBP → GIF)
     // =========================
-    img.src = base + ".webp";
+    const webp = await testImage(base + ".webp");
+    const gif  = await testImage(base + ".gif");
 
-    img.onerror = function () {
-      this.onerror = null;
-
-      this.src = base + ".gif";
-
-      this.onerror = function () {
-        console.log("❌ gambar tidak ditemukan:", base);
-        el.style.display = "none";
-      };
-    };
+    const finalImg = webp || gif;
 
     // =========================
-    // 🔥 AMBIL LINK
+    // 🔥 JIKA GAMBAR TIDAK ADA
     // =========================
-    fetch(base + ".txt")
-      .then(res => res.text())
-      .then(link => {
-        el.href = link.trim() || "#";
-      })
-      .catch(() => {
-        console.log("❌ link tidak ditemukan:", base);
-        el.href = "#";
+    if (!finalImg) {
+      console.log("❌ gambar tidak ditemukan:", base);
+      el.style.display = "none";
+      return;
+    }
+
+    // =========================
+    // 🔥 SET GAMBAR (ANTI CACHE + RESET)
+    // =========================
+    const newSrc = finalImg + cacheBust();
+
+    imgTag.removeAttribute("src");
+
+    setTimeout(() => {
+      imgTag.src = newSrc;
+    }, 10);
+
+    // =========================
+    // 🔥 AMBIL LINK (ANTI CACHE)
+    // =========================
+    try {
+      const res = await fetch(base + ".txt" + cacheBust(), {
+        cache: "no-store"
       });
+      const link = await res.text();
+      el.href = link.trim() || "#";
+    } catch {
+      console.log("❌ link tidak ditemukan:", base);
+      el.href = "#";
+    }
 
   });
 
