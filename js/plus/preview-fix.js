@@ -9,9 +9,17 @@
   console.log('🔥 Preview mode detected:', postId);
 
   const originalFetch = window.fetch;
+  const originalReplaceState = history.replaceState;
 
   // =====================================
-  // OVERRIDE FETCH
+  // 🚫 BLOCK URL REWRITE DARI SCRIPT UTAMA
+  // =====================================
+  history.replaceState = function () {
+    console.log('🚫 replaceState diblok saat preview');
+  };
+
+  // =====================================
+  // 🔥 OVERRIDE FETCH (slug → ID)
   // =====================================
   window.fetch = function (url, options) {
 
@@ -21,7 +29,7 @@
 
       return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed`, options)
         .then(r => r.json())
-        .then(data => [data])
+        .then(data => [data]) // ubah object jadi array
         .then(arr => new Response(JSON.stringify(arr), {
           headers: { 'Content-Type': 'application/json' }
         }));
@@ -31,13 +39,12 @@
   };
 
   // =====================================
-  // AMBIL DATA UNTUK URL
+  // 🔥 AMBIL DATA UNTUK URL CLEAN
   // =====================================
   originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed`)
     .then(r => r.json())
     .then(async post => {
 
-      // 🔥 FIX UTAMA
       let slug = post.slug || ('preview-' + postId);
 
       let parentSlug = '';
@@ -57,7 +64,9 @@
             parentSlug = parent.slug;
           }
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('Kategori gagal diambil');
+      }
 
       let cleanUrl = '/';
 
@@ -66,10 +75,22 @@
 
       cleanUrl += slug;
 
-      history.replaceState(null, '', cleanUrl);
+      // =====================================
+      // ✅ SET URL FINAL
+      // =====================================
+      originalReplaceState.call(history, null, '', cleanUrl);
 
       console.log('🔥 URL updated:', cleanUrl);
 
+      // =====================================
+      // ✅ RESTORE replaceState
+      // =====================================
+      history.replaceState = originalReplaceState;
+
+    })
+    .catch(err => {
+      console.error('Preview fetch error:', err);
+      history.replaceState = originalReplaceState;
     });
 
 })();
