@@ -47,7 +47,7 @@ const SIDEBAR = `
                     <li><a href="#">Breking New</a></li>
                     <li><a href="https://lampost.co/kategori/vidio/bedah-tajuk">Bedah Tajuk</a></li>
                     <li><a href="#">Economic Corner</a></li>
-                    <li><a href="#">Podcast</a></li>
+                    <li><a href="https://lampost.co/kategori/podcast">Podcast</a></li>
                 </ul>
             </li>
             <li><a href="https://lampost.co/kategori/teknologi">Teknologi</a></li>
