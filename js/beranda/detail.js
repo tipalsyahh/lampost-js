@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
-  const isPreview = new URLSearchParams(window.location.search).get('preview');
+  if (window.IS_PREVIEW) return;
 
   const berita = document.getElementById('berita');
   if (!berita) return;
