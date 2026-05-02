@@ -21,22 +21,35 @@
   // =====================================
   // 🔥 OVERRIDE FETCH (slug → ID)
   // =====================================
-  window.fetch = function (url, options) {
+window.fetch = function (url, options) {
 
-    if (typeof url === 'string' && url.includes('/wp-json/wp/v2/posts?slug=')) {
+  if (typeof url === 'string' && url.includes('/wp-json/wp/v2/posts?slug=')) {
 
-      console.log('🔥 Override fetch ke ID');
+    // ambil slug dari URL
+    const match = url.match(/slug=([^&]+)/);
+    const slug = match ? match[1] : '';
 
-      return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed`, options)
+    // 🔥 kalau slug preview-123 → ambil ID
+    if (slug.startsWith('preview-')) {
+
+      const id = slug.replace('preview-', '');
+
+      console.log('🔥 Preview slug detected → pakai ID:', id);
+
+      return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${id}?_embed`, options)
         .then(r => r.json())
-        .then(data => [data]) // ubah object jadi array
+        .then(data => [data])
         .then(arr => new Response(JSON.stringify(arr), {
           headers: { 'Content-Type': 'application/json' }
         }));
     }
 
+    // fallback normal
     return originalFetch(url, options);
-  };
+  }
+
+  return originalFetch(url, options);
+};
 
   // =====================================
   // 🔥 AMBIL DATA UNTUK URL CLEAN
