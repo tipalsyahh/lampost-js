@@ -21,41 +21,28 @@
   // =====================================
   // 🔥 OVERRIDE FETCH (slug → ID + preview)
   // =====================================
-  window.fetch = function (url, options) {
+window.fetch = function (url, options) {
 
-    if (typeof url === 'string' && url.includes('/wp-json/wp/v2/posts?slug=')) {
+  if (typeof url === 'string' && url.includes('/wp-json/wp/v2/posts')) {
 
-      const match = url.match(/slug=([^&]+)/);
-      const slug = match ? match[1] : '';
+    console.log('🔥 Intercept fetch:', url);
 
-      // kalau slug preview-xxx → ambil ID
-      if (slug.startsWith('preview-')) {
+    return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed&preview=true`, options)
+      .then(r => r.json())
+      .then(data => {
+        console.log('🔥 API RESULT:', data);
 
-        const id = slug.replace('preview-', '');
+        // 🔥 PASTIKAN ARRAY
+        const arr = Array.isArray(data) ? data : [data];
 
-        console.log('🔥 Preview slug → ID:', id);
-
-        return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${id}?_embed&preview=true`, options)
-          .then(r => r.json())
-          .then(data => [data])
-          .then(arr => new Response(JSON.stringify(arr), {
-            headers: { 'Content-Type': 'application/json' }
-          }));
-      }
-
-      // slug normal tapi masih preview → tetap pakai ID awal
-      console.log('🔥 Override slug → ID preview');
-
-      return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed&preview=true`, options)
-        .then(r => r.json())
-        .then(data => [data])
-        .then(arr => new Response(JSON.stringify(arr), {
+        return new Response(JSON.stringify(arr), {
           headers: { 'Content-Type': 'application/json' }
-        }));
-    }
+        });
+      });
+  }
 
-    return originalFetch(url, options);
-  };
+  return originalFetch(url, options);
+};
 
   // =====================================
   // 🔥 AMBIL DATA POST UNTUK CLEAN URL
