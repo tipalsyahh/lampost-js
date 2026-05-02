@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setTimeout(() => {
         popup.classList.add("active");
-    }, 3000);
+    }, 9000);
 
     closeBtn.addEventListener("click", () => {
         popup.classList.remove("active");
