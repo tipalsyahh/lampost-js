@@ -1,102 +1,114 @@
-(function () {
+(async function () {
 
   const params = new URLSearchParams(window.location.search);
   const postId = params.get('p');
-  const isPreview = params.get('preview');
 
-  if (!postId || !isPreview) return;
-
-  console.log('🔥 Preview mode detected:', postId);
-
-  const originalFetch = window.fetch;
-  const originalReplaceState = history.replaceState;
-
-  // =====================================
-  // 🚫 BLOCK replaceState dari script utama
-  // =====================================
-  history.replaceState = function () {
-    console.log('🚫 replaceState diblok saat preview');
-  };
-
-  // =====================================
-  // 🔥 OVERRIDE FETCH (slug → ID + preview)
-  // =====================================
-window.fetch = function (url, options) {
-
-  if (typeof url === 'string' && url.includes('/wp-json/wp/v2/posts')) {
-
-    console.log('🔥 Intercept fetch:', url);
-
-    return originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed&preview=true`, options)
-      .then(r => r.json())
-      .then(data => {
-        console.log('🔥 API RESULT:', data);
-
-        // 🔥 PASTIKAN ARRAY
-        const arr = Array.isArray(data) ? data : [data];
-
-        return new Response(JSON.stringify(arr), {
-          headers: { 'Content-Type': 'application/json' }
-        });
-      });
+  if (!postId) {
+    document.body.innerHTML = 'ID tidak ditemukan';
+    return;
   }
 
-  return originalFetch(url, options);
-};
+  try {
 
-  // =====================================
-  // 🔥 AMBIL DATA POST UNTUK CLEAN URL
-  // =====================================
-  originalFetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed&preview=true`)
-    .then(r => r.json())
-    .then(async post => {
+    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts/${postId}?_embed&preview=true`);
+    const post = await res.json();
 
-      let slug = post.slug || ('preview-' + postId);
+    console.log('🔥 PREVIEW DATA:', post);
 
-      let parentSlug = '';
-      let childSlug = '';
+    if (!post || !post.id) {
+      document.body.innerHTML = 'Berita tidak ditemukan';
+      return;
+    }
 
-      try {
-        if (post.categories?.length) {
+    // =====================================
+    // 🔥 TITLE DINAMIS
+    // =====================================
+    const cleanTitle = post.title?.rendered?.replace(/<[^>]*>?/gm, '') || '';
+    document.title = 'Preview - ' + (cleanTitle || post.slug || post.id);
 
-          const catRes = await originalFetch(`https://lampost.co/wp-json/wp/v2/categories/${post.categories[0]}`);
-          const cat = await catRes.json();
+    // =====================================
+    // 🔥 RENDER KE HTML
+    // =====================================
 
-          childSlug = cat.slug;
+    // JUDUL
+    const judul = document.querySelector('.judul-berita');
+    if (judul) judul.innerHTML = post.title.rendered;
 
-          if (cat.parent && cat.parent !== 0) {
-            const parentRes = await originalFetch(`https://lampost.co/wp-json/wp/v2/categories/${cat.parent}`);
-            const parent = await parentRes.json();
-            parentSlug = parent.slug;
-          }
-        }
-      } catch (e) {
-        console.warn('Kategori gagal diambil');
+    // ISI BERITA
+    const isi = document.querySelector('.isi-berita');
+    if (isi) isi.innerHTML = post.content.rendered || post.content.raw || '';
+
+    // GAMBAR
+    const img = document.querySelector('.gambar-berita');
+    if (img) {
+      if (post._embedded?.['wp:featuredmedia']?.[0]) {
+        img.src = post._embedded['wp:featuredmedia'][0].source_url;
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
       }
+    }
 
-      let cleanUrl = '/';
+    // =====================================
+    // 🔥 TANGGAL & JAM
+    // =====================================
+    const date = new Date(post.date);
 
-      if (parentSlug) cleanUrl += parentSlug + '/';
-      if (childSlug) cleanUrl += childSlug + '/';
+    const tanggal = document.getElementById('tanggal');
+    const jam = document.getElementById('jam');
 
-      cleanUrl += slug;
+    if (tanggal) {
+      tanggal.textContent = date.toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
 
-      // =====================================
-      // ✅ SET URL FINAL
-      // =====================================
-      originalReplaceState.call(history, null, '', cleanUrl);
+    if (jam) {
+      jam.textContent = date.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
 
-      console.log('🔥 URL updated:', cleanUrl);
+    // =====================================
+    // 🔥 EDITOR
+    // =====================================
+    const editor = document.getElementById('editor');
+    if (editor) {
+      editor.textContent = post._embedded?.author?.[0]?.name || 'Lampost';
+    }
 
-      // =====================================
-      // ✅ RESTORE replaceState
-      // =====================================
-      history.replaceState = originalReplaceState;
+    // =====================================
+    // 🔥 SHARE (OPSIONAL)
+    // =====================================
+    const url = window.location.href;
 
-    })
-    .catch(err => {
-      console.error('Preview fetch error:', err);
-      history.replaceState = originalReplaceState;
-    });
+    const fb = document.getElementById('fbShare');
+    const wa = document.getElementById('waShare');
+    const tg = document.getElementById('tgShare');
+    const x = document.getElementById('xShare');
+
+    if (fb) fb.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    if (wa) wa.href = `https://api.whatsapp.com/send?text=${encodeURIComponent(cleanTitle + ' ' + url)}`;
+    if (tg) tg.href = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(cleanTitle)}`;
+    if (x) x.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(cleanTitle)}&url=${encodeURIComponent(url)}`;
+
+    // COPY LINK
+    const copyBtn = document.getElementById('copyLink');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(url);
+        alert('Link disalin!');
+      });
+    }
+
+  } catch (err) {
+
+    console.error(err);
+    document.body.innerHTML = 'Gagal memuat preview';
+
+  }
 
 })();

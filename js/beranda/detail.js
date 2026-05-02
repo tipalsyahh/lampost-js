@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
 
-  if (window.IS_PREVIEW) return;
-
   const berita = document.getElementById('berita');
   if (!berita) return;
 
