@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-   if (window.__PREVIEW_LOADING__) return;
 
   const berita = document.getElementById('berita');
   if (!berita) return;
