@@ -3,21 +3,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("backToTop");
     if (!btn) return;
 
-    // awal: sembunyikan
-    btn.style.display = "none";
+    // awal sembunyikan pakai opacity (lebih aman)
+    btn.style.opacity = "0";
+    btn.style.pointerEvents = "none";
+    btn.style.transition = "opacity 0.3s ease";
 
-    // 🔥 kontrol muncul/hilang saat scroll
     window.addEventListener("scroll", () => {
-        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+        // ambil posisi scroll (cross browser)
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
         if (scrollTop > 200) {
-            btn.style.display = "block";
+            btn.style.opacity = "1";
+            btn.style.pointerEvents = "auto";
         } else {
-            btn.style.display = "none";
+            btn.style.opacity = "0";
+            btn.style.pointerEvents = "none";
         }
+
     });
 
-    // 🔥 klik kembali ke atas
     btn.addEventListener("click", () => {
         window.scrollTo({
             top: 0,
