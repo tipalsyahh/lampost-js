@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
   const q = params.get('q') || '';
   const query = decodeURIComponent(q).trim();
-  const queryLower = query.toLowerCase();
 
   title.textContent = `Search Result for '${query}'`;
 
@@ -52,24 +51,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // 🔥 MEDIA FIX (ANTI KOSONG)
   async function getMedia(id) {
-    if (!id || id === 0) return null;
+    const fallback = 'https://lampost.co/image/ai.jpeg';
+
+    if (!id || id === 0) return fallback;
     if (mediaCache[id]) return mediaCache[id];
 
     try {
       const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${id}`);
-      if (!res.ok) return null;
+      if (!res.ok) return fallback;
 
       const data = await res.json();
       const img =
         data.media_details?.sizes?.medium?.source_url ||
         data.source_url ||
-        null;
+        fallback;
 
-      mediaCache[id] = img;
-      return img;
+      return (mediaCache[id] = img);
     } catch {
-      return null;
+      return fallback;
     }
   }
 
@@ -101,7 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return `
       <a href="#" class="item-info" id="${id}">
-        <img class="img-microweb" loading="lazy">
+        <img 
+          class="img-microweb" 
+          loading="lazy"
+          onerror="this.onerror=null;this.src='https://lampost.co/image/ai.jpeg';"
+        >
         <div class="berita-microweb">
           <p class="judul">${judul}</p>
           <p class="kategori"></p>
@@ -122,16 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const imgEl = el.querySelector('img');
     const img = await getMedia(post.featured_media);
 
-    if (img) imgEl.src = img;
-    else imgEl.remove();
+    imgEl.src = img;
 
     const cat = await getCategory(post);
     const parent = await getParentCategory(cat.parent);
     const editor = await getEditor(post);
 
-    // 🔥 BUILD URL SUPPORT SUB KATEGORI
     let finalUrl = `/${cat.slug}/${post.slug}`;
-
     if (parent && parent.slug) {
       finalUrl = `/${parent.slug}/${cat.slug}/${post.slug}`;
     }
@@ -151,12 +153,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(
         `https://lampost.co/wp-json/wp/v2/posts` +
         `?search=${encodeURIComponent(query)}` +
+        `&search_columns=title,content` +
         `&per_page=${PER_PAGE}&page=${page}`
       );
 
       if (!res.ok) {
         finished = true;
-        btn.remove();
+        btnWrapper.remove();
         if (!hasRendered) {
           container.innerHTML =
             `<p>Berita "<strong>${query}</strong>" tidak ditemukan.</p>`;
@@ -168,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!posts.length) {
         finished = true;
-        btn.remove();
+        btnWrapper.remove();
         if (!hasRendered) {
           container.innerHTML =
             `<p>Berita "<strong>${query}</strong>" tidak ditemukan.</p>`;
@@ -176,34 +179,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const filtered = posts.filter(post => {
-        const title = post.title.rendered.toLowerCase();
-        const raw = post.excerpt?.rendered || post.content?.rendered || '';
-        const text = raw.replace(/(<([^>]+)>)/gi, '').toLowerCase();
-        return title.includes(queryLower) || text.includes(queryLower);
-      });
+      if (!hasRendered) container.innerHTML = '';
 
-      if (!hasRendered && filtered.length) container.innerHTML = '';
+      container.insertAdjacentHTML(
+        'beforeend',
+        posts.map(renderItem).join('')
+      );
 
-      if (filtered.length) {
-        container.insertAdjacentHTML(
-          'beforeend',
-          filtered.map(renderItem).join('')
-        );
+      posts.forEach(post => enrich(post));
+      hasRendered = true;
 
-        filtered.forEach(post => enrich(post));
-        hasRendered = true;
-
-        if (!btn.isConnected) container.after(btn);
-      } else if (!hasRendered && page === 1) {
-        finished = true;
-        btn.remove();
-        container.innerHTML =
-          `<p>Berita "<strong>${query}</strong>" tidak ditemukan.</p>`;
-      }
+      if (!btnWrapper.isConnected) container.appendChild(btnWrapper);
 
       page++;
       btn.textContent = 'Load More';
+
     } catch {
       btn.textContent = 'Gagal memuat';
     }
@@ -211,10 +201,16 @@ document.addEventListener('DOMContentLoaded', () => {
     loading = false;
   }
 
+  // 🔥 BUTTON CENTER
   const btn = document.createElement('button');
   btn.className = 'load-more';
   btn.textContent = 'Load More';
   btn.addEventListener('click', loadMore);
+
+  const btnWrapper = document.createElement('div');
+  btnWrapper.style.textAlign = 'center';
+  btnWrapper.style.margin = '20px 0';
+  btnWrapper.appendChild(btn);
 
   loadMore();
 });
