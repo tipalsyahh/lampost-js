@@ -3,16 +3,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("backToTop");
     if (!btn) return;
 
-    // awal sembunyikan pakai opacity (lebih aman)
+    // styling awal
     btn.style.opacity = "0";
     btn.style.pointerEvents = "none";
     btn.style.transition = "opacity 0.3s ease";
 
-    window.addEventListener("scroll", () => {
-
-        // ambil posisi scroll (cross browser)
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
+    // 🔥 fungsi update tombol
+    function toggleButton(scrollTop) {
         if (scrollTop > 200) {
             btn.style.opacity = "1";
             btn.style.pointerEvents = "auto";
@@ -20,13 +17,36 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.style.opacity = "0";
             btn.style.pointerEvents = "none";
         }
+    }
 
+    // 🔥 cek scroll window
+    window.addEventListener("scroll", () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        toggleButton(scrollTop);
     });
 
+    // 🔥 cek scroll di semua container (kalau ada)
+    document.querySelectorAll('*').forEach(el => {
+        const style = getComputedStyle(el);
+        if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            el.addEventListener("scroll", () => {
+                toggleButton(el.scrollTop);
+            });
+        }
+    });
+
+    // 🔥 klik tombol
     btn.addEventListener("click", () => {
         window.scrollTo({
             top: 0,
             behavior: "smooth"
+        });
+
+        // kalau pakai container scroll
+        document.querySelectorAll('*').forEach(el => {
+            if (el.scrollTop > 0) {
+                el.scrollTo({ top: 0, behavior: "smooth" });
+            }
         });
     });
 
