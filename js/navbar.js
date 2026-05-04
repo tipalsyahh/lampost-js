@@ -1,12 +1,28 @@
 document.addEventListener("DOMContentLoaded", () => {
 
     const btn = document.getElementById("backToTop");
+    if (!btn) return;
 
+    // awal: sembunyikan
+    btn.style.display = "none";
+
+    // 🔥 kontrol muncul/hilang saat scroll
+    window.addEventListener("scroll", () => {
+        const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+
+        if (scrollTop > 200) {
+            btn.style.display = "block";
+        } else {
+            btn.style.display = "none";
+        }
+    });
+
+    // 🔥 klik kembali ke atas
     btn.addEventListener("click", () => {
-
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
     });
 
 });
