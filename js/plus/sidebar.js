@@ -46,7 +46,7 @@ const SIDEBAR = `
                 <ul class="sub-menu" id="vidio">
                     <li><a href="#">Breking New</a></li>
                     <li><a href="https://lampost.co/kategori/vidio/bedah-tajuk">Bedah Tajuk</a></li>
-                    <li><a href="#">Economic Corner</a></li>
+                    <li><a href="https://lampost.co/kategori/economic-corner">Economic Corner</a></li>
                     <li><a href="https://lampost.co/kategori/podcast">Podcast</a></li>
                 </ul>
             </li>
