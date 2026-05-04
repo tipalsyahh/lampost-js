@@ -16,9 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const editorCache = {};
 
-  // 🔥 ambil slug dari URL
+  // 🔥 ambil slug + parent dari URL
   const path = window.location.pathname.split('/').filter(Boolean);
+
   const currentSlug = path[path.length - 1];
+  const parentSlug = path.length > 2 ? path[path.length - 2] : null;
 
   const formatTanggal = dateString => {
     const d = new Date(dateString);
@@ -27,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
            `${d.getFullYear()}`;
   };
 
-  // 🔥 ambil kategori utama
+  // 🔥 ambil kategori dengan validasi parent
   (async () => {
     try {
       const res = await fetch(
@@ -39,7 +41,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (!data.length) throw new Error();
 
-      kategoriId = data[0].id;
+      let selectedCategory = data[0];
+
+      // 🔥 cek parent kalau ada
+      if (parentSlug) {
+        for (const cat of data) {
+
+          if (!cat.parent) continue;
+
+          const parentRes = await fetch(
+            `https://lampost.co/wp-json/wp/v2/categories/${cat.parent}`
+          );
+          const parentData = await parentRes.json();
+
+          if (parentData.slug === parentSlug) {
+            selectedCategory = cat;
+            break;
+          }
+        }
+      }
+
+      kategoriId = selectedCategory.id;
       loadPosts();
 
     } catch {
@@ -48,7 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  // 🔥 ambil kategori
   async function getCategory(catId) {
     if (!catId) return { name: 'Opini', slug: 'opini', parent: 0 };
     if (catCache[catId]) return catCache[catId];
@@ -65,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 🔥 ambil parent kategori
   async function getParentCategory(parentId) {
     if (!parentId) return null;
     if (catCache[parentId]) return catCache[parentId];
@@ -86,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🔥 FIX MEDIA
   async function getMedia(mediaId) {
     const fallback = 'https://lampost.co/image/ai.jpeg';
 
@@ -156,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      let posts = await res.json();
+      const posts = await res.json();
       if (!posts.length) {
         hasMore = false;
         loadMoreBtn.style.display = 'none';
@@ -172,9 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const slug = post.slug;
           const tanggal = formatTanggal(post.date);
 
-          // 🔥 ambil kategori TERAKHIR (lebih akurat)
           const catId = post.categories?.slice(-1)[0];
-
           const cat = await getCategory(catId);
           const parent = await getParentCategory(cat.parent);
 
@@ -190,9 +207,8 @@ document.addEventListener('DOMContentLoaded', () => {
             deskripsi = deskripsi.slice(0, 150) + '...';
           }
 
-          // 🔥 FIX URL SUPPORT SUB KATEGORI
+          // 🔥 build URL
           let link = `/${cat.slug}/${slug}`;
-
           if (parent && parent.slug) {
             link = `/${parent.slug}/${cat.slug}/${slug}`;
           }
