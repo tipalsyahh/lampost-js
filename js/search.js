@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 🔥 MEDIA FIX (ANTI KOSONG)
   async function getMedia(id) {
     const fallback = 'https://lampost.co/image/ai.jpeg';
 
@@ -126,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const imgEl = el.querySelector('img');
     const img = await getMedia(post.featured_media);
-
     imgEl.src = img;
 
     const cat = await getCategory(post);
@@ -153,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(
         `https://lampost.co/wp-json/wp/v2/posts` +
         `?search=${encodeURIComponent(query)}` +
-        `&search_columns=title,content` +
+        `&orderby=relevance` +
         `&per_page=${PER_PAGE}&page=${page}`
       );
 
