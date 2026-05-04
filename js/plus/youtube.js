@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
   const track = document.querySelector('.video-track');
   const next = document.querySelector('.video-next');
@@ -8,12 +8,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const RSS_URL = "https://lampost.co/youtube.php";
 
-  // 🔥 FORMAT TANGGAL YOUTUBE
+  // 🔥 placeholder langsung tampil
+  track.innerHTML = `
+    <div class="video-card">Loading...</div>
+    <div class="video-card">Loading...</div>
+    <div class="video-card">Loading...</div>
+  `;
+
   function formatTanggal(text) {
     if (!text) return "";
 
     const now = new Date();
-
     const match = text.match(/(\d+)\s+(minute|hour|day|week|month|year)/);
 
     if (!match) return text;
@@ -38,41 +43,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function loadVideos(retry = 0) {
     try {
 
-      const res = await fetch(RSS_URL + "?t=" + Date.now(), {
-        cache: "no-store"
+      const res = await fetch(RSS_URL, {
+        cache: "force-cache"
       });
 
-      if (!res.ok) {
-        throw new Error("RSS gagal: " + res.status);
-      }
+      if (!res.ok) throw new Error("RSS gagal");
 
       const text = await res.text();
 
-      if (!text || text.length < 50) {
-        throw new Error("XML kosong");
-      }
+      if (!text || text.length < 50) throw new Error("XML kosong");
 
       const parser = new DOMParser();
       const xml = parser.parseFromString(text, "text/xml");
 
       if (xml.querySelector("parsererror")) {
-        throw new Error("XML rusak / tidak valid");
+        throw new Error("XML rusak");
       }
 
       let entries = xml.querySelectorAll("entry");
-
-      if (!entries.length) {
-        entries = xml.getElementsByTagName("entry");
-      }
-
-      if (!entries.length) {
-        throw new Error("Tidak ada video ditemukan");
-      }
+      if (!entries.length) entries = xml.getElementsByTagName("entry");
+      if (!entries.length) throw new Error("Tidak ada video");
 
       let output = "";
 
       Array.from(entries).forEach((entry, i) => {
-
         if (i >= 10) return;
 
         const title =
@@ -82,7 +76,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           entry.querySelector("yt\\:videoId")?.textContent ||
           entry.getElementsByTagName("yt:videoId")[0]?.textContent;
 
-        // 🔥 AMBIL TANGGAL
         const published =
           entry.querySelector("published")?.textContent || "";
 
@@ -92,20 +85,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         output += `
           <a href="https://lampost.co/play?v=${videoId}" class="video-card" target="_blank" rel="noopener">
-            <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg">
+            <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" loading="lazy">
             <div class="play-center">▶</div>
-
             <div class="overlay">
               <h3>${title}</h3>
-              <span class="video-date">${tanggal}</span>
+              <span>${tanggal}</span>
             </div>
           </a>
         `;
       });
 
-      if (!output) {
-        throw new Error("Video kosong setelah parsing");
-      }
+      if (!output) throw new Error("Kosong");
 
       track.innerHTML = output;
 
@@ -116,8 +106,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("ERROR:", err.message);
 
       if (retry < 2) {
-        console.log("Retry ke:", retry + 1);
         setTimeout(() => loadVideos(retry + 1), 1000);
+      } else {
+        track.innerHTML = "<p>Gagal memuat video</p>";
       }
 
     }
@@ -189,8 +180,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }, 400);
     }
 
-    next.onclick = slideNext;
-    prev.onclick = slidePrev;
+    if (next) next.onclick = slideNext;
+    if (prev) prev.onclick = slidePrev;
 
     track.addEventListener('click', function(e) {
       const link = e.target.closest('.video-card');
@@ -198,7 +189,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       e.preventDefault();
 
-      // 🔥 paksa buka tab baru (anti popup block)
       const newTab = window.open(link.href, '_blank');
       if (newTab) newTab.opener = null;
     });
