@@ -187,8 +187,6 @@ document.addEventListener('DOMContentLoaded', () => {
       posts.forEach(post => enrich(post));
       hasRendered = true;
 
-      if (!btnWrapper.isConnected) container.appendChild(btnWrapper);
-
       page++;
       btn.textContent = 'Load More';
 
@@ -199,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loading = false;
   }
 
-  // 🔥 BUTTON CENTER
+  // 🔥 BUTTON (SELALU DI BAWAH)
   const btn = document.createElement('button');
   btn.className = 'load-more';
   btn.textContent = 'Load More';
@@ -207,8 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnWrapper = document.createElement('div');
   btnWrapper.style.textAlign = 'center';
-  btnWrapper.style.margin = '20px 0';
+  btnWrapper.style.margin = '30px 0';
   btnWrapper.appendChild(btn);
+
+  // 🔥 taruh di luar container (ini kuncinya)
+  container.parentNode.appendChild(btnWrapper);
 
   loadMore();
 });
