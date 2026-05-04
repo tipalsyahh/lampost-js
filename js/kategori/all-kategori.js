@@ -16,11 +16,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const editorCache = {};
 
-  // 🔥 ambil slug + parent dari URL
+  // 🔥 ambil path URL
   const path = window.location.pathname.split('/').filter(Boolean);
 
-  const currentSlug = path[path.length - 1];
-  const parentSlug = path.length > 2 ? path[path.length - 2] : null;
+  // contoh:
+  // /kategori/olahraga/bola
+  const parentSlug = path.length > 2 ? path[1] : null; // olahraga
+  const currentSlug = path.length > 2 ? path[2] : path[1]; // bola atau olahraga
 
   const formatTanggal = dateString => {
     const d = new Date(dateString);
@@ -29,9 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
            `${d.getFullYear()}`;
   };
 
-  // 🔥 ambil kategori dengan validasi parent
+  // 🔥 ambil kategori + validasi parent
   (async () => {
     try {
+
       const res = await fetch(
         `https://lampost.co/wp-json/wp/v2/categories?slug=${currentSlug}`
       );
@@ -41,17 +44,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (!data.length) throw new Error();
 
-      let selectedCategory = data[0];
+      let selectedCategory = null;
 
-      // 🔥 cek parent kalau ada
-      if (parentSlug) {
-        for (const cat of data) {
+      for (const cat of data) {
 
-          if (!cat.parent) continue;
+        // jika tidak ada parent (kategori utama)
+        if (!parentSlug) {
+          selectedCategory = cat;
+          break;
+        }
+
+        // cek parent
+        if (cat.parent) {
 
           const parentRes = await fetch(
             `https://lampost.co/wp-json/wp/v2/categories/${cat.parent}`
           );
+
           const parentData = await parentRes.json();
 
           if (parentData.slug === parentSlug) {
@@ -59,6 +68,11 @@ document.addEventListener('DOMContentLoaded', () => {
             break;
           }
         }
+      }
+
+      // fallback jika tidak ketemu
+      if (!selectedCategory) {
+        selectedCategory = data[0];
       }
 
       kategoriId = selectedCategory.id;
@@ -207,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             deskripsi = deskripsi.slice(0, 150) + '...';
           }
 
-          // 🔥 build URL
+          // 🔥 build URL post
           let link = `/${cat.slug}/${slug}`;
           if (parent && parent.slug) {
             link = `/${parent.slug}/${cat.slug}/${slug}`;
