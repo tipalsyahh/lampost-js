@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const editorCache = {};
 
-  // 🔥 ambil slug otomatis dari URL
+  // 🔥 ambil slug dari URL
   const path = window.location.pathname.split('/').filter(Boolean);
   const currentSlug = path[path.length - 1];
 
@@ -27,12 +27,13 @@ document.addEventListener('DOMContentLoaded', () => {
            `${d.getFullYear()}`;
   };
 
-  // 🔥 ambil kategori berdasarkan slug DINAMIS
+  // 🔥 ambil kategori
   (async () => {
     try {
       const res = await fetch(
         `https://lampost.co/wp-json/wp/v2/categories?slug=${currentSlug}`
       );
+
       if (!res.ok) throw new Error();
 
       const data = await res.json();
@@ -62,20 +63,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // 🔥 FIX MEDIA (ANTI KOSONG TOTAL)
   async function getMedia(mediaId) {
-    if (!mediaId) return 'image/ai.jpg';
+    const fallback = 'https://lampost.co/image/ai.jpeg';
+
+    if (!mediaId) return fallback;
     if (mediaCache[mediaId]) return mediaCache[mediaId];
 
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
-    );
-    const data = await res.json();
+    try {
+      const res = await fetch(
+        `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
+      );
 
-    return (mediaCache[mediaId] =
-      data.media_details?.sizes?.medium?.source_url ||
-      data.source_url ||
-      'image/ai.jpg'
-    );
+      if (!res.ok) return fallback;
+
+      const data = await res.json();
+
+      const img =
+        data?.media_details?.sizes?.medium?.source_url ||
+        data?.media_details?.sizes?.full?.source_url ||
+        data?.source_url ||
+        fallback;
+
+      return (mediaCache[mediaId] = img);
+
+    } catch {
+      return fallback;
+    }
   }
 
   async function getEditor(post) {
@@ -159,7 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
           htmlArr.push(`
             <a href="${link}" class="item-info">
-              <img src="${gambar}" alt="${judul}" class="img-microweb" loading="lazy">
+              <img 
+                src="${gambar}" 
+                alt="${judul}" 
+                class="img-microweb" 
+                loading="lazy"
+                onerror="this.onerror=null;this.src='https://lampost.co/image/ai.jpeg';"
+              >
               <div class="berita-microweb">
                 <p class="judul">${judul}</p>
                 <p class="kategori">${kategori}</p>
