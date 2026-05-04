@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
            `${d.getFullYear()}`;
   };
 
-  // 🔥 ambil kategori
+  // 🔥 ambil kategori utama
   (async () => {
     try {
       const res = await fetch(
@@ -48,8 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
+  // 🔥 ambil kategori
   async function getCategory(catId) {
-    if (!catId) return { name: 'Opini', slug: 'opini' };
+    if (!catId) return { name: 'Opini', slug: 'opini', parent: 0 };
     if (catCache[catId]) return catCache[catId];
 
     const res = await fetch(
@@ -59,11 +60,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return (catCache[catId] = {
       name: data.name,
-      slug: data.slug
+      slug: data.slug,
+      parent: data.parent
     });
   }
 
-  // 🔥 FIX MEDIA (ANTI KOSONG TOTAL)
+  // 🔥 ambil parent kategori
+  async function getParentCategory(parentId) {
+    if (!parentId) return null;
+    if (catCache[parentId]) return catCache[parentId];
+
+    try {
+      const res = await fetch(
+        `https://lampost.co/wp-json/wp/v2/categories/${parentId}`
+      );
+      const data = await res.json();
+
+      return (catCache[parentId] = {
+        name: data.name,
+        slug: data.slug,
+        parent: data.parent
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  // 🔥 FIX MEDIA
   async function getMedia(mediaId) {
     const fallback = 'https://lampost.co/image/ai.jpeg';
 
@@ -140,10 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      posts = posts.sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
-
       const htmlArr = [];
 
       await Promise.all(
@@ -153,9 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
           const slug = post.slug;
           const tanggal = formatTanggal(post.date);
 
-          const catId = post.categories?.[0];
-          const { name: kategori, slug: kategoriSlug } =
-            await getCategory(catId);
+          // 🔥 ambil kategori TERAKHIR (lebih akurat)
+          const catId = post.categories?.slice(-1)[0];
+
+          const cat = await getCategory(catId);
+          const parent = await getParentCategory(cat.parent);
 
           const gambar = await getMedia(post.featured_media);
           const editor = await getEditor(post);
@@ -169,7 +190,12 @@ document.addEventListener('DOMContentLoaded', () => {
             deskripsi = deskripsi.slice(0, 150) + '...';
           }
 
-          const link = `/${kategoriSlug}/${slug}`;
+          // 🔥 FIX URL SUPPORT SUB KATEGORI
+          let link = `/${cat.slug}/${slug}`;
+
+          if (parent && parent.slug) {
+            link = `/${parent.slug}/${cat.slug}/${slug}`;
+          }
 
           htmlArr.push(`
             <a href="${link}" class="item-info">
@@ -182,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
               >
               <div class="berita-microweb">
                 <p class="judul">${judul}</p>
-                <p class="kategori">${kategori}</p>
+                <p class="kategori">${cat.name}</p>
                 <div class="info-microweb">
                   <p class="editor">By ${editor}</p>
                   <p class="tanggal">${tanggal}</p>
