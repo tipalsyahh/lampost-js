@@ -7,60 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!heroLeft || !top1 || !top2 || !bottom1) return;
 
-    const mediaCache = {};
-    const categoryCache = {};
-    const editorCache = {};
-
     function formatTanggal(dateString) {
         const d = new Date(dateString);
         const bulan = d.toLocaleString('en-US', { month: 'short' });
         return `${bulan} ${d.getDate()}`;
-    }
-
-    async function getMedia(mediaId) {
-        if (!mediaId) return 'https://lampost.co/image/ai.jpeg';
-        if (mediaCache[mediaId]) return mediaCache[mediaId];
-
-        const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${mediaId}`);
-        const data = await res.json();
-
-        return (mediaCache[mediaId] =
-            data.media_details?.sizes?.full?.source_url ||
-            data.source_url ||
-            'https://lampost.co/image/ai.jpeg'
-        );
-    }
-
-    async function getCategory(catId) {
-        if (!catId) return { name: 'Berita', slug: 'berita' };
-        if (categoryCache[catId]) return categoryCache[catId];
-
-        const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${catId}`);
-        const data = await res.json();
-
-        return (categoryCache[catId] = {
-            name: data.name,
-            slug: data.slug
-        });
-    }
-
-    async function getEditor(post) {
-        let editor = 'Redaksi';
-        const termLink = post._links?.['wp:term']?.[2]?.href;
-        if (!termLink) return editor;
-
-        if (editorCache[termLink]) return editorCache[termLink];
-
-        try {
-            const res = await fetch(termLink);
-            if (res.ok) {
-                const data = await res.json();
-                editor = data?.[0]?.name || editor;
-                editorCache[termLink] = editor;
-            }
-        } catch (_) { }
-
-        return editor;
     }
 
     function killBorder(el) {
@@ -73,66 +23,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderFast(el, post) {
+
         const judul = post.title.rendered;
         const tanggal = formatTanggal(post.date);
-        const id = `hero-${post.id}`;
+
+        // 🔥 ambil data langsung dari _embed
+        const img =
+            post._embedded?.['wp:featuredmedia']?.[0]?.source_url ||
+            'https://lampost.co/image/ai.jpeg';
+
+        const kategori =
+            post._embedded?.['wp:term']?.[0]?.[0]?.name || 'Berita';
+
+        const kategoriSlug =
+            post._embedded?.['wp:term']?.[0]?.[0]?.slug || 'berita';
+
+        const editor =
+            post._embedded?.author?.[0]?.name || 'Redaksi';
+
+        const link = `/${kategoriSlug}/${post.slug}`;
 
         el.innerHTML = `
-            <a class="hero-link" id="${id}">
-            <img src="https://lampost.co/image/ai.jpeg" alt="" loading="lazy" decoding="async">
-            <div class="hero-content">
-            <p class="hero-category">...</p>
-            <h2 class="card-text">${judul}</h2>
-            <div class="detail-info">
-            <p class="editor-slider">By ...</p>
-            <p class="tanggal-slider">${tanggal}</p>
-            </div>
-            </div>
+            <a href="${link}" class="hero-link">
+                <img src="${img}" alt="${judul}" loading="lazy" decoding="async">
+                <div class="hero-content">
+                    <p class="hero-category">${kategori}</p>
+                    <h2 class="card-text">${judul}</h2>
+                    <div class="detail-info">
+                        <p class="editor-slider">By ${editor}</p>
+                        <p class="tanggal-slider">${tanggal}</p>
+                    </div>
+                </div>
             </a>
-            `;
-        const linkEl = el.querySelector('.hero-link');
-        killBorder(linkEl);
+        `;
 
-        (async () => {
-
-            const [imgUrl, kategoriData, editor] = await Promise.all([
-                getMedia(post.featured_media),
-                getCategory(post.categories?.[0]),
-                getEditor(post)
-            ]);
-
-            const { name: kategori, slug } = kategoriData;
-
-            const imgEl = el.querySelector('img');
-            if (!linkEl || !imgEl) return;
-
-            const preload = new Image();
-            preload.src = imgUrl;
-
-            preload.onload = () => {
-                imgEl.src = imgUrl;
-                imgEl.alt = judul;
-                linkEl.href = `/${slug}/${post.slug}`;
-                killBorder(linkEl);
-            };
-
-            linkEl.querySelector('.hero-category').textContent = kategori;
-            linkEl.querySelector('.editor-slider').textContent = `By ${editor}`;
-
-        })();
+        killBorder(el.querySelector('.hero-link'));
     }
 
     async function init() {
         try {
 
-            const tagRes = await fetch('https://lampost.co/wp-json/wp/v2/tags?slug=headline');
-            const tagData = await tagRes.json();
+            // 🔥 langsung ambil post + embed
+            const res = await fetch(
+                `https://lampost.co/wp-json/wp/v2/posts` +
+                `?tags=headline&_embed&per_page=4&orderby=date&order=desc`
+            );
 
-            if (!tagData.length) throw new Error('Tag tidak ditemukan');
-
-            const tagId = tagData[0].id;
-
-            const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?tags=${tagId}&per_page=4&orderby=date&order=desc`);
             if (!res.ok) throw new Error('Gagal ambil data');
 
             const posts = await res.json();
