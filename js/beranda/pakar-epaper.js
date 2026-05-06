@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // AMBIL POST
         // ===========================
         const res = await fetch(
-            `https://lampost.co/epaper/wp-json/wp/v2/posts?categories=${categoryId}&per_page=10&orderby=date&order=desc`
+            `https://lampost.co/epaper/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&orderby=date&order=desc`
         );
 
         if (!res.ok) throw new Error('Gagal mengambil post');
