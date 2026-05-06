@@ -146,13 +146,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             // HTML
             // ===========================
             htmlArr.push(`
-                <a href="${link}" class="post-item">
+                <a href="${link}" class="post-item" target="_blank" rel="noopener noreferrer">
 
                     <div class="post-content">
-
-                        <div class="post-category">
-                            ${kategoriNama}
-                        </div>
 
                         <div class="post-title">
                             ${judul}
