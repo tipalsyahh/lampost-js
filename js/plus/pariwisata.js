@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => 'https://lampost.co/image/ai.jpeg');
   }
 
-  fetch(`https://lampost.co/wp-json/wp/v2/posts?per_page=8&_fields=id,slug,title,featured_media,categories`)
+  fetch(`https://lampost.co/wp-json/wp/v2/posts?per_page=12&_fields=id,slug,title,featured_media,categories`)
     .then(res => res.ok ? res.json() : [])
     .then(async posts => {
 

@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // AMBIL POST
         // ===========================
         const res = await fetch(
-            `https://lampost.co/epaper/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&orderby=date&order=desc`
+            `https://lampost.co/epaper/wp-json/wp/v2/posts?categories=${categoryId}&per_page=8&orderby=date&order=desc`
         );
 
         if (!res.ok) throw new Error('Gagal mengambil post');
@@ -148,14 +148,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             htmlArr.push(`
                 <a href="${link}" class="post-item" target="_blank" rel="noopener noreferrer">
 
-                    <div class="post-content">
-
-                        <div class="post-title">
-                            ${judul}
-                        </div>
-
-                    </div>
-
                     <div class="post-thumb">
 
                         <img 
@@ -164,6 +156,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                             loading="lazy" 
                             decoding="async"
                         >
+
+                    </div>
+
+                    <div class="post-content">
+
+                        <div class="post-title">
+                            ${judul}
+                        </div>
 
                     </div>
 
