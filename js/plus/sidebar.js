@@ -86,15 +86,7 @@ const SIDEBAR = `
         <center>
             <h2>MENU</h2>
         </center>
-        <div class="search-sidebar" id="searchSidebar">
-            <div class="input-menu">
-                <input type="search" class="search-input" placeholder="Cari Artikel Disini.." aria-label="Search"
-                    id="input-sidebar">
-                <button type="button" class="search-btn" aria-label="Search" id="btn-sidebar-search">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </div>
+
         <div class="sidebar-isi">
             <ul>
                 <li><a href="https://lampost.co/"><i class="bi bi-house-door"></i> Beranda</a></li>
