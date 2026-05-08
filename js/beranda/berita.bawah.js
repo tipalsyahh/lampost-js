@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadAllowedCategories() {
-    const slugs = ['olahraga', 'hiburan'];
+    const slugs = ['haji'];
 
     const res = await fetch(
       `https://lampost.co/wp-json/wp/v2/categories?slug=${slugs.join(',')}`
