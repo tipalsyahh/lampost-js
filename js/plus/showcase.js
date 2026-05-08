@@ -12,6 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const FALLBACK_IMG = 'https://lampost.co/image/ai.jpeg';
 
+    // =========================
+    // 🔥 TAMBAHAN ANTI DUPLIKAT
+    // =========================
+    const usedCategories = new Set();
+    const usedImages = new Set();
+
     const formatTanggal = dateString =>
         new Date(dateString).toLocaleDateString('id-ID', {
             day: '2-digit',
@@ -111,17 +117,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = document.getElementById(`card-${post.id}`);
         if (!el) return;
 
-        // ✅ FIX DI SINI (kategori tidak selalu index 0)
         const catIds = post.categories || [];
 
-        const selectedCatId = catIds.length
-            ? catIds[Math.floor(Math.random() * catIds.length)]
-            : null;
+        // =========================
+        // 🔥 FIX: pilih kategori unik
+        // =========================
+        let selectedCatId = null;
+        let kategoriHierarchy = [];
+        let kategoriName = '';
 
-        const kategoriHierarchy = await getCategoryHierarchy(selectedCatId);
+        for (let i = 0; i < catIds.length; i++) {
+
+            const tryCatId = catIds[i];
+            const hierarchy = await getCategoryHierarchy(tryCatId);
+            const name = hierarchy[hierarchy.length - 1].name;
+
+            if (!usedCategories.has(name)) {
+                selectedCatId = tryCatId;
+                kategoriHierarchy = hierarchy;
+                kategoriName = name;
+                usedCategories.add(name);
+                break;
+            }
+        }
+
+        // fallback kalau semua sudah dipakai
+        if (!selectedCatId) {
+            selectedCatId = catIds[0] || null;
+            kategoriHierarchy = await getCategoryHierarchy(selectedCatId);
+            kategoriName = kategoriHierarchy[kategoriHierarchy.length - 1].name;
+        }
 
         const slugPath = kategoriHierarchy.map(c => c.slug).join('/');
-        const kategoriName = kategoriHierarchy[kategoriHierarchy.length - 1].name;
 
         const imgEl = el.querySelector('.card-img');
 
@@ -134,7 +161,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const gambar = await getMedia(post.featured_media);
 
-        imgEl.src = gambar;
+        // =========================
+        // 🔥 FIX: image harus unik
+        // =========================
+        let finalImg = gambar;
+
+        if (usedImages.has(gambar)) {
+            finalImg = FALLBACK_IMG;
+        } else {
+            usedImages.add(gambar);
+        }
+
+        imgEl.src = finalImg;
 
         el.querySelector('.card-header').textContent = kategoriName;
 
