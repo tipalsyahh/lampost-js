@@ -2,8 +2,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const container = document.querySelector('.home');
   const loadMoreBtn = document.getElementById('loadMore');
+
   if (!container || !loadMoreBtn) return;
 
+  // =========================
+  // CONFIG
+  // =========================
+  const API = 'https://lampost.co/wp-json/wp/v2';
   const PER_PAGE = 6;
   const MAX_PAGE = 6;
 
@@ -12,257 +17,425 @@ document.addEventListener('DOMContentLoaded', () => {
   let hasMore = true;
   let kategoriId = null;
 
-  const catCache = {};
-  const mediaCache = {};
-  const editorCache = {};
+  // =========================
+  // CACHE SUPER CEPAT
+  // =========================
+  const categoryCache = new Map();
+  const mediaCache = new Map();
+  const editorCache = new Map();
 
-  // 🔥 ambil path URL
-  const path = window.location.pathname.split('/').filter(Boolean);
+  // =========================
+  // URL PATH
+  // =========================
+  const path = window.location.pathname
+    .split('/')
+    .filter(Boolean);
 
-  // contoh:
-  // /kategori/olahraga/bola
-  const parentSlug = path.length > 2 ? path[1] : null; // olahraga
-  const currentSlug = path.length > 2 ? path[2] : path[1]; // bola atau olahraga
+  const parentSlug =
+    path.length > 2 ? path[1] : null;
 
+  const currentSlug =
+    path.length > 2 ? path[2] : path[1];
+
+  // =========================
+  // FORMAT TANGGAL
+  // =========================
   const formatTanggal = dateString => {
+
     const d = new Date(dateString);
+
     return `${String(d.getDate()).padStart(2, '0')}/` +
            `${String(d.getMonth() + 1).padStart(2, '0')}/` +
            `${d.getFullYear()}`;
   };
 
-  // 🔥 ambil kategori + validasi parent
-  (async () => {
+  // =========================
+  // FETCH CEPAT
+  // =========================
+  async function fastFetch(url) {
+
+    const res = await fetch(url, {
+      cache: 'force-cache',
+      keepalive: true,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!res.ok) throw new Error('Fetch Error');
+
+    return res.json();
+  }
+
+  // =========================
+  // AMBIL KATEGORI
+  // =========================
+  async function initKategori() {
+
     try {
 
-      const res = await fetch(
-        `https://lampost.co/wp-json/wp/v2/categories?slug=${currentSlug}`
+      const data = await fastFetch(
+        `${API}/categories?slug=${currentSlug}&per_page=20&_fields=id,name,slug,parent`
       );
 
-      if (!res.ok) throw new Error();
-
-      const data = await res.json();
       if (!data.length) throw new Error();
 
       let selectedCategory = null;
 
-      for (const cat of data) {
+      // =========================
+      // VALIDASI PARENT TANPA FETCH BERULANG
+      // =========================
+      if (!parentSlug) {
 
-        // jika tidak ada parent (kategori utama)
-        if (!parentSlug) {
-          selectedCategory = cat;
-          break;
-        }
+        selectedCategory = data[0];
 
-        // cek parent
-        if (cat.parent) {
+      } else {
 
-          const parentRes = await fetch(
-            `https://lampost.co/wp-json/wp/v2/categories/${cat.parent}`
+        const parentIds = [
+          ...new Set(
+            data
+              .map(c => c.parent)
+              .filter(Boolean)
+          )
+        ];
+
+        // fetch semua parent sekaligus
+        let parentsMap = {};
+
+        if (parentIds.length) {
+
+          const parents = await fastFetch(
+            `${API}/categories?include=${parentIds.join(',')}&per_page=50&_fields=id,slug`
           );
 
-          const parentData = await parentRes.json();
+          parents.forEach(p => {
+            parentsMap[p.id] = p.slug;
+          });
+        }
 
-          if (parentData.slug === parentSlug) {
+        for (const cat of data) {
+
+          if (
+            parentsMap[cat.parent] === parentSlug
+          ) {
             selectedCategory = cat;
             break;
           }
         }
       }
 
-      // fallback jika tidak ketemu
       if (!selectedCategory) {
         selectedCategory = data[0];
       }
 
       kategoriId = selectedCategory.id;
+
+      // =========================
+      // PRELOAD DATA AWAL
+      // =========================
       loadPosts();
 
-    } catch {
-      container.innerHTML = '<p>Kategori tidak tersedia</p>';
+    } catch (err) {
+
+      console.error(err);
+
+      container.innerHTML =
+        '<p>Kategori tidak tersedia</p>';
+
       loadMoreBtn.style.display = 'none';
     }
-  })();
-
-  async function getCategory(catId) {
-    if (!catId) return { name: 'Opini', slug: 'opini', parent: 0 };
-    if (catCache[catId]) return catCache[catId];
-
-    const res = await fetch(
-      `https://lampost.co/wp-json/wp/v2/categories/${catId}`
-    );
-    const data = await res.json();
-
-    return (catCache[catId] = {
-      name: data.name,
-      slug: data.slug,
-      parent: data.parent
-    });
   }
 
-  async function getParentCategory(parentId) {
-    if (!parentId) return null;
-    if (catCache[parentId]) return catCache[parentId];
-
-    try {
-      const res = await fetch(
-        `https://lampost.co/wp-json/wp/v2/categories/${parentId}`
-      );
-      const data = await res.json();
-
-      return (catCache[parentId] = {
-        name: data.name,
-        slug: data.slug,
-        parent: data.parent
-      });
-    } catch {
-      return null;
-    }
-  }
-
-  async function getMedia(mediaId) {
-    const fallback = 'https://lampost.co/image/ai.jpeg';
-
-    if (!mediaId) return fallback;
-    if (mediaCache[mediaId]) return mediaCache[mediaId];
-
-    try {
-      const res = await fetch(
-        `https://lampost.co/wp-json/wp/v2/media/${mediaId}`
-      );
-
-      if (!res.ok) return fallback;
-
-      const data = await res.json();
-
-      const img =
-        data?.media_details?.sizes?.medium?.source_url ||
-        data?.media_details?.sizes?.full?.source_url ||
-        data?.source_url ||
-        fallback;
-
-      return (mediaCache[mediaId] = img);
-
-    } catch {
-      return fallback;
-    }
-  }
-
-  async function getEditor(post) {
-    let editor = 'Redaksi';
-    const termLink = post._links?.['wp:term']?.[2]?.href;
-    if (!termLink) return editor;
-    if (editorCache[termLink]) return editorCache[termLink];
-
-    try {
-      const res = await fetch(termLink);
-      if (res.ok) {
-        const data = await res.json();
-        editor = data?.[0]?.name || editor;
-        editorCache[termLink] = editor;
-      }
-    } catch {}
-
-    return editor;
-  }
-
+  // =========================
+  // LOAD POSTS SUPER CEPAT
+  // =========================
   async function loadPosts() {
-    if (isLoading || !hasMore || page > MAX_PAGE) {
+
+    if (
+      isLoading ||
+      !hasMore ||
+      page > MAX_PAGE
+    ) {
       loadMoreBtn.style.display = 'none';
       return;
     }
 
     isLoading = true;
+
     loadMoreBtn.disabled = true;
     loadMoreBtn.textContent = 'Loading...';
 
     try {
-      const res = await fetch(
-        `https://lampost.co/wp-json/wp/v2/posts` +
-        `?categories=${kategoriId}&per_page=${PER_PAGE}&page=${page}` +
-        `&orderby=date&order=desc`
+
+      // =========================
+      // SATU FETCH SAJA
+      // _embed = category + media + author
+      // =========================
+      const posts = await fastFetch(
+        `${API}/posts` +
+        `?categories=${kategoriId}` +
+        `&per_page=${PER_PAGE}` +
+        `&page=${page}` +
+        `&_embed` +
+        `&_fields=id,date,slug,title,excerpt,categories,featured_media,_links,_embedded`
       );
 
-      if (!res.ok) {
-        hasMore = false;
-        loadMoreBtn.style.display = 'none';
-        return;
-      }
-
-      const posts = await res.json();
       if (!posts.length) {
+
         hasMore = false;
         loadMoreBtn.style.display = 'none';
+
         return;
       }
 
-      const htmlArr = [];
+      // =========================
+      // AMBIL SEMUA CATEGORY ID
+      // =========================
+      const allCategoryIds = [
+        ...new Set(
+          posts.flatMap(post => post.categories || [])
+        )
+      ];
 
-      await Promise.all(
-        posts.map(async post => {
+      // =========================
+      // FETCH CATEGORY SEKALI
+      // =========================
+      const uncachedCategoryIds =
+        allCategoryIds.filter(
+          id => !categoryCache.has(id)
+        );
 
-          const judul = post.title.rendered;
-          const slug = post.slug;
-          const tanggal = formatTanggal(post.date);
+      if (uncachedCategoryIds.length) {
 
-          const catId = post.categories?.slice(-1)[0];
-          const cat = await getCategory(catId);
-          const parent = await getParentCategory(cat.parent);
+        const categories = await fastFetch(
+          `${API}/categories` +
+          `?include=${uncachedCategoryIds.join(',')}` +
+          `&per_page=100` +
+          `&_fields=id,name,slug,parent`
+        );
 
-          const gambar = await getMedia(post.featured_media);
-          const editor = await getEditor(post);
+        categories.forEach(cat => {
+          categoryCache.set(cat.id, cat);
+        });
+      }
 
-          let deskripsi =
-            post.excerpt?.rendered
-              ?.replace(/<[^>]+>/g, '')
-              ?.trim() || '';
+      // =========================
+      // PRELOAD PARENT CATEGORY
+      // =========================
+      const parentIds = [
+        ...new Set(
+          [...categoryCache.values()]
+            .map(c => c.parent)
+            .filter(Boolean)
+        )
+      ];
 
-          if (deskripsi.length > 150) {
-            deskripsi = deskripsi.slice(0, 150) + '...';
-          }
+      const uncachedParents =
+        parentIds.filter(
+          id => !categoryCache.has(id)
+        );
 
-          // 🔥 build URL post
-          let link = `/${cat.slug}/${slug}`;
-          if (parent && parent.slug) {
-            link = `/${parent.slug}/${cat.slug}/${slug}`;
-          }
+      if (uncachedParents.length) {
 
-          htmlArr.push(`
-            <a href="${link}" class="item-info">
-              <img 
-                src="${gambar}" 
-                alt="${judul}" 
-                class="img-microweb" 
-                loading="lazy"
-                onerror="this.onerror=null;this.src='https://lampost.co/image/ai.jpeg';"
-              >
-              <div class="berita-microweb">
-                <p class="judul">${judul}</p>
-                <p class="kategori">${cat.name}</p>
-                <div class="info-microweb">
-                  <p class="editor">By ${editor}</p>
-                  <p class="tanggal">${tanggal}</p>
-                </div>
-                <p class="deskripsi">${deskripsi}</p>
+        const parents = await fastFetch(
+          `${API}/categories` +
+          `?include=${uncachedParents.join(',')}` +
+          `&per_page=100` +
+          `&_fields=id,name,slug,parent`
+        );
+
+        parents.forEach(cat => {
+          categoryCache.set(cat.id, cat);
+        });
+      }
+
+      // =========================
+      // BUILD HTML SUPER CEPAT
+      // =========================
+      let html = '';
+
+      for (const post of posts) {
+
+        const judul =
+          post.title?.rendered || '';
+
+        const slug =
+          post.slug || '';
+
+        const tanggal =
+          formatTanggal(post.date);
+
+        // =========================
+        // CATEGORY
+        // =========================
+        const catId =
+          post.categories?.slice(-1)[0];
+
+        const cat =
+          categoryCache.get(catId) || {
+            name: 'Opini',
+            slug: 'opini',
+            parent: 0
+          };
+
+        const parent =
+          categoryCache.get(cat.parent);
+
+        // =========================
+        // GAMBAR DARI _EMBED
+        // TANPA FETCH MEDIA LAGI
+        // =========================
+        let gambar =
+          'https://lampost.co/image/ai.jpeg';
+
+        const media =
+          post._embedded?.['wp:featuredmedia']?.[0];
+
+        if (media) {
+
+          gambar =
+            media?.media_details?.sizes?.medium?.source_url ||
+            media?.media_details?.sizes?.full?.source_url ||
+            media?.source_url ||
+            gambar;
+        }
+
+        // =========================
+        // EDITOR
+        // =========================
+        let editor = 'Redaksi';
+
+        const editorData =
+          post._embedded?.author?.[0];
+
+        if (editorData?.name) {
+          editor = editorData.name;
+        }
+
+        // =========================
+        // DESKRIPSI
+        // =========================
+        let deskripsi =
+          post.excerpt?.rendered
+            ?.replace(/<[^>]+>/g, '')
+            ?.trim() || '';
+
+        if (deskripsi.length > 150) {
+          deskripsi =
+            deskripsi.slice(0, 150) + '...';
+        }
+
+        // =========================
+        // LINK
+        // =========================
+        let link =
+          `/${cat.slug}/${slug}`;
+
+        if (parent?.slug) {
+
+          link =
+            `/${parent.slug}/${cat.slug}/${slug}`;
+        }
+
+        // =========================
+        // HTML
+        // =========================
+        html += `
+          <a href="${link}" class="item-info">
+
+            <img
+              src="${gambar}"
+              alt="${judul}"
+              class="img-microweb"
+              loading="lazy"
+              decoding="async"
+              fetchpriority="low"
+              onerror="this.onerror=null;this.src='https://lampost.co/image/ai.jpeg';"
+            >
+
+            <div class="berita-microweb">
+
+              <p class="judul">
+                ${judul}
+              </p>
+
+              <p class="kategori">
+                ${cat.name}
+              </p>
+
+              <div class="info-microweb">
+
+                <p class="editor">
+                  By ${editor}
+                </p>
+
+                <p class="tanggal">
+                  ${tanggal}
+                </p>
+
               </div>
-            </a>
-          `);
 
-        })
+              <p class="deskripsi">
+                ${deskripsi}
+              </p>
+
+            </div>
+
+          </a>
+        `;
+      }
+
+      // =========================
+      // INSERT SEKALI
+      // =========================
+      container.insertAdjacentHTML(
+        'beforeend',
+        html
       );
 
-      container.insertAdjacentHTML('beforeend', htmlArr.join(''));
       page++;
 
+      // =========================
+      // PRELOAD PAGE BERIKUTNYA
+      // =========================
+      if (page <= MAX_PAGE) {
+
+        fetch(
+          `${API}/posts` +
+          `?categories=${kategoriId}` +
+          `&per_page=${PER_PAGE}` +
+          `&page=${page}` +
+          `&_embed`,
+          {
+            cache: 'force-cache'
+          }
+        ).catch(() => {});
+      }
+
     } catch (err) {
+
       console.error(err);
+
     } finally {
+
       isLoading = false;
+
       loadMoreBtn.disabled = false;
       loadMoreBtn.textContent = 'Load More';
     }
   }
 
-  loadMoreBtn.addEventListener('click', loadPosts);
+  // =========================
+  // BUTTON LOAD MORE
+  // =========================
+  loadMoreBtn.addEventListener(
+    'click',
+    loadPosts
+  );
+
+  // =========================
+  // START
+  // =========================
+  initKategori();
 
 });
