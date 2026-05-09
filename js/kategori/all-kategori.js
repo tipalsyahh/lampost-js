@@ -5,95 +5,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (!container || !loadMoreBtn) return;
 
-  // =========================
-  // CONFIG
-  // =========================
   const API = 'https://lampost.co/wp-json/wp/v2';
   const PER_PAGE = 10;
   const MAX_PAGE = 6;
+  const FALLBACK_IMAGE = 'https://lampost.co/image/ai.jpeg';
 
   let page = 1;
+  let totalPages = MAX_PAGE;
+  let kategoriId = null;
   let isLoading = false;
   let hasMore = true;
-  let kategoriId = null;
-  let totalPages = MAX_PAGE;
 
-  // =========================
-  // CACHE
-  // =========================
   const categoryCache = new Map();
   const editorCache = new Map();
+  const fetchCache = new Map();
 
-  // =========================
-  // URL PATH
-  // =========================
-  const path = window.location.pathname
-    .split('/')
-    .filter(Boolean);
+  const path = location.pathname.split('/').filter(Boolean);
 
-  const parentSlug =
-    path.length > 2 ? path[1] : null;
+  const parentSlug = path.length > 2
+    ? path[1]
+    : null;
 
-  const currentSlug =
-    path.length > 2 ? path[2] : path[1];
+  const currentSlug = path.length > 2
+    ? path[2]
+    : path[1];
 
-  // =========================
-  // FORMAT TANGGAL
-  // =========================
-  const formatTanggal = dateString => {
+  const formatTanggal = date => {
 
-    const d = new Date(dateString);
+    const d = new Date(date);
 
-    return `${String(d.getDate()).padStart(2, '0')}/` +
-           `${String(d.getMonth() + 1).padStart(2, '0')}/` +
-           `${d.getFullYear()}`;
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
   };
 
-  // =========================
-  // FETCH SUPER CEPAT
-  // =========================
   async function fastFetch(url) {
 
-    const res = await fetch(url, {
-      cache: 'force-cache',
-      keepalive: true,
-      priority: 'high',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!res.ok) {
-      throw new Error('Fetch Error');
+    if (fetchCache.has(url)) {
+      return fetchCache.get(url);
     }
 
-    return {
-      data: await res.json(),
-      headers: res.headers
-    };
+    const promise = fetch(url, {
+      cache: 'force-cache',
+      keepalive: true,
+      headers: {
+        Accept: 'application/json'
+      }
+    })
+    .then(async res => {
+
+      if (!res.ok) {
+        throw new Error('Fetch Error');
+      }
+
+      return {
+        data: await res.json(),
+        headers: res.headers
+      };
+    });
+
+    fetchCache.set(url, promise);
+
+    return promise;
   }
 
-  // =========================
-  // HIDE BUTTON
-  // =========================
   function hideLoadMore() {
 
     hasMore = false;
-
     loadMoreBtn.style.display = 'none';
   }
 
-  // =========================
-  // INIT CATEGORY
-  // =========================
   async function initKategori() {
 
     try {
 
       const result = await fastFetch(
-        `${API}/categories` +
-        `?slug=${currentSlug}` +
-        `&_fields=id,name,slug,parent`
+        `${API}/categories?slug=${currentSlug}&_fields=id,slug,parent,name`
       );
 
       const data = result.data;
@@ -102,92 +87,226 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error();
       }
 
-      let selectedCategory = null;
+      let selectedCategory = data[0];
 
-      // =========================
-      // TANPA PARENT
-      // =========================
-      if (!parentSlug) {
-
-        selectedCategory = data[0];
-
-      } else {
+      if (parentSlug) {
 
         const parentIds = [
           ...new Set(
-            data
-              .map(cat => cat.parent)
-              .filter(Boolean)
+            data.map(v => v.parent).filter(Boolean)
           )
         ];
 
-        let parentMap = {};
-
         if (parentIds.length) {
 
-          const parentResult =
-            await fastFetch(
-              `${API}/categories` +
-              `?include=${parentIds.join(',')}` +
-              `&_fields=id,slug`
-            );
+          const parentResult = await fastFetch(
+            `${API}/categories?include=${parentIds.join(',')}&_fields=id,slug`
+          );
 
-          parentResult.data.forEach(parent => {
+          const parentMap = {};
 
-            parentMap[parent.id] =
-              parent.slug;
+          parentResult.data.forEach(v => {
+            parentMap[v.id] = v.slug;
           });
-        }
 
-        for (const cat of data) {
+          const matched = data.find(v =>
+            parentMap[v.parent] === parentSlug
+          );
 
-          if (
-            parentMap[cat.parent] ===
-            parentSlug
-          ) {
-            selectedCategory = cat;
-            break;
+          if (matched) {
+            selectedCategory = matched;
           }
         }
       }
 
-      if (!selectedCategory) {
-        selectedCategory = data[0];
-      }
-
       kategoriId = selectedCategory.id;
 
-      // =========================
-      // LOAD POSTS
-      // =========================
       loadPosts();
 
-    } catch (err) {
+    } catch {
 
-      console.error(err);
-
-      container.innerHTML =
-        '<p>Kategori tidak tersedia</p>';
+      container.innerHTML = '<p>Kategori tidak tersedia</p>';
 
       hideLoadMore();
     }
   }
 
-  // =========================
-  // LOAD POSTS
-  // =========================
+  async function preloadCategories(posts) {
+
+    const ids = [
+      ...new Set(
+        posts.flatMap(v => v.categories || [])
+      )
+    ];
+
+    const uncached = ids.filter(id =>
+      !categoryCache.has(id)
+    );
+
+    if (!uncached.length) return;
+
+    const result = await fastFetch(
+      `${API}/categories?include=${uncached.join(',')}&_fields=id,name,slug,parent`
+    );
+
+    result.data.forEach(cat => {
+      categoryCache.set(cat.id, cat);
+    });
+
+    const parentIds = [
+      ...new Set(
+        result.data
+          .map(v => v.parent)
+          .filter(Boolean)
+      )
+    ];
+
+    const uncachedParents = parentIds.filter(id =>
+      !categoryCache.has(id)
+    );
+
+    if (!uncachedParents.length) return;
+
+    const parentResult = await fastFetch(
+      `${API}/categories?include=${uncachedParents.join(',')}&_fields=id,name,slug,parent`
+    );
+
+    parentResult.data.forEach(parent => {
+      categoryCache.set(parent.id, parent);
+    });
+  }
+
+  async function preloadEditors(posts) {
+
+    const links = [
+      ...new Set(
+        posts
+          .map(v => v._links?.['wp:term']?.[2]?.href)
+          .filter(Boolean)
+      )
+    ];
+
+    await Promise.all(
+
+      links.map(async link => {
+
+        if (editorCache.has(link)) return;
+
+        try {
+
+          const result = await fastFetch(link);
+
+          editorCache.set(
+            link,
+            result.data?.[0]?.name || 'Redaksi'
+          );
+
+        } catch {
+
+          editorCache.set(link, 'Redaksi');
+        }
+      })
+    );
+  }
+
+  function buildPost(post) {
+
+    const judul = post.title?.rendered || '';
+    const slug = post.slug || '';
+    const tanggal = formatTanggal(post.date);
+
+    const catId = post.categories?.slice(-1)[0];
+
+    const cat = categoryCache.get(catId) || {
+      name: 'Opini',
+      slug: 'opini',
+      parent: 0
+    };
+
+    const parent = categoryCache.get(cat.parent);
+
+    const media = post._embedded?.['wp:featuredmedia']?.[0];
+
+    const gambar =
+      media?.media_details?.sizes?.medium?.source_url ||
+      media?.media_details?.sizes?.medium_large?.source_url ||
+      media?.source_url ||
+      FALLBACK_IMAGE;
+
+    const termLink =
+      post._links?.['wp:term']?.[2]?.href;
+
+    const editor =
+      editorCache.get(termLink) || 'Redaksi';
+
+    let deskripsi =
+      post.excerpt?.rendered
+        ?.replace(/<[^>]+>/g, '')
+        ?.trim() || '';
+
+    if (deskripsi.length > 140) {
+      deskripsi =
+        deskripsi.slice(0, 140) + '...';
+    }
+
+    let link = `/${cat.slug}/${slug}`;
+
+    if (parent?.slug) {
+      link = `/${parent.slug}/${cat.slug}/${slug}`;
+    }
+
+    return `
+      <a href="${link}" class="item-info">
+
+        <img
+          src="${gambar}"
+          alt="${judul}"
+          class="img-microweb"
+          loading="lazy"
+          decoding="async"
+          fetchpriority="low"
+          width="400"
+          height="225"
+          onerror="this.onerror=null;this.src='${FALLBACK_IMAGE}';"
+        >
+
+        <div class="berita-microweb">
+
+          <p class="judul">
+            ${judul}
+          </p>
+
+          <p class="kategori">
+            ${cat.name}
+          </p>
+
+          <div class="info-microweb">
+
+            <p class="editor">
+              By ${editor}
+            </p>
+
+            <p class="tanggal">
+              ${tanggal}
+            </p>
+
+          </div>
+
+          <p class="deskripsi">
+            ${deskripsi}
+          </p>
+
+        </div>
+
+      </a>
+    `;
+  }
+
   async function loadPosts() {
 
-    if (
-      isLoading ||
-      !hasMore
-    ) return;
+    if (isLoading || !hasMore) return;
 
-    // =========================
-    // STOP JIKA PAGE HABIS
-    // =========================
     if (page > totalPages) {
-
       hideLoadMore();
       return;
     }
@@ -199,292 +318,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
 
-      // =========================
-      // FETCH POSTS
-      // =========================
       const result = await fastFetch(
-
-        `${API}/posts` +
-        `?categories=${kategoriId}` +
-        `&per_page=${PER_PAGE}` +
-        `&page=${page}` +
-        `&_embed` +
-        `&_fields=id,date,slug,title,excerpt,categories,_links,_embedded`
+        `${API}/posts?categories=${kategoriId}&per_page=${PER_PAGE}&page=${page}&_embed&_fields=id,date,slug,title,excerpt,categories,_links,_embedded`
       );
 
       const posts = result.data;
 
-      // =========================
-      // TOTAL PAGE
-      // =========================
-      totalPages = parseInt(
-        result.headers.get('X-WP-TotalPages')
-      ) || MAX_PAGE;
+      totalPages =
+        parseInt(
+          result.headers.get('X-WP-TotalPages')
+        ) || MAX_PAGE;
 
-      // =========================
-      // JIKA TIDAK ADA POST
-      // =========================
       if (!posts.length) {
-
         hideLoadMore();
         return;
       }
 
-      // =========================
-      // FETCH CATEGORY SEKALI
-      // =========================
-      const categoryIds = [
-        ...new Set(
-          posts.flatMap(
-            post => post.categories || []
-          )
-        )
-      ];
+      await Promise.all([
+        preloadCategories(posts),
+        preloadEditors(posts)
+      ]);
 
-      const uncachedCategoryIds =
-        categoryIds.filter(
-          id => !categoryCache.has(id)
-        );
+      const html = posts.map(buildPost).join('');
 
-      // =========================
-      // CATEGORY PARALLEL
-      // =========================
-      if (uncachedCategoryIds.length) {
-
-        const categoryResult =
-          await fastFetch(
-
-            `${API}/categories` +
-            `?include=${uncachedCategoryIds.join(',')}` +
-            `&_fields=id,name,slug,parent`
-          );
-
-        categoryResult.data.forEach(cat => {
-
-          categoryCache.set(
-            cat.id,
-            cat
-          );
-        });
-      }
-
-      // =========================
-      // PARENT CATEGORY
-      // =========================
-      const parentIds = [
-        ...new Set(
-          [...categoryCache.values()]
-            .map(cat => cat.parent)
-            .filter(Boolean)
-        )
-      ];
-
-      const uncachedParents =
-        parentIds.filter(
-          id => !categoryCache.has(id)
-        );
-
-      if (uncachedParents.length) {
-
-        const parentResult =
-          await fastFetch(
-
-            `${API}/categories` +
-            `?include=${uncachedParents.join(',')}` +
-            `&_fields=id,name,slug,parent`
-          );
-
-        parentResult.data.forEach(parent => {
-
-          categoryCache.set(
-            parent.id,
-            parent
-          );
-        });
-      }
-
-      // =========================
-      // PRELOAD EDITOR
-      // =========================
-      const editorLinks = [
-        ...new Set(
-          posts
-            .map(
-              post =>
-                post._links?.['wp:term']?.[2]?.href
-            )
-            .filter(Boolean)
-        )
-      ];
-
-      // =========================
-      // FETCH EDITOR PARALEL
-      // =========================
-      await Promise.all(
-
-        editorLinks.map(async link => {
-
-          if (editorCache.has(link)) return;
-
-          try {
-
-            const result =
-              await fastFetch(link);
-
-            editorCache.set(
-              link,
-              result.data?.[0]?.name ||
-              'Redaksi'
-            );
-
-          } catch {
-
-            editorCache.set(
-              link,
-              'Redaksi'
-            );
-          }
-        })
-      );
-
-      // =========================
-      // BUILD HTML SEKALI
-      // =========================
-      let html = '';
-
-      for (const post of posts) {
-
-        const judul =
-          post.title?.rendered || '';
-
-        const slug =
-          post.slug || '';
-
-        const tanggal =
-          formatTanggal(post.date);
-
-        // =========================
-        // CATEGORY
-        // =========================
-        const catId =
-          post.categories?.slice(-1)[0];
-
-        const cat =
-          categoryCache.get(catId) || {
-            name: 'Opini',
-            slug: 'opini',
-            parent: 0
-          };
-
-        const parent =
-          categoryCache.get(cat.parent);
-
-        // =========================
-        // GAMBAR
-        // =========================
-        let gambar =
-          'https://lampost.co/image/ai.jpeg';
-
-        const media =
-          post._embedded?.['wp:featuredmedia']?.[0];
-
-        if (media) {
-
-          gambar =
-            media?.media_details?.sizes?.medium?.source_url ||
-            media?.media_details?.sizes?.medium_large?.source_url ||
-            media?.source_url ||
-            gambar;
-        }
-
-        // =========================
-        // EDITOR
-        // =========================
-        const termLink =
-          post._links?.['wp:term']?.[2]?.href;
-
-        const editor =
-          editorCache.get(termLink) ||
-          'Redaksi';
-
-        // =========================
-        // DESKRIPSI
-        // =========================
-        let deskripsi =
-          post.excerpt?.rendered
-            ?.replace(/<[^>]+>/g, '')
-            ?.trim() || '';
-
-        if (deskripsi.length > 140) {
-
-          deskripsi =
-            deskripsi.slice(0, 140) + '...';
-        }
-
-        // =========================
-        // LINK
-        // =========================
-        let link =
-          `/${cat.slug}/${slug}`;
-
-        if (parent?.slug) {
-
-          link =
-            `/${parent.slug}/${cat.slug}/${slug}`;
-        }
-
-        // =========================
-        // HTML
-        // =========================
-        html += `
-
-          <a href="${link}" class="item-info">
-
-            <img
-              src="${gambar}"
-              alt="${judul}"
-              class="img-microweb"
-              loading="lazy"
-              decoding="async"
-              fetchpriority="low"
-              onerror="this.onerror=null;this.src='https://lampost.co/image/ai.jpeg';"
-            >
-
-            <div class="berita-microweb">
-
-              <p class="judul">
-                ${judul}
-              </p>
-
-              <p class="kategori">
-                ${cat.name}
-              </p>
-
-              <div class="info-microweb">
-
-                <p class="editor">
-                  By ${editor}
-                </p>
-
-                <p class="tanggal">
-                  ${tanggal}
-                </p>
-
-              </div>
-
-              <p class="deskripsi">
-                ${deskripsi}
-              </p>
-
-            </div>
-
-          </a>
-        `;
-      }
-
-      // =========================
-      // INSERT HTML SEKALI
-      // =========================
       container.insertAdjacentHTML(
         'beforeend',
         html
@@ -492,9 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       page++;
 
-      // =========================
-      // HIDE BUTTON JIKA HABIS
-      // =========================
       if (
         page > totalPages ||
         posts.length < PER_PAGE
@@ -507,31 +360,23 @@ document.addEventListener('DOMContentLoaded', () => {
         loadMoreBtn.style.display = 'flex';
       }
 
-      // =========================
-      // PRELOAD NEXT PAGE
-      // =========================
-      if (page <= totalPages) {
+      if (
+        'requestIdleCallback' in window &&
+        page <= totalPages
+      ) {
 
         requestIdleCallback(() => {
 
           fetch(
-            `${API}/posts` +
-            `?categories=${kategoriId}` +
-            `&per_page=${PER_PAGE}` +
-            `&page=${page}` +
-            `&_embed` +
-            `&_fields=id,date,slug,title,excerpt,categories,_links,_embedded`,
+            `${API}/posts?categories=${kategoriId}&per_page=${PER_PAGE}&page=${page}&_embed&_fields=id,date,slug,title,excerpt,categories,_links,_embedded`,
             {
               cache: 'force-cache'
             }
           ).catch(() => {});
-
         });
       }
 
-    } catch (err) {
-
-      console.error(err);
+    } catch {
 
       hideLoadMore();
 
@@ -544,17 +389,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // =========================
-  // BUTTON
-  // =========================
   loadMoreBtn.addEventListener(
     'click',
-    loadPosts
+    loadPosts,
+    {
+      passive: true
+    }
   );
 
-  // =========================
-  // START
-  // =========================
   initKategori();
 
 });
