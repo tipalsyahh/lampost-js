@@ -16,12 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let isLoading = false;
   let hasMore = true;
   let kategoriId = null;
+  let totalPages = MAX_PAGE;
 
   // =========================
-  // CACHE SUPER CEPAT
+  // CACHE
   // =========================
   const categoryCache = new Map();
-  const mediaCache = new Map();
   const editorCache = new Map();
 
   // =========================
@@ -50,40 +50,62 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // =========================
-  // FETCH CEPAT
+  // FETCH SUPER CEPAT
   // =========================
   async function fastFetch(url) {
 
     const res = await fetch(url, {
       cache: 'force-cache',
       keepalive: true,
+      priority: 'high',
       headers: {
         'Accept': 'application/json'
       }
     });
 
-    if (!res.ok) throw new Error('Fetch Error');
+    if (!res.ok) {
+      throw new Error('Fetch Error');
+    }
 
-    return res.json();
+    return {
+      data: await res.json(),
+      headers: res.headers
+    };
   }
 
   // =========================
-  // AMBIL KATEGORI
+  // HIDE BUTTON
+  // =========================
+  function hideLoadMore() {
+
+    hasMore = false;
+
+    loadMoreBtn.style.display = 'none';
+  }
+
+  // =========================
+  // INIT CATEGORY
   // =========================
   async function initKategori() {
 
     try {
 
-      const data = await fastFetch(
-        `${API}/categories?slug=${currentSlug}&per_page=20&_fields=id,name,slug,parent`
+      const result = await fastFetch(
+        `${API}/categories` +
+        `?slug=${currentSlug}` +
+        `&_fields=id,name,slug,parent`
       );
 
-      if (!data.length) throw new Error();
+      const data = result.data;
+
+      if (!data.length) {
+        throw new Error();
+      }
 
       let selectedCategory = null;
 
       // =========================
-      // VALIDASI PARENT TANPA FETCH BERULANG
+      // TANPA PARENT
       // =========================
       if (!parentSlug) {
 
@@ -94,29 +116,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const parentIds = [
           ...new Set(
             data
-              .map(c => c.parent)
+              .map(cat => cat.parent)
               .filter(Boolean)
           )
         ];
 
-        // fetch semua parent sekaligus
-        let parentsMap = {};
+        let parentMap = {};
 
         if (parentIds.length) {
 
-          const parents = await fastFetch(
-            `${API}/categories?include=${parentIds.join(',')}&per_page=50&_fields=id,slug`
-          );
+          const parentResult =
+            await fastFetch(
+              `${API}/categories` +
+              `?include=${parentIds.join(',')}` +
+              `&_fields=id,slug`
+            );
 
-          parents.forEach(p => {
-            parentsMap[p.id] = p.slug;
+          parentResult.data.forEach(parent => {
+
+            parentMap[parent.id] =
+              parent.slug;
           });
         }
 
         for (const cat of data) {
 
           if (
-            parentsMap[cat.parent] === parentSlug
+            parentMap[cat.parent] ===
+            parentSlug
           ) {
             selectedCategory = cat;
             break;
@@ -131,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
       kategoriId = selectedCategory.id;
 
       // =========================
-      // PRELOAD DATA AWAL
+      // LOAD POSTS
       // =========================
       loadPosts();
 
@@ -142,21 +169,26 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML =
         '<p>Kategori tidak tersedia</p>';
 
-      loadMoreBtn.style.display = 'none';
+      hideLoadMore();
     }
   }
 
   // =========================
-  // LOAD POSTS SUPER CEPAT
+  // LOAD POSTS
   // =========================
   async function loadPosts() {
 
     if (
       isLoading ||
-      !hasMore ||
-      page > MAX_PAGE
-    ) {
-      loadMoreBtn.style.display = 'none';
+      !hasMore
+    ) return;
+
+    // =========================
+    // STOP JIKA PAGE HABIS
+    // =========================
+    if (page > totalPages) {
+
+      hideLoadMore();
       return;
     }
 
@@ -168,64 +200,81 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
 
       // =========================
-      // SATU FETCH SAJA
-      // _embed = category + media + author
+      // FETCH POSTS
       // =========================
-      const posts = await fastFetch(
+      const result = await fastFetch(
+
         `${API}/posts` +
         `?categories=${kategoriId}` +
         `&per_page=${PER_PAGE}` +
         `&page=${page}` +
         `&_embed` +
-        `&_fields=id,date,slug,title,excerpt,categories,featured_media,_links,_embedded`
+        `&_fields=id,date,slug,title,excerpt,categories,_links,_embedded`
       );
 
+      const posts = result.data;
+
+      // =========================
+      // TOTAL PAGE
+      // =========================
+      totalPages = parseInt(
+        result.headers.get('X-WP-TotalPages')
+      ) || MAX_PAGE;
+
+      // =========================
+      // JIKA TIDAK ADA POST
+      // =========================
       if (!posts.length) {
 
-        hasMore = false;
-        loadMoreBtn.style.display = 'none';
-
+        hideLoadMore();
         return;
       }
 
       // =========================
-      // AMBIL SEMUA CATEGORY ID
+      // FETCH CATEGORY SEKALI
       // =========================
-      const allCategoryIds = [
+      const categoryIds = [
         ...new Set(
-          posts.flatMap(post => post.categories || [])
+          posts.flatMap(
+            post => post.categories || []
+          )
         )
       ];
 
-      // =========================
-      // FETCH CATEGORY SEKALI
-      // =========================
       const uncachedCategoryIds =
-        allCategoryIds.filter(
+        categoryIds.filter(
           id => !categoryCache.has(id)
         );
 
+      // =========================
+      // CATEGORY PARALLEL
+      // =========================
       if (uncachedCategoryIds.length) {
 
-        const categories = await fastFetch(
-          `${API}/categories` +
-          `?include=${uncachedCategoryIds.join(',')}` +
-          `&per_page=100` +
-          `&_fields=id,name,slug,parent`
-        );
+        const categoryResult =
+          await fastFetch(
 
-        categories.forEach(cat => {
-          categoryCache.set(cat.id, cat);
+            `${API}/categories` +
+            `?include=${uncachedCategoryIds.join(',')}` +
+            `&_fields=id,name,slug,parent`
+          );
+
+        categoryResult.data.forEach(cat => {
+
+          categoryCache.set(
+            cat.id,
+            cat
+          );
         });
       }
 
       // =========================
-      // PRELOAD PARENT CATEGORY
+      // PARENT CATEGORY
       // =========================
       const parentIds = [
         ...new Set(
           [...categoryCache.values()]
-            .map(c => c.parent)
+            .map(cat => cat.parent)
             .filter(Boolean)
         )
       ];
@@ -237,20 +286,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (uncachedParents.length) {
 
-        const parents = await fastFetch(
-          `${API}/categories` +
-          `?include=${uncachedParents.join(',')}` +
-          `&per_page=100` +
-          `&_fields=id,name,slug,parent`
-        );
+        const parentResult =
+          await fastFetch(
 
-        parents.forEach(cat => {
-          categoryCache.set(cat.id, cat);
+            `${API}/categories` +
+            `?include=${uncachedParents.join(',')}` +
+            `&_fields=id,name,slug,parent`
+          );
+
+        parentResult.data.forEach(parent => {
+
+          categoryCache.set(
+            parent.id,
+            parent
+          );
         });
       }
 
       // =========================
-      // BUILD HTML SUPER CEPAT
+      // PRELOAD EDITOR
+      // =========================
+      const editorLinks = [
+        ...new Set(
+          posts
+            .map(
+              post =>
+                post._links?.['wp:term']?.[2]?.href
+            )
+            .filter(Boolean)
+        )
+      ];
+
+      // =========================
+      // FETCH EDITOR PARALEL
+      // =========================
+      await Promise.all(
+
+        editorLinks.map(async link => {
+
+          if (editorCache.has(link)) return;
+
+          try {
+
+            const result =
+              await fastFetch(link);
+
+            editorCache.set(
+              link,
+              result.data?.[0]?.name ||
+              'Redaksi'
+            );
+
+          } catch {
+
+            editorCache.set(
+              link,
+              'Redaksi'
+            );
+          }
+        })
+      );
+
+      // =========================
+      // BUILD HTML SEKALI
       // =========================
       let html = '';
 
@@ -282,8 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
           categoryCache.get(cat.parent);
 
         // =========================
-        // GAMBAR DARI _EMBED
-        // TANPA FETCH MEDIA LAGI
+        // GAMBAR
         // =========================
         let gambar =
           'https://lampost.co/image/ai.jpeg';
@@ -295,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           gambar =
             media?.media_details?.sizes?.medium?.source_url ||
-            media?.media_details?.sizes?.full?.source_url ||
+            media?.media_details?.sizes?.medium_large?.source_url ||
             media?.source_url ||
             gambar;
         }
@@ -303,14 +400,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // =========================
         // EDITOR
         // =========================
-        let editor = 'Redaksi';
+        const termLink =
+          post._links?.['wp:term']?.[2]?.href;
 
-        const editorData =
-          post._embedded?.author?.[0];
-
-        if (editorData?.name) {
-          editor = editorData.name;
-        }
+        const editor =
+          editorCache.get(termLink) ||
+          'Redaksi';
 
         // =========================
         // DESKRIPSI
@@ -320,9 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
             ?.replace(/<[^>]+>/g, '')
             ?.trim() || '';
 
-        if (deskripsi.length > 150) {
+        if (deskripsi.length > 140) {
+
           deskripsi =
-            deskripsi.slice(0, 150) + '...';
+            deskripsi.slice(0, 140) + '...';
         }
 
         // =========================
@@ -341,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // HTML
         // =========================
         html += `
+
           <a href="${link}" class="item-info">
 
             <img
@@ -386,7 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // =========================
-      // INSERT SEKALI
+      // INSERT HTML SEKALI
       // =========================
       container.insertAdjacentHTML(
         'beforeend',
@@ -396,25 +493,47 @@ document.addEventListener('DOMContentLoaded', () => {
       page++;
 
       // =========================
-      // PRELOAD PAGE BERIKUTNYA
+      // HIDE BUTTON JIKA HABIS
       // =========================
-      if (page <= MAX_PAGE) {
+      if (
+        page > totalPages ||
+        posts.length < PER_PAGE
+      ) {
 
-        fetch(
-          `${API}/posts` +
-          `?categories=${kategoriId}` +
-          `&per_page=${PER_PAGE}` +
-          `&page=${page}` +
-          `&_embed`,
-          {
-            cache: 'force-cache'
-          }
-        ).catch(() => {});
+        hideLoadMore();
+
+      } else {
+
+        loadMoreBtn.style.display = 'flex';
+      }
+
+      // =========================
+      // PRELOAD NEXT PAGE
+      // =========================
+      if (page <= totalPages) {
+
+        requestIdleCallback(() => {
+
+          fetch(
+            `${API}/posts` +
+            `?categories=${kategoriId}` +
+            `&per_page=${PER_PAGE}` +
+            `&page=${page}` +
+            `&_embed` +
+            `&_fields=id,date,slug,title,excerpt,categories,_links,_embedded`,
+            {
+              cache: 'force-cache'
+            }
+          ).catch(() => {});
+
+        });
       }
 
     } catch (err) {
 
       console.error(err);
+
+      hideLoadMore();
 
     } finally {
 
@@ -426,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================
-  // BUTTON LOAD MORE
+  // BUTTON
   // =========================
   loadMoreBtn.addEventListener(
     'click',
