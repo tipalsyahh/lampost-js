@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // CONFIG
   // =========================
   const API = 'https://lampost.co/wp-json/wp/v2';
-  const PER_PAGE = 6;
+  const PER_PAGE = 10;
   const MAX_PAGE = 6;
 
   let page = 1;
