@@ -11,8 +11,11 @@ function getText() {
   const editor = beritaEl.querySelector("#editor")?.innerText || "";
   const tanggal = beritaEl.querySelector("#tanggal")?.innerText || "";
 
+  // 🔥 TAMBAHAN JAM
+  const jam = beritaEl.querySelector("#jam")?.innerText || "";
+
   const isiEl = beritaEl.querySelector(".isi-berita");
-  if (!isiEl) return `${judul}. ${editor}. ${tanggal}.`;
+  if (!isiEl) return `${judul}. ${editor}. ${tanggal}. ${jam}.`;
 
   const clone = isiEl.cloneNode(true);
 
@@ -46,7 +49,8 @@ function getText() {
     }
   });
 
-  let finalText = `${judul}. ${editor}. ${tanggal}. ${isi}`;
+  // 🔥 JAM MASUK KE VOICE
+  let finalText = `${judul}. ${editor}. ${tanggal}. ${jam}. ${isi}`;
 
   finalText = finalText
     .replace(/BERITA LAINNYA/g, "")
