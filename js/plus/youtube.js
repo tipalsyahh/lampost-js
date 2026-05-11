@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => {
 
   const track = document.querySelector('.video-track');
   const next = document.querySelector('.video-next');
@@ -8,12 +8,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const RSS_URL = "https://lampost.co/youtube.php";
 
-  // placeholder
+  // =====================================
+  // LOADING
+  // =====================================
+
   track.innerHTML = `
     <div class="video-card loading">Loading...</div>
     <div class="video-card loading">Loading...</div>
     <div class="video-card loading">Loading...</div>
   `;
+
+  // =====================================
+  // FORMAT TANGGAL
+  // =====================================
 
   function formatTanggal(text) {
 
@@ -21,12 +28,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const date = new Date(text);
 
+    if (isNaN(date)) return text;
+
     return date.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     });
   }
+
+  // =====================================
+  // LOAD VIDEO
+  // =====================================
 
   async function loadVideos(retry = 0) {
 
@@ -48,16 +61,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const parser = new DOMParser();
 
-      const xml = parser.parseFromString(text, "text/xml");
+      const xml =
+        parser.parseFromString(
+          text,
+          "text/xml"
+        );
 
       if (xml.querySelector("parsererror")) {
         throw new Error("XML rusak");
       }
 
-      let entries = xml.querySelectorAll("entry");
+      let entries =
+        xml.querySelectorAll("entry");
 
       if (!entries.length) {
-        entries = xml.getElementsByTagName("entry");
+        entries =
+          xml.getElementsByTagName("entry");
       }
 
       if (!entries.length) {
@@ -70,26 +89,81 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (i >= 10) return;
 
+        // =====================================
+        // TITLE
+        // =====================================
+
         const title =
-          entry.querySelector("title")?.textContent?.trim() || "";
+          entry.querySelector("title")
+          ?.textContent
+          ?.trim() || "Video";
+
+        // =====================================
+        // VIDEO ID
+        // SUPPORT:
+        // <videoId>
+        // <yt:videoId>
+        // =====================================
 
         const videoId =
-          entry.querySelector("yt\\:videoId")?.textContent ||
-          entry.getElementsByTagName("yt:videoId")[0]?.textContent;
+
+          entry.querySelector("videoId")
+          ?.textContent
+          ?.trim()
+
+          ||
+
+          entry.querySelector("yt\\:videoId")
+          ?.textContent
+          ?.trim()
+
+          ||
+
+          entry.getElementsByTagName("videoId")[0]
+          ?.textContent
+          ?.trim()
+
+          ||
+
+          entry.getElementsByTagName("yt:videoId")[0]
+          ?.textContent
+          ?.trim();
+
+        // =====================================
+        // PUBLISHED
+        // =====================================
 
         const published =
-          entry.querySelector("published")?.textContent || "";
+          entry.querySelector("published")
+          ?.textContent
+          ?.trim() || "";
 
-        const tanggal = formatTanggal(published);
+        const tanggal =
+          formatTanggal(published);
+
+        // =====================================
+        // VALIDASI
+        // =====================================
 
         if (!videoId) return;
+
+        // =====================================
+        // THUMBNAIL
+        // =====================================
 
         const thumb =
           `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
-        // 🔥 redirect seperti script lama
+        // =====================================
+        // REDIRECT
+        // =====================================
+
         const redirectUrl =
           `https://lampost.co/play?v=${videoId}`;
+
+        // =====================================
+        // OUTPUT
+        // =====================================
 
         output += `
           <a href="${redirectUrl}"
@@ -106,18 +180,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 decoding="async"
               >
 
-              <div class="play-center">▶</div>
+              <div class="play-center">
+                ▶
+              </div>
 
             </div>
 
             <div class="overlay">
+
               <h3>${title}</h3>
+
               <span>${tanggal}</span>
+
             </div>
 
           </a>
         `;
       });
+
+      // =====================================
+      // VALIDASI OUTPUT
+      // =====================================
 
       if (!output) {
         throw new Error("Video kosong");
@@ -131,7 +214,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
 
-      console.error("ERROR:", err);
+      console.error(
+        "VIDEO ERROR:",
+        err
+      );
 
       if (retry < 2) {
 
@@ -150,61 +236,104 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // =====================================
+  // LOAD
+  // =====================================
+
   loadVideos();
+
+  // =====================================
+  // SLIDER
+  // =====================================
 
   function initSlider() {
 
     if (window.innerWidth <= 768) {
+
       track.style.transform = 'none';
       track.style.transition = 'none';
+
       return;
     }
 
-    const cards = [...track.querySelectorAll('.video-card')];
+    const cards = [
+      ...track.querySelectorAll('.video-card')
+    ];
 
     if (!cards.length) return;
 
-    // hapus clone lama
-    track.querySelectorAll('.clone').forEach(el => el.remove());
+    // =====================================
+    // HAPUS CLONE LAMA
+    // =====================================
+
+    track
+      .querySelectorAll('.clone')
+      .forEach(el => el.remove());
 
     const visible = 2;
 
     const gap = 15;
 
-    const cardWidth = cards[0].offsetWidth + gap;
+    const cardWidth =
+      cards[0].offsetWidth + gap;
 
     let index = visible;
 
     let isAnimating = false;
 
-    const firstClones = cards
+    // =====================================
+    // CLONE
+    // =====================================
+
+    const firstClones =
+      cards
       .slice(0, visible)
       .map(el => {
-        const clone = el.cloneNode(true);
+
+        const clone =
+          el.cloneNode(true);
+
         clone.classList.add('clone');
+
         return clone;
       });
 
-    const lastClones = cards
+    const lastClones =
+      cards
       .slice(-visible)
       .map(el => {
-        const clone = el.cloneNode(true);
+
+        const clone =
+          el.cloneNode(true);
+
         clone.classList.add('clone');
+
         return clone;
       });
 
-    lastClones.reverse().forEach(clone => {
-      track.prepend(clone);
-    });
+    lastClones
+      .reverse()
+      .forEach(clone => {
+        track.prepend(clone);
+      });
 
-    firstClones.forEach(clone => {
-      track.appendChild(clone);
-    });
+    firstClones
+      .forEach(clone => {
+        track.appendChild(clone);
+      });
+
+    // =====================================
+    // POSITION
+    // =====================================
 
     track.style.transition = 'none';
 
     track.style.transform =
       `translateX(-${cardWidth * index}px)`;
+
+    // =====================================
+    // NEXT
+    // =====================================
 
     function slideNext() {
 
@@ -214,16 +343,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       index++;
 
-      track.style.transition = '0.4s ease';
+      track.style.transition =
+        '0.4s ease';
 
       track.style.transform =
         `translateX(-${cardWidth * index}px)`;
 
       setTimeout(() => {
 
-        if (index >= cards.length + visible) {
+        if (
+          index >=
+          cards.length + visible
+        ) {
 
-          track.style.transition = 'none';
+          track.style.transition =
+            'none';
 
           index = visible;
 
@@ -236,6 +370,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 400);
     }
 
+    // =====================================
+    // PREV
+    // =====================================
+
     function slidePrev() {
 
       if (isAnimating) return;
@@ -244,7 +382,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       index--;
 
-      track.style.transition = '0.4s ease';
+      track.style.transition =
+        '0.4s ease';
 
       track.style.transform =
         `translateX(-${cardWidth * index}px)`;
@@ -253,9 +392,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (index < visible) {
 
-          track.style.transition = 'none';
+          track.style.transition =
+            'none';
 
-          index = cards.length + visible - 1;
+          index =
+            cards.length +
+            visible - 1;
 
           track.style.transform =
             `translateX(-${cardWidth * index}px)`;
@@ -266,6 +408,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 400);
     }
 
+    // =====================================
+    // BUTTON
+    // =====================================
+
     if (next) {
       next.onclick = slideNext;
     }
@@ -274,23 +420,32 @@ document.addEventListener("DOMContentLoaded", () => {
       prev.onclick = slidePrev;
     }
 
-    // 🔥 redirect aman seperti script lama
-    track.addEventListener('click', function(e) {
+    // =====================================
+    // OPEN TAB
+    // =====================================
 
-      const link = e.target.closest('.video-card');
+    track.addEventListener(
+      'click',
+      function(e) {
 
-      if (!link) return;
+        const link =
+          e.target.closest('.video-card');
 
-      e.preventDefault();
+        if (!link) return;
 
-      const newTab = window.open(link.href, '_blank');
+        e.preventDefault();
 
-      if (newTab) {
-        newTab.opener = null;
+        const newTab =
+          window.open(
+            link.href,
+            '_blank'
+          );
+
+        if (newTab) {
+          newTab.opener = null;
+        }
       }
-
-    });
-
+    );
   }
 
 });
