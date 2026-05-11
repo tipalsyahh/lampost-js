@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   lineAccent.style.display = 'none';
   loadMoreBtn.style.display = 'none';
 
-  const PER_PAGE = 10;
+  const PER_PAGE = 5;
   let page = 1;
   let isLoading = false;
   let hasMore = true;
