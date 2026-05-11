@@ -8,32 +8,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const RSS_URL = "https://lampost.co/youtube.php";
 
-  // 🔥 placeholder langsung tampil
+  // placeholder
   track.innerHTML = `
-    <div class="video-card">Loading...</div>
-    <div class="video-card">Loading...</div>
-    <div class="video-card">Loading...</div>
+    <div class="video-card loading">Loading...</div>
+    <div class="video-card loading">Loading...</div>
+    <div class="video-card loading">Loading...</div>
   `;
 
   function formatTanggal(text) {
+
     if (!text) return "";
 
-    const now = new Date();
-    const match = text.match(/(\d+)\s+(minute|hour|day|week|month|year)/);
+    const date = new Date(text);
 
-    if (!match) return text;
-
-    const value = parseInt(match[1]);
-    const unit = match[2];
-
-    if (unit === "minute") now.setMinutes(now.getMinutes() - value);
-    if (unit === "hour") now.setHours(now.getHours() - value);
-    if (unit === "day") now.setDate(now.getDate() - value);
-    if (unit === "week") now.setDate(now.getDate() - (value * 7));
-    if (unit === "month") now.setMonth(now.getMonth() - value);
-    if (unit === "year") now.setFullYear(now.getFullYear() - value);
-
-    return now.toLocaleDateString('id-ID', {
+    return date.toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -41,19 +29,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadVideos(retry = 0) {
+
     try {
 
       const res = await fetch(RSS_URL, {
-        cache: "force-cache"
+        cache: "no-store"
       });
 
-      if (!res.ok) throw new Error("RSS gagal");
+      if (!res.ok) {
+        throw new Error("RSS gagal");
+      }
 
       const text = await res.text();
 
-      if (!text || text.length < 50) throw new Error("XML kosong");
+      if (!text || text.length < 50) {
+        throw new Error("XML kosong");
+      }
 
       const parser = new DOMParser();
+
       const xml = parser.parseFromString(text, "text/xml");
 
       if (xml.querySelector("parsererror")) {
@@ -61,16 +55,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       let entries = xml.querySelectorAll("entry");
-      if (!entries.length) entries = xml.getElementsByTagName("entry");
-      if (!entries.length) throw new Error("Tidak ada video");
+
+      if (!entries.length) {
+        entries = xml.getElementsByTagName("entry");
+      }
+
+      if (!entries.length) {
+        throw new Error("Tidak ada video");
+      }
 
       let output = "";
 
       Array.from(entries).forEach((entry, i) => {
+
         if (i >= 10) return;
 
         const title =
-          entry.querySelector("title")?.textContent || "";
+          entry.querySelector("title")?.textContent?.trim() || "";
 
         const videoId =
           entry.querySelector("yt\\:videoId")?.textContent ||
@@ -83,115 +84,213 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!videoId) return;
 
+        const thumb =
+          `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+        // 🔥 redirect seperti script lama
+        const redirectUrl =
+          `https://lampost.co/play?v=${videoId}`;
+
         output += `
-          <a href="https://lampost.co/play?v=${videoId}" class="video-card" target="_blank" rel="noopener">
-            <img src="https://img.youtube.com/vi/${videoId}/hqdefault.jpg" loading="lazy">
-            <div class="play-center">▶</div>
+          <a href="${redirectUrl}"
+             class="video-card"
+             target="_blank"
+             rel="noopener noreferrer">
+
+            <div class="thumb-wrap">
+
+              <img
+                src="${thumb}"
+                alt="${title}"
+                loading="lazy"
+                decoding="async"
+              >
+
+              <div class="play-center">▶</div>
+
+            </div>
+
             <div class="overlay">
               <h3>${title}</h3>
               <span>${tanggal}</span>
             </div>
+
           </a>
         `;
       });
 
-      if (!output) throw new Error("Kosong");
+      if (!output) {
+        throw new Error("Video kosong");
+      }
 
       track.innerHTML = output;
 
-      initSlider();
+      requestAnimationFrame(() => {
+        initSlider();
+      });
 
     } catch (err) {
 
-      console.error("ERROR:", err.message);
+      console.error("ERROR:", err);
 
       if (retry < 2) {
-        setTimeout(() => loadVideos(retry + 1), 1000);
-      } else {
-        track.innerHTML = "<p>Gagal memuat video</p>";
-      }
 
+        setTimeout(() => {
+          loadVideos(retry + 1);
+        }, 1000);
+
+      } else {
+
+        track.innerHTML = `
+          <div class="video-error">
+            Gagal memuat video
+          </div>
+        `;
+      }
     }
   }
 
   loadVideos();
 
   function initSlider() {
+
     if (window.innerWidth <= 768) {
       track.style.transform = 'none';
+      track.style.transition = 'none';
       return;
     }
 
-    const cards = Array.from(track.children);
+    const cards = [...track.querySelectorAll('.video-card')];
+
     if (!cards.length) return;
 
-    const cardWidth = cards[0].offsetWidth + 15;
+    // hapus clone lama
+    track.querySelectorAll('.clone').forEach(el => el.remove());
+
     const visible = 2;
 
+    const gap = 15;
+
+    const cardWidth = cards[0].offsetWidth + gap;
+
     let index = visible;
+
     let isAnimating = false;
 
-    const firstClones = cards.slice(0, visible).map(el => el.cloneNode(true));
-    const lastClones = cards.slice(-visible).map(el => el.cloneNode(true));
+    const firstClones = cards
+      .slice(0, visible)
+      .map(el => {
+        const clone = el.cloneNode(true);
+        clone.classList.add('clone');
+        return clone;
+      });
+
+    const lastClones = cards
+      .slice(-visible)
+      .map(el => {
+        const clone = el.cloneNode(true);
+        clone.classList.add('clone');
+        return clone;
+      });
 
     lastClones.reverse().forEach(clone => {
-      track.insertBefore(clone, track.firstChild);
+      track.prepend(clone);
     });
 
     firstClones.forEach(clone => {
       track.appendChild(clone);
     });
 
-    track.style.transform = `translateX(-${cardWidth * index}px)`;
+    track.style.transition = 'none';
+
+    track.style.transform =
+      `translateX(-${cardWidth * index}px)`;
 
     function slideNext() {
+
       if (isAnimating) return;
+
       isAnimating = true;
 
       index++;
-      track.style.transition = '0.4s';
-      track.style.transform = `translateX(-${cardWidth * index}px)`;
+
+      track.style.transition = '0.4s ease';
+
+      track.style.transform =
+        `translateX(-${cardWidth * index}px)`;
 
       setTimeout(() => {
+
         if (index >= cards.length + visible) {
+
           track.style.transition = 'none';
+
           index = visible;
-          track.style.transform = `translateX(-${cardWidth * index}px)`;
+
+          track.style.transform =
+            `translateX(-${cardWidth * index}px)`;
         }
+
         isAnimating = false;
+
       }, 400);
     }
 
     function slidePrev() {
+
       if (isAnimating) return;
+
       isAnimating = true;
 
       index--;
-      track.style.transition = '0.4s';
-      track.style.transform = `translateX(-${cardWidth * index}px)`;
+
+      track.style.transition = '0.4s ease';
+
+      track.style.transform =
+        `translateX(-${cardWidth * index}px)`;
 
       setTimeout(() => {
+
         if (index < visible) {
+
           track.style.transition = 'none';
+
           index = cards.length + visible - 1;
-          track.style.transform = `translateX(-${cardWidth * index}px)`;
+
+          track.style.transform =
+            `translateX(-${cardWidth * index}px)`;
         }
+
         isAnimating = false;
+
       }, 400);
     }
 
-    if (next) next.onclick = slideNext;
-    if (prev) prev.onclick = slidePrev;
+    if (next) {
+      next.onclick = slideNext;
+    }
 
+    if (prev) {
+      prev.onclick = slidePrev;
+    }
+
+    // 🔥 redirect aman seperti script lama
     track.addEventListener('click', function(e) {
+
       const link = e.target.closest('.video-card');
+
       if (!link) return;
 
       e.preventDefault();
 
       const newTab = window.open(link.href, '_blank');
-      if (newTab) newTab.opener = null;
+
+      if (newTab) {
+        newTab.opener = null;
+      }
+
     });
+
   }
 
 });
