@@ -146,7 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // HTML
             // ===========================
             htmlArr.push(`
-                <a href="${link}" class="post-item" target="_blank" rel="noopener noreferrer">
+                <a href="${link}" class="post-item" id="kolom-pakar" target="_blank" rel="noopener noreferrer">
 
                     <div class="post-thumb">
 
