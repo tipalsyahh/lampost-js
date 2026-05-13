@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch("https://lampost.co/wp-json/wp/v2/categories?per_page=100");
             const data = await res.json();
 
-            let html = '<option value="">Semua Berita</option>';
+            let html = '<option value="">Semua Kategori</option>';
 
             data.forEach(cat => {
                 categoryMap[cat.id] = {
