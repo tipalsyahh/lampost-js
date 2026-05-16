@@ -1,48 +1,52 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function(){
 
-  /* ===============================
-     FUNGSI UMUM SEARCH
-  =============================== */
-  function bindSearch(container) {
-    if (!container) return;
+    const inputSidebar =
+        document.getElementById('input-sidebar');
 
-    const input = container.querySelector('.search-input');
-    const btn = container.querySelector('.search-btn'); // boleh null
+    const btnSidebarSearch =
+        document.getElementById('btn-sidebar-search');
 
-    function goSearch() {
-      const q = input.value;
-
-      if (!q || !q.trim()) {
-        alert('Masukkan kata kunci pencarian');
+    if(!inputSidebar || !btnSidebarSearch){
         return;
-      }
-
-      window.location.href =
-        `/search?q=${encodeURIComponent(q.trim())}`;
     }
 
-    /* klik icon (kalau ada) */
-    if (btn) {
-      btn.addEventListener('click', goSearch);
+    function runSearch(){
+
+        const keyword =
+            inputSidebar.value.trim();
+
+        if(keyword !== ''){
+
+            window.location.href =
+                '/search?q=' +
+                encodeURIComponent(keyword);
+
+        }
+
     }
 
-    /* ENTER */
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        goSearch();
-      }
-    });
-  }
+    /* CLICK BUTTON */
 
-  /* ===============================
-     SEARCH BERANDA
-  =============================== */
-  bindSearch(document.getElementById('searchBeranda'));
+    btnSidebarSearch.addEventListener(
+        'click',
+        runSearch
+    );
 
-  /* ===============================
-     SEARCH SIDEBAR
-  =============================== */
-  bindSearch(document.getElementById('searchSidebar'));
+    /* ENTER KEY */
+
+    inputSidebar.addEventListener(
+        'keypress',
+        function(e){
+
+            if(e.key === 'Enter'){
+
+                e.preventDefault();
+
+                runSearch();
+
+            }
+
+        }
+    );
 
 });
