@@ -49,7 +49,7 @@ const SIDEBAR = `
                 </div>
                 </ul>
             </div>
-            
+
             <div class="button-user">
                 <a href="https://lampost.co/epaper/produk/lampung-post-digital-premium/" class="langganan">Langganan</a>
                 <a href="https://lampost.co/epaper/my-account/?wcm_redirect_to=post&wcm_redirect_id=302927" class="login"><i class="bi bi-person-circle"></i>Masuk</a>
@@ -123,7 +123,16 @@ const SIDEBAR = `
         <center>
             <h2>MENU</h2>
         </center>
-
+        <div class="search-sidebar" id="searchSidebar">
+            <div class="input-menu">
+                <input type="search" class="search-input" placeholder="Cari Artikel Disini.." aria-label="Search"
+                    id="input-sidebar">
+                <button type="button" class="search-btn" aria-label="Search" id="btn-sidebar-search">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </div>
+        
         <div class="sidebar-isi">
             <ul>
                 <li><a href="https://lampost.co/"><i class="bi bi-house-door"></i> Beranda</a></li>
