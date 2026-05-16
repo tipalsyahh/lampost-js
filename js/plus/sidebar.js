@@ -132,7 +132,31 @@ const SIDEBAR = `
                 </button>
             </div>
         </div>
+        <div class="darkmode-item">
+            <button
+                type="button"
+                class="darkmode-toggle"
+                id="darkModeToggle"
+                aria-label="Dark Mode">
         
+                <span class="toggle-circle">
+        
+                    <!-- ICON DINAMIS -->
+                    <i class="bi bi-moon-fill" id="toggleIcon"></i>
+        
+                </span>
+        
+                <span class="toggle-icons">
+        
+                    <i class="bi bi-sun-fill sun-icon"></i>
+        
+                    <i class="bi bi-moon-fill moon-icon-right"></i>
+        
+                </span>
+        
+            </button>
+        
+        </div>
         <div class="sidebar-isi">
             <ul>
                 <li><a href="https://lampost.co/"><i class="bi bi-house-door"></i> Beranda</a></li>
