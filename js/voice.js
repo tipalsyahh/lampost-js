@@ -1,56 +1,183 @@
 const synth = window.speechSynthesis;
+
 let utterance = null;
 let isPlaying = false;
 let isMuted = true;
+let resumeInterval = null;
+
+/* =========================================
+DETECT BAHASA DEVICE
+========================================= */
+
+function getDeviceLang() {
+
+  const lang =
+    navigator.language ||
+    navigator.userLanguage ||
+    "id-ID";
+
+  return lang;
+
+}
+
+/* =========================================
+AMBIL VOICE TERBAIK
+========================================= */
+
+function getBestVoice() {
+
+  const voices = synth.getVoices();
+
+  if (!voices.length) return null;
+
+  const deviceLang = getDeviceLang().toLowerCase();
+
+  // PRIORITAS SESUAI DEVICE
+  let voice =
+    voices.find(v =>
+      v.lang.toLowerCase() === deviceLang
+    );
+
+  // PRIORITAS BAHASA SAMA
+  if (!voice) {
+
+    const shortLang =
+      deviceLang.split("-")[0];
+
+    voice =
+      voices.find(v =>
+        v.lang.toLowerCase()
+        .startsWith(shortLang)
+      );
+
+  }
+
+  // FALLBACK INDONESIA
+  if (!voice) {
+
+    voice =
+      voices.find(v =>
+        v.lang.toLowerCase()
+        .includes("id")
+      );
+
+  }
+
+  // FALLBACK ENGLISH
+  if (!voice) {
+
+    voice =
+      voices.find(v =>
+        v.lang.toLowerCase()
+        .includes("en")
+      );
+
+  }
+
+  // FALLBACK RANDOM
+  if (!voice) {
+
+    voice = voices[0];
+
+  }
+
+  return voice;
+
+}
+
+/* =========================================
+GET TEXT
+========================================= */
 
 function getText() {
-  const beritaEl = document.getElementById("berita");
+
+  const beritaEl =
+    document.getElementById("berita");
+
   if (!beritaEl) return "";
 
-  const judul = beritaEl.querySelector(".judul-berita")?.innerText || "";
-  const editor = beritaEl.querySelector("#editor")?.innerText || "";
-  const tanggal = beritaEl.querySelector("#tanggal")?.innerText || "";
+  const judul =
+    beritaEl.querySelector(".judul-berita")
+    ?.innerText || "";
 
-  // 🔥 TAMBAHAN JAM
-  const jam = beritaEl.querySelector("#jam")?.innerText || "";
+  const editor =
+    beritaEl.querySelector("#editor")
+    ?.innerText || "";
 
-  const isiEl = beritaEl.querySelector(".isi-berita");
-  if (!isiEl) return `${judul}. ${editor}. ${tanggal}. ${jam}.`;
+  const tanggal =
+    beritaEl.querySelector("#tanggal")
+    ?.innerText || "";
+
+  const jam =
+    beritaEl.querySelector("#jam")
+    ?.innerText || "";
+
+  const isiEl =
+    beritaEl.querySelector(".isi-berita");
+
+  if (!isiEl) {
+
+    return `${judul}. ${editor}. ${tanggal}. ${jam}.`;
+
+  }
 
   const clone = isiEl.cloneNode(true);
 
-  // 🔥 FIX IKLAN & GAMBAR (PENTING)
-  clone.querySelectorAll("img, .iklan-beranda, picture, source").forEach(el => el.remove());
+  /* HAPUS GAMBAR IKLAN */
 
-  // 🔥 tetap ubah <a> jadi text
-  clone.querySelectorAll("a").forEach(a => {
-    const text = a.innerText;
-    a.replaceWith(text);
-  });
+  clone
+    .querySelectorAll(
+      "img, picture, source, iframe, video, .iklan-beranda"
+    )
+    .forEach(el => el.remove());
 
-  // hapus elemen tidak perlu
-  const removeEls = clone.querySelectorAll(
-    "button, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
-  );
-  removeEls.forEach(el => el.remove());
+  /* A JADI TEXT */
+
+  clone
+    .querySelectorAll("a")
+    .forEach(a => {
+
+      const text = a.innerText;
+
+      a.replaceWith(text);
+
+    });
+
+  /* HAPUS ELEMENT */
+
+  clone
+    .querySelectorAll(
+      "button, figure, figcaption, .baca-berita, #voiceToggle, #aiTags, .home, .load-more"
+    )
+    .forEach(el => el.remove());
 
   let isi = "";
 
-  clone.querySelectorAll("h1, h2, h3, h4, p, li").forEach(el => {
-    let text = el.innerText.trim();
-    if (!text) return;
+  clone
+    .querySelectorAll(
+      "h1, h2, h3, h4, p, li"
+    )
+    .forEach(el => {
 
-    const tag = el.tagName;
+      let text =
+        el.innerText.trim();
 
-    if (tag === "LI") {
-      isi += `${text}. ... `;
-    } else {
-      isi += `${text}. `;
-    }
-  });
+      if (!text) return;
 
-  // 🔥 JAM MASUK KE VOICE
-  let finalText = `${judul}. ${editor}. ${tanggal}. ${jam}. ${isi}`;
+      if (el.tagName === "LI") {
+
+        isi += `${text}. ... `;
+
+      } else {
+
+        isi += `${text}. `;
+
+      }
+
+    });
+
+  let finalText =
+    `${judul}. ${editor}. ${tanggal}. ${jam}. ${isi}`;
 
   finalText = finalText
     .replace(/BERITA LAINNYA/g, "")
@@ -58,99 +185,308 @@ function getText() {
     .trim();
 
   return finalText;
+
 }
+
+/* =========================================
+BUTTON TEXT
+========================================= */
 
 function setBtnText(btn, text, icon) {
-  btn.innerHTML = `<span>${text}</span> <i class="${icon}"></i>`;
+
+  btn.innerHTML =
+    `<span>${text}</span> <i class="${icon}"></i>`;
+
 }
 
+/* =========================================
+STOP VOICE
+========================================= */
+
+function stopVoice(btn) {
+
+  try {
+
+    synth.cancel();
+
+  } catch(e){}
+
+  clearInterval(resumeInterval);
+
+  isPlaying = false;
+
+  isMuted = true;
+
+  setBtnText(
+    btn,
+    'Dengarkan Berita',
+    'bi bi-volume-up'
+  );
+
+}
+
+/* =========================================
+PLAY VOICE
+========================================= */
+
 function playVoice(btn) {
+
   if (isMuted) return;
 
   const text = getText();
+
   if (!text) return;
 
-  if (synth.speaking || synth.pending) synth.cancel();
+  try {
 
-  utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "id-ID";
+    synth.cancel();
+
+  } catch(e){}
+
+  utterance =
+    new SpeechSynthesisUtterance(text);
+
+  const selectedVoice =
+    getBestVoice();
+
+  if (selectedVoice) {
+
+    utterance.voice = selectedVoice;
+
+    utterance.lang =
+      selectedVoice.lang;
+
+  } else {
+
+    utterance.lang =
+      getDeviceLang();
+
+  }
 
   utterance.rate = 1;
+
   utterance.pitch = 1;
+
   utterance.volume = 1;
 
+  utterance.onstart = () => {
+
+    isPlaying = true;
+
+  };
+
   utterance.onend = () => {
+
+    clearInterval(resumeInterval);
+
     isPlaying = false;
+
     isMuted = true;
-    setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
+
+    setBtnText(
+      btn,
+      'Dengarkan Berita',
+      'bi bi-volume-up'
+    );
+
   };
 
   utterance.onerror = () => {
+
+    clearInterval(resumeInterval);
+
     isPlaying = false;
+
     isMuted = true;
-    setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
+
+    setBtnText(
+      btn,
+      'Dengarkan Berita',
+      'bi bi-volume-up'
+    );
+
   };
 
-  synth.speak(utterance);
+  /* =========================================
+  FIX BROWSER SAMSUNG / IG / WEBVIEW
+  ========================================= */
 
-  // 🔥 AUTO RESUME KUAT (ANTI MATI SAAT LOCK / BACKGROUND)
-  const resumeInterval = setInterval(() => {
-    if (!isPlaying) return clearInterval(resumeInterval);
+  setTimeout(() => {
 
-    if (synth.paused) {
-      try { synth.resume(); } catch(e){}
+    try {
+
+      synth.speak(utterance);
+
+    } catch(e){}
+
+  }, 150);
+
+  /* =========================================
+  AUTO RESUME
+  ========================================= */
+
+  clearInterval(resumeInterval);
+
+  resumeInterval = setInterval(() => {
+
+    if (!isPlaying) {
+
+      clearInterval(resumeInterval);
+
+      return;
+
     }
 
-    // 🔥 jika benar-benar berhenti paksa
-    if (!synth.speaking && isPlaying) {
-      try {
-        synth.speak(utterance);
-      } catch(e){}
-    }
+    try {
+
+      if (synth.paused) {
+
+        synth.resume();
+
+      }
+
+      // Samsung / Webview fix
+      if (!synth.speaking) {
+
+        synth.pause();
+
+        synth.resume();
+
+      }
+
+    } catch(e){}
 
   }, 1000);
 
-  isPlaying = true;
 }
 
-function stopVoice(btn) {
-  if (synth.speaking || synth.pending) synth.cancel();
-  isPlaying = false;
-  isMuted = true;
-  setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
-}
+/* =========================================
+INIT
+========================================= */
 
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("voiceToggle");
-  if (!btn) return;
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-  isMuted = true;
-  stopVoice(btn);
+    const btn =
+      document.getElementById("voiceToggle");
 
-  setBtnText(btn, 'Dengarkan Berita', 'bi bi-volume-up');
+    if (!btn) return;
 
-  btn.addEventListener("click", () => {
-    if (isMuted) {
-      isMuted = false;
-      setBtnText(btn, 'Berhenti', 'bi bi-volume-mute-fill');
-      playVoice(btn);
-    } else {
-      stopVoice(btn);
+    stopVoice(btn);
+
+    /* LOAD VOICES */
+
+    function initVoices() {
+
+      synth.getVoices();
+
     }
-  });
 
-  if (!synth.getVoices().length) {
-    synth.onvoiceschanged = () => {};
+    initVoices();
+
+    if (
+      speechSynthesis.onvoiceschanged !==
+      undefined
+    ) {
+
+      speechSynthesis.onvoiceschanged =
+        initVoices;
+
+    }
+
+    /* BUTTON CLICK */
+
+    btn.addEventListener(
+      "click",
+      () => {
+
+        // IOS / Samsung / WebView unlock
+        synth.resume();
+
+        if (isMuted) {
+
+          isMuted = false;
+
+          setBtnText(
+            btn,
+            'Berhenti',
+            'bi bi-volume-mute-fill'
+          );
+
+          playVoice(btn);
+
+        } else {
+
+          stopVoice(btn);
+
+        }
+
+      }
+    );
+
   }
-});
+);
 
-window.addEventListener("beforeunload", () => synth.cancel());
+/* =========================================
+UNLOAD
+========================================= */
 
-// 🔥 FIX BACKGROUND / LAYAR MATI
-document.addEventListener("visibilitychange", () => {
-  if (isPlaying) {
-    setTimeout(() => {
-      try { synth.resume(); } catch(e){}
-    }, 300);
+window.addEventListener(
+  "beforeunload",
+  () => {
+
+    try {
+
+      synth.cancel();
+
+    } catch(e){}
+
   }
-});
+);
+
+/* =========================================
+BACKGROUND FIX
+========================================= */
+
+document.addEventListener(
+  "visibilitychange",
+  () => {
+
+    if (isPlaying) {
+
+      setTimeout(() => {
+
+        try {
+
+          synth.resume();
+
+        } catch(e){}
+
+      }, 300);
+
+    }
+
+  }
+);
+
+/* =========================================
+FOCUS FIX MOBILE
+========================================= */
+
+window.addEventListener(
+  "focus",
+  () => {
+
+    if (isPlaying) {
+
+      try {
+
+        synth.resume();
+
+      } catch(e){}
+
+    }
+
+  }
+);
