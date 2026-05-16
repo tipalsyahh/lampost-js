@@ -93,3 +93,84 @@ document.querySelectorAll('.logo-img').forEach(el => {
     }
   };
 });
+
+const darkModeToggle =
+document.getElementById("darkModeToggle");
+
+const toggleIcon =
+document.getElementById("toggleIcon");
+
+const body = document.body;
+
+/* =========================================
+SET ICON
+========================================= */
+
+function updateIcon(){
+
+    if(body.classList.contains("dark-mode")){
+
+        toggleIcon.className =
+        "bi bi-moon-fill";
+
+    }else{
+
+        toggleIcon.className =
+        "bi bi-sun-fill";
+
+    }
+
+}
+
+/* =========================================
+LOAD THEME
+========================================= */
+
+const savedTheme =
+localStorage.getItem("theme");
+
+if(savedTheme){
+
+    body.classList.add(savedTheme);
+
+}else{
+
+    body.classList.add("light-mode");
+
+}
+
+updateIcon();
+
+/* =========================================
+TOGGLE
+========================================= */
+
+darkModeToggle.onclick = function(){
+
+    if(body.classList.contains("dark-mode")){
+
+        body.classList.remove("dark-mode");
+
+        body.classList.add("light-mode");
+
+        localStorage.setItem(
+            "theme",
+            "light-mode"
+        );
+
+    }else{
+
+        body.classList.remove("light-mode");
+
+        body.classList.add("dark-mode");
+
+        localStorage.setItem(
+            "theme",
+            "dark-mode"
+        );
+
+    }
+
+    updateIcon();
+
+};
