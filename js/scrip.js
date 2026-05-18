@@ -123,7 +123,7 @@ const lightLogo =
 "https://lampost.co/index/image/lampost300.png (1).webp";
 
 const darkLogo =
-"https://lampost.co/index/image/mode-dart.png (1).webp";
+"https://lampost.co/index/image/mode-dart.png";
 
 /* =========================================
 SET ICON + LOGO
