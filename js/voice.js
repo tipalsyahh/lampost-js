@@ -1,34 +1,14 @@
-/* =========================================
-SYNTH
-========================================= */
-
-const synth =
-window.speechSynthesis;
+const synth = window.speechSynthesis;
 
 let utterance = null;
-
 let isPlaying = false;
-
 let isMuted = true;
-
 let resumeInterval = null;
-
-/* =========================================
-STORAGE
-========================================= */
 
 const STORAGE_KEY =
 "lampost_voice_position";
 
-/* =========================================
-CURRENT POSITION
-========================================= */
-
 let currentCharIndex = 0;
-
-/* =========================================
-DETECT BAHASA DEVICE
-========================================= */
 
 function getDeviceLang() {
 
@@ -43,11 +23,6 @@ function getDeviceLang() {
   return lang;
 }
 
-/* =========================================
-AMBIL VOICE TERBAIK
-PRIORITAS INDONESIA
-========================================= */
-
 function getBestVoice() {
 
   const voices =
@@ -55,10 +30,6 @@ function getBestVoice() {
 
   if (!voices.length)
     return null;
-
-  // =====================================
-  // PRIORITAS INDONESIA
-  // =====================================
 
   let voice =
 
@@ -68,10 +39,6 @@ function getBestVoice() {
        .toLowerCase()
        .includes("id")
     );
-
-  // =====================================
-  // DEVICE LANGUAGE
-  // =====================================
 
   if (!voice) {
 
@@ -89,10 +56,6 @@ function getBestVoice() {
          deviceLang
       );
   }
-
-  // =====================================
-  // SHORT LANG
-  // =====================================
 
   if (!voice) {
 
@@ -112,10 +75,6 @@ function getBestVoice() {
       );
   }
 
-  // =====================================
-  // ENGLISH
-  // =====================================
-
   if (!voice) {
 
     voice =
@@ -128,10 +87,6 @@ function getBestVoice() {
       );
   }
 
-  // =====================================
-  // RANDOM
-  // =====================================
-
   if (!voice) {
 
     voice = voices[0];
@@ -139,10 +94,6 @@ function getBestVoice() {
 
   return voice;
 }
-
-/* =========================================
-GET TEXT
-========================================= */
 
 function getText() {
 
@@ -198,10 +149,6 @@ function getText() {
   const clone =
     isiEl.cloneNode(true);
 
-  /* =====================================
-  HAPUS ELEMENT
-  ===================================== */
-
   clone
     .querySelectorAll(
       `
@@ -224,10 +171,6 @@ function getText() {
     .forEach(el =>
       el.remove()
     );
-
-  /* =====================================
-  A -> TEXT
-  ===================================== */
 
   clone
     .querySelectorAll("a")
@@ -296,10 +239,6 @@ function getText() {
   return finalText;
 }
 
-/* =========================================
-BUTTON TEXT
-========================================= */
-
 function setBtnText(
   btn,
   text,
@@ -314,10 +253,6 @@ function setBtnText(
   `;
 }
 
-/* =========================================
-SAVE POSITION
-========================================= */
-
 function savePosition() {
 
   localStorage.setItem(
@@ -327,10 +262,6 @@ function savePosition() {
     currentCharIndex
   );
 }
-
-/* =========================================
-LOAD POSITION
-========================================= */
 
 function loadPosition() {
 
@@ -342,10 +273,6 @@ function loadPosition() {
   );
 }
 
-/* =========================================
-CLEAR POSITION
-========================================= */
-
 function clearPosition() {
 
   localStorage.removeItem(
@@ -355,11 +282,10 @@ function clearPosition() {
   currentCharIndex = 0;
 }
 
-/* =========================================
-STOP VOICE
-========================================= */
-
-function stopVoice(btn) {
+function stopVoice(
+  btn,
+  reset = false
+) {
 
   try {
 
@@ -375,6 +301,11 @@ function stopVoice(btn) {
 
   isMuted = true;
 
+  if (reset) {
+
+    clearPosition();
+  }
+
   setBtnText(
 
     btn,
@@ -384,10 +315,6 @@ function stopVoice(btn) {
     'bi bi-volume-up'
   );
 }
-
-/* =========================================
-PLAY VOICE
-========================================= */
 
 function playVoice(btn) {
 
@@ -399,18 +326,14 @@ function playVoice(btn) {
   if (!fullText)
     return;
 
-// =====================================
-// RESUME TEXT
-// =====================================
+  const savedStartIndex =
+    currentCharIndex;
 
-const savedStartIndex =
-currentCharIndex;
+  const text =
 
-const text =
-
-  fullText.substring(
-    currentCharIndex
-  );
+    fullText.substring(
+      currentCharIndex
+    );
 
   try {
 
@@ -442,40 +365,26 @@ const text =
   }
 
   utterance.rate = 1;
-
   utterance.pitch = 1;
-
   utterance.volume = 1;
 
-/* =====================================
-TRACK POSITION
-===================================== */
+  utterance.onboundary =
+  function(event){
 
-utterance.onboundary =
-function(event){
+    if (
+      typeof event.charIndex ===
+      'number'
+    ) {
 
-  // ===================================
-  // CHAR INDEX
-  // ===================================
+      currentCharIndex =
 
-  if (
-    typeof event.charIndex ===
-    'number'
-  ) {
+        savedStartIndex +
 
-    currentCharIndex =
+        event.charIndex;
 
-      savedStartIndex +
-
-      event.charIndex;
-
-    savePosition();
-  }
-};
-
-  /* =====================================
-  START
-  ===================================== */
+      savePosition();
+    }
+  };
 
   utterance.onstart =
   () => {
@@ -483,36 +392,14 @@ function(event){
     isPlaying = true;
   };
 
-  /* =====================================
-  END
-  ===================================== */
-
   utterance.onend =
   () => {
 
-    clearInterval(
-      resumeInterval
-    );
-
-    isPlaying = false;
-
-    isMuted = true;
-
-    clearPosition();
-
-    setBtnText(
-
+    stopVoice(
       btn,
-
-      'Dengarkan Berita',
-
-      'bi bi-volume-up'
+      true
     );
   };
-
-  /* =====================================
-  ERROR
-  ===================================== */
 
   utterance.onerror =
   () => {
@@ -535,10 +422,6 @@ function(event){
     );
   };
 
-  /* =====================================
-  START SPEAK
-  ===================================== */
-
   setTimeout(() => {
 
     try {
@@ -550,10 +433,6 @@ function(event){
     } catch(e){}
 
   }, 100);
-
-  /* =====================================
-  AUTO RESUME
-  ===================================== */
 
   clearInterval(
     resumeInterval
@@ -594,10 +473,6 @@ function(event){
   }, 1000);
 }
 
-/* =========================================
-INIT
-========================================= */
-
 document.addEventListener(
 
   "DOMContentLoaded",
@@ -612,18 +487,10 @@ document.addEventListener(
 
     if (!btn) return;
 
-    // ===================================
-    // LOAD POSITION
-    // ===================================
-
     currentCharIndex =
       loadPosition();
 
     stopVoice(btn);
-
-    // ===================================
-    // LOAD VOICES
-    // ===================================
 
     function initVoices() {
 
@@ -646,10 +513,6 @@ document.addEventListener(
       initVoices;
     }
 
-    // ===================================
-    // BUTTON CLICK
-    // ===================================
-
     btn.addEventListener(
 
       "click",
@@ -657,10 +520,6 @@ document.addEventListener(
       () => {
 
         synth.resume();
-
-        // ===============================
-        // PLAY
-        // ===============================
 
         if (isMuted) {
 
@@ -679,10 +538,6 @@ document.addEventListener(
 
         }
 
-        // ===============================
-        // STOP
-        // ===============================
-
         else {
 
           stopVoice(btn);
@@ -692,10 +547,6 @@ document.addEventListener(
 
   }
 );
-
-/* =========================================
-UNLOAD
-========================================= */
 
 window.addEventListener(
 
@@ -710,10 +561,6 @@ window.addEventListener(
     } catch(e){}
   }
 );
-
-/* =========================================
-BACKGROUND FIX
-========================================= */
 
 document.addEventListener(
 
@@ -736,10 +583,6 @@ document.addEventListener(
 
   }
 );
-
-/* =========================================
-FOCUS FIX MOBILE
-========================================= */
 
 window.addEventListener(
 
