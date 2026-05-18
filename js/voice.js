@@ -5,19 +5,16 @@ let isPlaying = false;
 let isMuted = true;
 let resumeInterval = null;
 
-const STORAGE_KEY =
-"lampost_voice_position";
+const STORAGE_KEY = "lampost_voice_position";
 
 let currentCharIndex = 0;
+let currentText = "";
 
 function getDeviceLang() {
 
   const lang =
-
     navigator.language ||
-
     navigator.userLanguage ||
-
     "id-ID";
 
   return lang;
@@ -25,70 +22,51 @@ function getDeviceLang() {
 
 function getBestVoice() {
 
-  const voices =
-    synth.getVoices();
+  const voices = synth.getVoices();
 
   if (!voices.length)
     return null;
 
   let voice =
-
     voices.find(v =>
-
-      v.lang
-       .toLowerCase()
-       .includes("id")
+      v.lang.toLowerCase().includes("id")
     );
 
   if (!voice) {
 
     const deviceLang =
-
-      getDeviceLang()
-      .toLowerCase();
+      getDeviceLang().toLowerCase();
 
     voice =
-
       voices.find(v =>
-
-        v.lang
-         .toLowerCase() ===
-         deviceLang
+        v.lang.toLowerCase() === deviceLang
       );
   }
 
   if (!voice) {
 
     const shortLang =
-
       getDeviceLang()
       .split("-")[0]
       .toLowerCase();
 
     voice =
-
       voices.find(v =>
-
         v.lang
-         .toLowerCase()
-         .startsWith(shortLang)
+          .toLowerCase()
+          .startsWith(shortLang)
       );
   }
 
   if (!voice) {
 
     voice =
-
       voices.find(v =>
-
-        v.lang
-         .toLowerCase()
-         .includes("en")
+        v.lang.toLowerCase().includes("en")
       );
   }
 
   if (!voice) {
-
     voice = voices[0];
   }
 
@@ -98,43 +76,29 @@ function getBestVoice() {
 function getText() {
 
   const beritaEl =
-
-    document.getElementById(
-      "berita"
-    );
+    document.getElementById("berita");
 
   if (!beritaEl)
     return "";
 
   const judul =
-
-    beritaEl.querySelector(
-      ".judul-berita"
-    )?.innerText || "";
+    beritaEl.querySelector(".judul-berita")
+      ?.innerText || "";
 
   const editor =
-
-    beritaEl.querySelector(
-      "#editor"
-    )?.innerText || "";
+    beritaEl.querySelector("#editor")
+      ?.innerText || "";
 
   const tanggal =
-
-    beritaEl.querySelector(
-      "#tanggal"
-    )?.innerText || "";
+    beritaEl.querySelector("#tanggal")
+      ?.innerText || "";
 
   const jam =
-
-    beritaEl.querySelector(
-      "#jam"
-    )?.innerText || "";
+    beritaEl.querySelector("#jam")
+      ?.innerText || "";
 
   const isiEl =
-
-    beritaEl.querySelector(
-      ".isi-berita"
-    );
+    beritaEl.querySelector(".isi-berita");
 
   if (!isiEl) {
 
@@ -146,12 +110,10 @@ function getText() {
     `;
   }
 
-  const clone =
-    isiEl.cloneNode(true);
+  const clone = isiEl.cloneNode(true);
 
   clone
-    .querySelectorAll(
-      `
+    .querySelectorAll(`
       img,
       picture,
       source,
@@ -166,18 +128,14 @@ function getText() {
       #aiTags,
       .home,
       .load-more
-      `
-    )
-    .forEach(el =>
-      el.remove()
-    );
+    `)
+    .forEach(el => el.remove());
 
   clone
     .querySelectorAll("a")
     .forEach(a => {
 
-      const text =
-        a.innerText;
+      const text = a.innerText;
 
       a.replaceWith(text);
 
@@ -196,44 +154,28 @@ function getText() {
 
       if (!text) return;
 
-      if (
-        el.tagName === "LI"
-      ) {
+      if (el.tagName === "LI") {
 
-        isi +=
-        `${text}. ... `;
+        isi += `${text}. ... `;
 
       } else {
 
-        isi +=
-        `${text}. `;
+        isi += `${text}. `;
       }
 
     });
 
-  let finalText =
-
-    `
+  let finalText = `
     ${judul}.
     ${editor}.
     ${tanggal}.
     ${jam}.
     ${isi}
-    `;
+  `;
 
-  finalText =
-    finalText
-
-    .replace(
-      /BERITA LAINNYA/g,
-      ""
-    )
-
-    .replace(
-      /\s+/g,
-      " "
-    )
-
+  finalText = finalText
+    .replace(/BERITA LAINNYA/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 
   return finalText;
@@ -245,20 +187,16 @@ function setBtnText(
   icon
 ) {
 
-  btn.innerHTML =
-
-  `
-  <span>${text}</span>
-  <i class="${icon}"></i>
+  btn.innerHTML = `
+    <span>${text}</span>
+    <i class="${icon}"></i>
   `;
 }
 
 function savePosition() {
 
   localStorage.setItem(
-
     STORAGE_KEY,
-
     currentCharIndex
   );
 }
@@ -266,10 +204,7 @@ function savePosition() {
 function loadPosition() {
 
   return parseInt(
-
-    localStorage.getItem(
-      STORAGE_KEY
-    ) || 0
+    localStorage.getItem(STORAGE_KEY) || 0
   );
 }
 
@@ -289,6 +224,28 @@ function stopVoice(
 
   try {
 
+    if (utterance) {
+
+      if (
+        typeof utterance.text === "string"
+      ) {
+
+        const spokenLength =
+          currentText.length -
+          utterance.text.length;
+
+        if (
+          spokenLength > currentCharIndex
+        ) {
+
+          currentCharIndex =
+            spokenLength;
+
+          savePosition();
+        }
+      }
+    }
+
     synth.cancel();
 
   } catch(e){}
@@ -298,20 +255,15 @@ function stopVoice(
   );
 
   isPlaying = false;
-
   isMuted = true;
 
   if (reset) {
-
     clearPosition();
   }
 
   setBtnText(
-
     btn,
-
     'Dengarkan Berita',
-
     'bi bi-volume-up'
   );
 }
@@ -320,18 +272,24 @@ function playVoice(btn) {
 
   if (isMuted) return;
 
-  const fullText =
-    getText();
+  currentText = getText();
 
-  if (!fullText)
+  if (!currentText)
     return;
+
+  if (
+    currentCharIndex >=
+    currentText.length
+  ) {
+
+    currentCharIndex = 0;
+  }
 
   const savedStartIndex =
     currentCharIndex;
 
   const text =
-
-    fullText.substring(
+    currentText.substring(
       currentCharIndex
     );
 
@@ -342,10 +300,7 @@ function playVoice(btn) {
   } catch(e){}
 
   utterance =
-
-    new SpeechSynthesisUtterance(
-      text
-    );
+    new SpeechSynthesisUtterance(text);
 
   const selectedVoice =
     getBestVoice();
@@ -360,8 +315,7 @@ function playVoice(btn) {
 
   } else {
 
-    utterance.lang =
-      "id-ID";
+    utterance.lang = "id-ID";
   }
 
   utterance.rate = 1;
@@ -373,13 +327,11 @@ function playVoice(btn) {
 
     if (
       typeof event.charIndex ===
-      'number'
+      "number"
     ) {
 
       currentCharIndex =
-
         savedStartIndex +
-
         event.charIndex;
 
       savePosition();
@@ -409,15 +361,11 @@ function playVoice(btn) {
     );
 
     isPlaying = false;
-
     isMuted = true;
 
     setBtnText(
-
       btn,
-
       'Dengarkan Berita',
-
       'bi bi-volume-up'
     );
   };
@@ -452,19 +400,13 @@ function playVoice(btn) {
 
     try {
 
-      if (
-        synth.paused
-      ) {
-
+      if (synth.paused) {
         synth.resume();
       }
 
-      if (
-        !synth.speaking
-      ) {
+      if (!synth.speaking) {
 
         synth.pause();
-
         synth.resume();
       }
 
@@ -474,13 +416,10 @@ function playVoice(btn) {
 }
 
 document.addEventListener(
-
   "DOMContentLoaded",
-
   () => {
 
     const btn =
-
       document.getElementById(
         "voiceToggle"
       );
@@ -493,30 +432,24 @@ document.addEventListener(
     stopVoice(btn);
 
     function initVoices() {
-
       synth.getVoices();
     }
 
     initVoices();
 
     if (
-
       speechSynthesis
       .onvoiceschanged !==
       undefined
-
     ) {
 
       speechSynthesis
       .onvoiceschanged =
-
       initVoices;
     }
 
     btn.addEventListener(
-
       "click",
-
       () => {
 
         synth.resume();
@@ -526,19 +459,14 @@ document.addEventListener(
           isMuted = false;
 
           setBtnText(
-
             btn,
-
             'Berhenti',
-
             'bi bi-volume-mute-fill'
           );
 
           playVoice(btn);
 
-        }
-
-        else {
+        } else {
 
           stopVoice(btn);
         }
@@ -549,12 +477,12 @@ document.addEventListener(
 );
 
 window.addEventListener(
-
   "beforeunload",
-
   () => {
 
     try {
+
+      savePosition();
 
       synth.cancel();
 
@@ -563,9 +491,7 @@ window.addEventListener(
 );
 
 document.addEventListener(
-
   "visibilitychange",
-
   () => {
 
     if (isPlaying) {
@@ -585,9 +511,7 @@ document.addEventListener(
 );
 
 window.addEventListener(
-
   "focus",
-
   () => {
 
     if (isPlaying) {
