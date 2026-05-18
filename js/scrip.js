@@ -94,32 +94,79 @@ document.querySelectorAll('.logo-img').forEach(el => {
   };
 });
 
+/* ===============================
+   MODE
+================================ */
+
 const darkModeToggle =
-document.getElementById("darkModeToggle");
+document.getElementById(
+    "darkModeToggle"
+);
 
 const toggleIcon =
-document.getElementById("toggleIcon");
+document.getElementById(
+    "toggleIcon"
+);
+
+const logoImage =
+document.getElementById(
+    "logoImage"
+);
 
 const body = document.body;
 
 /* =========================================
-SET ICON
+LOGO
 ========================================= */
 
-function updateIcon(){
+const lightLogo =
+"https://lampost.co/index/image/lampost300.png (1).webp";
 
-    if(body.classList.contains("dark-mode")){
+const darkLogo =
+"https://lampost.co/index/image/mode-dart.png (1).webp";
+
+/* =========================================
+SET ICON + LOGO
+========================================= */
+
+function updateTheme(){
+
+    // =====================================
+    // DARK MODE
+    // =====================================
+
+    if(
+        body.classList.contains(
+            "dark-mode"
+        )
+    ){
 
         toggleIcon.className =
         "bi bi-moon-fill";
 
-    }else{
+        if(logoImage){
+
+            logoImage.src =
+            darkLogo;
+        }
+
+    }
+
+    // =====================================
+    // LIGHT MODE
+    // =====================================
+
+    else{
 
         toggleIcon.className =
         "bi bi-sun-fill";
 
-    }
+        if(logoImage){
 
+            logoImage.src =
+            lightLogo;
+        }
+    }
 }
 
 /* =========================================
@@ -127,50 +174,87 @@ LOAD THEME
 ========================================= */
 
 const savedTheme =
-localStorage.getItem("theme");
+localStorage.getItem(
+    "theme"
+);
 
 if(savedTheme){
 
-    body.classList.add(savedTheme);
+    body.classList.add(
+        savedTheme
+    );
 
 }else{
 
-    body.classList.add("light-mode");
-
+    body.classList.add(
+        "light-mode"
+    );
 }
 
-updateIcon();
+/* =========================================
+UPDATE
+========================================= */
+
+updateTheme();
 
 /* =========================================
 TOGGLE
 ========================================= */
 
-darkModeToggle.onclick = function(){
+darkModeToggle.onclick =
+function(){
 
-    if(body.classList.contains("dark-mode")){
+    // =====================================
+    // TO LIGHT
+    // =====================================
 
-        body.classList.remove("dark-mode");
+    if(
+        body.classList.contains(
+            "dark-mode"
+        )
+    ){
 
-        body.classList.add("light-mode");
-
-        localStorage.setItem(
-            "theme",
-            "light-mode"
-        );
-
-    }else{
-
-        body.classList.remove("light-mode");
-
-        body.classList.add("dark-mode");
-
-        localStorage.setItem(
-            "theme",
+        body.classList.remove(
             "dark-mode"
         );
 
+        body.classList.add(
+            "light-mode"
+        );
+
+        localStorage.setItem(
+
+            "theme",
+
+            "light-mode"
+        );
     }
 
-    updateIcon();
+    // =====================================
+    // TO DARK
+    // =====================================
 
+    else{
+
+        body.classList.remove(
+            "light-mode"
+        );
+
+        body.classList.add(
+            "dark-mode"
+        );
+
+        localStorage.setItem(
+
+            "theme",
+
+            "dark-mode"
+        );
+    }
+
+    // =====================================
+    // UPDATE
+    // =====================================
+
+    updateTheme();
 };
