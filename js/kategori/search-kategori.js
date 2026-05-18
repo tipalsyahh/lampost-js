@@ -1,48 +1,108 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener(
+'DOMContentLoaded',
+() => {
 
   /* ===============================
      FUNGSI UMUM SEARCH
   =============================== */
+
   function bindSearch(container) {
+
     if (!container) return;
 
-    const input = container.querySelector('.search-input');
-    const btn = container.querySelector('.search-btn'); // boleh null
+    const input =
+
+      container.querySelector(
+        '.search-input'
+      );
+
+    const btn =
+
+      container.querySelector(
+        '.search-btn'
+      );
+
+    // =============================
+    // GO SEARCH
+    // =============================
 
     function goSearch() {
-      const q = input.value;
 
-      if (!q || !q.trim()) {
-        alert('Masukkan kata kunci pencarian');
+      const q =
+        input.value.trim();
+
+      // ===========================
+      // EMPTY
+      // ===========================
+
+      if (!q) {
+
+        alert(
+          'Masukkan kata kunci pencarian'
+        );
+
         return;
       }
 
+      // ===========================
+      // ROOT SEARCH
+      // ===========================
+
       window.location.href =
-        `../search?q=${encodeURIComponent(q.trim())}`;
+
+        '/search?q=' +
+
+        encodeURIComponent(q);
     }
 
-    /* klik icon (kalau ada) */
+    // =============================
+    // CLICK
+    // =============================
+
     if (btn) {
-      btn.addEventListener('click', goSearch);
+
+      btn.addEventListener(
+        'click',
+        goSearch
+      );
     }
 
-    /* ENTER */
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        goSearch();
+    // =============================
+    // ENTER
+    // =============================
+
+    input.addEventListener(
+      'keydown',
+      e => {
+
+        if (e.key === 'Enter') {
+
+          e.preventDefault();
+
+          goSearch();
+        }
       }
-    });
+    );
   }
 
   /* ===============================
      SEARCH BERANDA
   =============================== */
-  bindSearch(document.getElementById('searchBeranda'));
+
+  bindSearch(
+    document.getElementById(
+      'searchBeranda'
+    )
+  );
 
   /* ===============================
      SEARCH SIDEBAR
   =============================== */
-  bindSearch(document.getElementById('searchSidebar'));
+
+  bindSearch(
+    document.getElementById(
+      'searchSidebar'
+    )
+  );
 
 });
