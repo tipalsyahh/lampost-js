@@ -399,15 +399,18 @@ function playVoice(btn) {
   if (!fullText)
     return;
 
-  // =====================================
-  // RESUME TEXT
-  // =====================================
+// =====================================
+// RESUME TEXT
+// =====================================
 
-  const text =
+const savedStartIndex =
+currentCharIndex;
 
-    fullText.substring(
-      currentCharIndex
-    );
+const text =
+
+  fullText.substring(
+    currentCharIndex
+  );
 
   try {
 
@@ -444,23 +447,31 @@ function playVoice(btn) {
 
   utterance.volume = 1;
 
-  /* =====================================
-  TRACK POSITION
-  ===================================== */
+/* =====================================
+TRACK POSITION
+===================================== */
 
-  utterance.onboundary =
-  function(event){
+utterance.onboundary =
+function(event){
 
-    if (
-      event.name === "word"
-    ) {
+  // ===================================
+  // CHAR INDEX
+  // ===================================
 
-      currentCharIndex +=
-        event.charLength || 1;
+  if (
+    typeof event.charIndex ===
+    'number'
+  ) {
 
-      savePosition();
-    }
-  };
+    currentCharIndex =
+
+      savedStartIndex +
+
+      event.charIndex;
+
+    savePosition();
+  }
+};
 
   /* =====================================
   START
