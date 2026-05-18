@@ -1,10 +1,13 @@
 const SIDEBAR = `
-
 <nav class="navbar-main">
         <div class="navbar-padding">
             <div class="logo">
                 <a href="https://lampost.co/">
-                  <img src="https://lampost.co/index/image/lampost300.png (1).webp" class="logo-img">
+                  <img
+                        src="https://lampost.co/index/image/lampost300.png (1).webp"
+                        class="logo-img"
+                        id="logoImage"
+                    >
                 </a>
                 <ul>
                     <li><a href="#" id="btnMenu">
@@ -17,19 +20,19 @@ const SIDEBAR = `
                         <i class="bi bi-search"></i> Search
                     </a>
                 </li>
-
+                
                 <div class="search-modal" id="searchModal">
-
+                
                     <div class="search-modal-overlay"></div>
-
+                
                     <div class="search-modal-box">
-
+                
                         <button class="search-modal-close" id="closeSearchModal">
                             <i class="bi bi-x-lg"></i>
                         </button>
-
+                
                         <form action="/search" method="GET" class="search-modal-form">
-
+                
                             <input
                                 type="text"
                                 name="q"
@@ -37,19 +40,19 @@ const SIDEBAR = `
                                 autocomplete="off"
                                 required
                             >
-
+                
                             <button type="submit">
                                 <i class="bi bi-search"></i>
                             </button>
-
+                
                         </form>
-
+                
                     </div>
-
+                
                 </div>
+                
                 </ul>
             </div>
-
             <div class="button-user">
                 <a href="https://lampost.co/epaper/produk/lampung-post-digital-premium/" class="langganan">Langganan</a>
                 <a href="https://lampost.co/epaper/my-account/?wcm_redirect_to=post&wcm_redirect_id=302927" class="login"><i class="bi bi-person-circle"></i>Masuk</a>
@@ -123,6 +126,7 @@ const SIDEBAR = `
         <center>
             <h2>MENU</h2>
         </center>
+
         <div class="search-sidebar" id="searchSidebar">
             <div class="input-menu">
                 <input type="search" class="search-input" placeholder="Cari Artikel Disini.." aria-label="Search"
@@ -131,31 +135,6 @@ const SIDEBAR = `
                     <i class="bi bi-search"></i>
                 </button>
             </div>
-        </div>
-        <div class="darkmode-item">
-            <button
-                type="button"
-                class="darkmode-toggle"
-                id="darkModeToggle"
-                aria-label="Dark Mode">
-        
-                <span class="toggle-circle">
-        
-                    <!-- ICON DINAMIS -->
-                    <i class="bi bi-moon-fill" id="toggleIcon"></i>
-        
-                </span>
-        
-                <span class="toggle-icons">
-        
-                    <i class="bi bi-sun-fill sun-icon"></i>
-        
-                    <i class="bi bi-moon-fill moon-icon-right"></i>
-        
-                </span>
-        
-            </button>
-        
         </div>
         <div class="sidebar-isi">
             <ul>
@@ -240,7 +219,33 @@ const SIDEBAR = `
                     </ul>
                 </li>
                 <li><a href="https://lampost.co/kategori/iklan-pengumuman"><i class="bi bi-megaphone"></i> Iklan Pengumuman</a></li>
+                <li><a href="https://lampost.co/indeks"><i class="bi bi-book"></i> Indeks</a></li>
             </ul>
+        </div>
+                <div class="darkmode-item">
+            <button
+                type="button"
+                class="darkmode-toggle"
+                id="darkModeToggle"
+                aria-label="Dark Mode">
+        
+                <span class="toggle-circle">
+        
+                    <!-- ICON DINAMIS -->
+                    <i class="bi bi-moon-fill" id="toggleIcon"></i>
+        
+                </span>
+        
+                <span class="toggle-icons">
+        
+                    <i class="bi bi-sun-fill sun-icon"></i>
+        
+                    <i class="bi bi-moon-fill moon-icon-right"></i>
+        
+                </span>
+        
+            </button>
+        
         </div>
     </div>
 `;
