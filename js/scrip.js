@@ -94,4 +94,167 @@ document.querySelectorAll('.logo-img').forEach(el => {
   };
 });
 
+/* ===============================
+   MODE
+================================ */
 
+const darkModeToggle =
+document.getElementById(
+    "darkModeToggle"
+);
+
+const toggleIcon =
+document.getElementById(
+    "toggleIcon"
+);
+
+const logoImage =
+document.getElementById(
+    "logoImage"
+);
+
+const body = document.body;
+
+/* =========================================
+LOGO
+========================================= */
+
+const lightLogo =
+"https://lampost.co/index/image/lampost300.png (1).webp";
+
+const darkLogo =
+"https://lampost.co/index/image/mode-dart.png";
+
+/* =========================================
+SET ICON + LOGO
+========================================= */
+
+function updateTheme(){
+
+    // =====================================
+    // DARK MODE
+    // =====================================
+
+    if(
+        body.classList.contains(
+            "dark-mode"
+        )
+    ){
+
+        toggleIcon.className =
+        "bi bi-moon-fill";
+
+        if(logoImage){
+
+            logoImage.src =
+            darkLogo;
+        }
+
+    }
+
+    // =====================================
+    // LIGHT MODE
+    // =====================================
+
+    else{
+
+        toggleIcon.className =
+        "bi bi-sun-fill";
+
+        if(logoImage){
+
+            logoImage.src =
+            lightLogo;
+        }
+    }
+}
+
+/* =========================================
+LOAD THEME
+========================================= */
+
+const savedTheme =
+localStorage.getItem(
+    "theme"
+);
+
+if(savedTheme){
+
+    body.classList.add(
+        savedTheme
+    );
+
+}else{
+
+    body.classList.add(
+        "light-mode"
+    );
+}
+
+/* =========================================
+UPDATE
+========================================= */
+
+updateTheme();
+
+/* =========================================
+TOGGLE
+========================================= */
+
+darkModeToggle.onclick =
+function(){
+
+    // =====================================
+    // TO LIGHT
+    // =====================================
+
+    if(
+        body.classList.contains(
+            "dark-mode"
+        )
+    ){
+
+        body.classList.remove(
+            "dark-mode"
+        );
+
+        body.classList.add(
+            "light-mode"
+        );
+
+        localStorage.setItem(
+
+            "theme",
+
+            "light-mode"
+        );
+    }
+
+    // =====================================
+    // TO DARK
+    // =====================================
+
+    else{
+
+        body.classList.remove(
+            "light-mode"
+        );
+
+        body.classList.add(
+            "dark-mode"
+        );
+
+        localStorage.setItem(
+
+            "theme",
+
+            "dark-mode"
+        );
+    }
+
+    // =====================================
+    // UPDATE
+    // =====================================
+
+    updateTheme();
+};
