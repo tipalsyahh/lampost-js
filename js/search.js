@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const title = document.querySelector('h2.search-title');
   const container = document.getElementById('search-results');
+
   if (!title || !container) return;
 
   const params = new URLSearchParams(location.search);
@@ -27,56 +28,86 @@ document.addEventListener('DOMContentLoaded', () => {
   const mediaCache = {};
   const editorCache = {};
 
-  async function getCategory(post) {
-    const id = post.categories?.[post.categories.length - 1];
-    if (!id) return { name: 'Berita', slug: 'berita', parent: 0 };
+  async function fetchCategory(id) {
+    if (!id) return null;
 
-    if (catCache[id]) return catCache[id];
-
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${id}`);
-    const data = await res.json();
-
-    return (catCache[id] = {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      parent: data.parent
-    });
-  }
-
-  async function getParentCategory(parentId) {
-    if (!parentId) return null;
-
-    if (catCache[parentId]) return catCache[parentId];
+    if (catCache[id]) {
+      return catCache[id];
+    }
 
     try {
-      const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${parentId}`);
+      const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${id}`);
+
+      if (!res.ok) return null;
+
       const data = await res.json();
 
-      return (catCache[parentId] = {
+      const cat = {
         id: data.id,
         name: data.name,
         slug: data.slug,
         parent: data.parent
-      });
+      };
+
+      catCache[id] = cat;
+
+      return cat;
+
     } catch {
       return null;
     }
   }
 
+  async function getCategory(post) {
+    const ids = post.categories || [];
+
+    if (!ids.length) {
+      return {
+        id: 0,
+        name: 'Berita',
+        slug: 'berita',
+        parent: 0
+      };
+    }
+
+    const categories = [];
+
+    for (const id of ids) {
+      const cat = await fetchCategory(id);
+
+      if (cat) {
+        categories.push(cat);
+      }
+    }
+
+    const childCategory = categories.find(cat => cat.parent && cat.parent !== 0);
+
+    if (childCategory) {
+      return childCategory;
+    }
+
+    return categories[0] || {
+      id: 0,
+      name: 'Berita',
+      slug: 'berita',
+      parent: 0
+    };
+  }
+
   async function buildCategoryPath(category) {
-    if (!category) return '';
+    if (!category) return 'berita';
 
     const paths = [category.slug];
 
     let currentParent = category.parent;
 
     while (currentParent && currentParent !== 0) {
-      const parent = await getParentCategory(currentParent);
+      const parent = await fetchCategory(currentParent);
 
       if (!parent) break;
 
       paths.unshift(parent.slug);
+
       currentParent = parent.parent;
     }
 
@@ -87,7 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const fallback = 'https://lampost.co/image/ai.jpeg';
 
     if (!id || id === 0) return fallback;
-    if (mediaCache[id]) return mediaCache[id];
+
+    if (mediaCache[id]) {
+      return mediaCache[id];
+    }
 
     try {
       const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${id}`);
@@ -101,34 +135,46 @@ document.addEventListener('DOMContentLoaded', () => {
         data.source_url ||
         fallback;
 
-      return (mediaCache[id] = img);
+      mediaCache[id] = img;
+
+      return img;
+
     } catch {
       return fallback;
     }
   }
 
   async function getEditor(post) {
-    if (editorCache[post.id]) return editorCache[post.id];
+    if (editorCache[post.id]) {
+      return editorCache[post.id];
+    }
 
     let editor = 'Redaksi';
 
     const term = post._links?.['wp:term']?.[2]?.href;
 
-    if (!term) return editor;
+    if (!term) {
+      return editor;
+    }
 
     try {
       const res = await fetch(term);
       const data = await res.json();
 
       editor = data?.[0]?.name || editor;
+
     } catch {}
 
-    return (editorCache[post.id] = editor);
+    editorCache[post.id] = editor;
+
+    return editor;
   }
 
   function renderItem(post) {
     const judul = post.title.rendered;
+
     const tanggal = new Date(post.date).toLocaleDateString('id-ID');
+
     const id = `search-${post.id}`;
 
     const deskripsi =
@@ -143,13 +189,17 @@ document.addEventListener('DOMContentLoaded', () => {
           loading="lazy"
           onerror="this.onerror=null;this.src='https://lampost.co/image/ai.jpeg';"
         >
+
         <div class="berita-microweb">
           <p class="judul">${judul}</p>
+
           <p class="kategori"></p>
+
           <div class="info-microweb">
             <p class="editor"></p>
             <p class="tanggal">${tanggal}</p>
           </div>
+
           <p class="deskripsi">${deskripsi}</p>
         </div>
       </a>
@@ -196,7 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `https://lampost.co/wp-json/wp/v2/posts` +
         `?search=${encodeURIComponent(query)}` +
         `&orderby=relevance` +
-        `&per_page=${PER_PAGE}&page=${page}`
+        `&per_page=${PER_PAGE}` +
+        `&page=${page}`
       );
 
       if (!res.ok) {
