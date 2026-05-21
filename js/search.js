@@ -30,25 +30,57 @@ document.addEventListener('DOMContentLoaded', () => {
   async function getCategory(post) {
     const id = post.categories?.[post.categories.length - 1];
     if (!id) return { name: 'Berita', slug: 'berita', parent: 0 };
+
     if (catCache[id]) return catCache[id];
 
     const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${id}`);
     const data = await res.json();
 
-    return (catCache[id] = { name: data.name, slug: data.slug, parent: data.parent });
+    return (catCache[id] = {
+      id: data.id,
+      name: data.name,
+      slug: data.slug,
+      parent: data.parent
+    });
   }
 
   async function getParentCategory(parentId) {
     if (!parentId) return null;
+
     if (catCache[parentId]) return catCache[parentId];
 
     try {
       const res = await fetch(`https://lampost.co/wp-json/wp/v2/categories/${parentId}`);
       const data = await res.json();
-      return (catCache[parentId] = { name: data.name, slug: data.slug, parent: data.parent });
+
+      return (catCache[parentId] = {
+        id: data.id,
+        name: data.name,
+        slug: data.slug,
+        parent: data.parent
+      });
     } catch {
       return null;
     }
+  }
+
+  async function buildCategoryPath(category) {
+    if (!category) return '';
+
+    const paths = [category.slug];
+
+    let currentParent = category.parent;
+
+    while (currentParent && currentParent !== 0) {
+      const parent = await getParentCategory(currentParent);
+
+      if (!parent) break;
+
+      paths.unshift(parent.slug);
+      currentParent = parent.parent;
+    }
+
+    return paths.join('/');
   }
 
   async function getMedia(id) {
@@ -59,9 +91,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       const res = await fetch(`https://lampost.co/wp-json/wp/v2/media/${id}`);
+
       if (!res.ok) return fallback;
 
       const data = await res.json();
+
       const img =
         data.media_details?.sizes?.medium?.source_url ||
         data.source_url ||
@@ -77,12 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editorCache[post.id]) return editorCache[post.id];
 
     let editor = 'Redaksi';
+
     const term = post._links?.['wp:term']?.[2]?.href;
+
     if (!term) return editor;
 
     try {
       const res = await fetch(term);
       const data = await res.json();
+
       editor = data?.[0]?.name || editor;
     } catch {}
 
@@ -121,31 +158,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function enrich(post) {
     const el = document.getElementById(`search-${post.id}`);
+
     if (!el) return;
 
     const imgEl = el.querySelector('img');
+
     const img = await getMedia(post.featured_media);
+
     imgEl.src = img;
 
     const cat = await getCategory(post);
-    const parent = await getParentCategory(cat.parent);
+
+    const categoryPath = await buildCategoryPath(cat);
+
     const editor = await getEditor(post);
 
-    let finalUrl = `/${cat.slug}/${post.slug}`;
-    if (parent && parent.slug) {
-      finalUrl = `/${parent.slug}/${cat.slug}/${post.slug}`;
-    }
+    const finalUrl = `/${categoryPath}/${post.slug}`;
 
     el.href = finalUrl;
+
     el.querySelector('.kategori').textContent = cat.name;
+
     el.querySelector('.editor').textContent = `By ${editor}`;
   }
 
   async function loadMore() {
     if (loading || finished) return;
+
     loading = true;
 
-    if (btn.isConnected) btn.textContent = 'Memuat...';
+    if (btn.isConnected) {
+      btn.textContent = 'Memuat...';
+    }
 
     try {
       const res = await fetch(
@@ -157,11 +201,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!res.ok) {
         finished = true;
+
         btnWrapper.remove();
+
         if (!hasRendered) {
           container.innerHTML =
             `<p>Berita "<strong>${query}</strong>" tidak ditemukan.</p>`;
         }
+
         return;
       }
 
@@ -169,15 +216,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!posts.length) {
         finished = true;
+
         btnWrapper.remove();
+
         if (!hasRendered) {
           container.innerHTML =
             `<p>Berita "<strong>${query}</strong>" tidak ditemukan.</p>`;
         }
+
         return;
       }
 
-      if (!hasRendered) container.innerHTML = '';
+      if (!hasRendered) {
+        container.innerHTML = '';
+      }
 
       container.insertAdjacentHTML(
         'beforeend',
@@ -185,9 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
       );
 
       posts.forEach(post => enrich(post));
+
       hasRendered = true;
 
       page++;
+
       btn.textContent = 'Load More';
 
     } catch {
@@ -197,18 +251,21 @@ document.addEventListener('DOMContentLoaded', () => {
     loading = false;
   }
 
-  // 🔥 BUTTON (SELALU DI BAWAH)
   const btn = document.createElement('button');
+
   btn.className = 'load-more';
+
   btn.textContent = 'Load More';
+
   btn.addEventListener('click', loadMore);
 
   const btnWrapper = document.createElement('div');
+
   btnWrapper.style.textAlign = 'center';
   btnWrapper.style.margin = '30px 0';
+
   btnWrapper.appendChild(btn);
 
-  // 🔥 taruh di luar container (ini kuncinya)
   container.parentNode.appendChild(btnWrapper);
 
   loadMore();
