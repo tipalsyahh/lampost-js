@@ -18,10 +18,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const categoryId = catData[0].id;
     const kategoriNama = catData[0].name || 'Nasional';
-    const kategoriSlug = catData[0].slug || 'nasional';
 
-    // 🔥 FIX: mulai dari data ke-3 langsung dari server
-    const res = await fetch(`https://lampost.co/wp-json/wp/v2/posts?categories=${categoryId}&per_page=6&offset=2&orderby=date&order=desc`);
+    /*
+    |--------------------------------------------------------------------------
+    | POSTS
+    |--------------------------------------------------------------------------
+    */
+
+    const res = await fetch(
+
+      `https://lampost.co/wp-json/wp/v2/posts?` +
+
+      `categories=${categoryId}` +
+
+      `&per_page=6` +
+
+      `&offset=2` +
+
+      `&orderby=date` +
+
+      `&order=desc`
+
+    );
+
     if (!res.ok) throw new Error();
 
     const posts = await res.json();
@@ -32,45 +51,120 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const post of posts) {
 
       const judul = post.title.rendered;
-      const link = `/${kategoriSlug}/${post.slug}`;
+
+      /*
+      |--------------------------------------------------------------------------
+      | PERMALINK ASLI WORDPRESS
+      |--------------------------------------------------------------------------
+      */
+
+      const link = new URL(post.link).pathname;
+
+      /*
+      |--------------------------------------------------------------------------
+      | TANGGAL
+      |--------------------------------------------------------------------------
+      */
 
       const d = new Date(post.date);
-      const tanggal = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+      const tanggal =
+        `${String(d.getDate()).padStart(2, '0')}/` +
+        `${String(d.getMonth() + 1).padStart(2, '0')}/` +
+        `${d.getFullYear()}`;
+
+      /*
+      |--------------------------------------------------------------------------
+      | EDITOR
+      |--------------------------------------------------------------------------
+      */
 
       let editor = 'Redaksi';
-      const termLink = post._links?.['wp:term']?.[2]?.href;
+
+      const termLink =
+        post._links?.['wp:term']?.[2]?.href;
 
       if (termLink) {
+
         if (TERM_CACHE[termLink]) {
-          editor = TERM_CACHE[termLink];
+
+          editor =
+            TERM_CACHE[termLink];
+
         } else {
+
           try {
-            const termRes = await fetch(termLink);
+
+            const termRes =
+              await fetch(termLink);
+
             if (termRes.ok) {
-              const termData = await termRes.json();
-              editor = termData?.[0]?.name || editor;
-              TERM_CACHE[termLink] = editor;
+
+              const termData =
+                await termRes.json();
+
+              editor =
+                termData?.[0]?.name ||
+                editor;
+
+              TERM_CACHE[termLink] =
+                editor;
             }
+
           } catch { }
+
         }
+
       }
 
+      /*
+      |--------------------------------------------------------------------------
+      | HTML
+      |--------------------------------------------------------------------------
+      */
+
       htmlArr.push(`
+
         <a href="${link}" class="list-berita">
+
           <div class="konten">
-            <p class="judul">${judul}</p>
-            <p class="meta">${kategoriNama} ${tanggal}</p>
+
+            <p class="judul">
+              ${judul}
+            </p>
+
+            <p class="meta">
+              ${kategoriNama} ${tanggal}
+            </p>
+
           </div>
+
         </a>
+
       `);
 
     }
 
-    container.insertAdjacentHTML('beforeend', htmlArr.join(''));
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER
+    |--------------------------------------------------------------------------
+    */
+
+    container.insertAdjacentHTML(
+      'beforeend',
+      htmlArr.join('')
+    );
 
   } catch (err) {
+
     console.error(err);
-    container.insertAdjacentHTML('beforeend', '<p>Gagal memuat berita</p>');
+
+    container.insertAdjacentHTML(
+      'beforeend',
+      '<p>Gagal memuat berita</p>'
+    );
+
   }
 
 });
