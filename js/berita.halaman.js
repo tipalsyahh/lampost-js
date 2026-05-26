@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = await res.json();
 
       return (mediaCache[mediaId] =
-        data?.media_details?.sizes?.full?.source_url ||   // HD utama
+        data?.media_details?.sizes?.full?.source_url ||
         data?.media_details?.sizes?.large?.source_url ||
         data?.media_details?.sizes?.medium_large?.source_url ||
         data?.source_url ||
@@ -154,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const posts = await res.json();
+
       if (!posts.length) {
         hasMore = false;
         loadMoreBtn.style.display = 'none';
@@ -163,11 +164,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       let output = '';
 
       posts.forEach(post => {
+
         if (currentSlug && post.slug === currentSlug) return;
 
         const id = `post-${post.id}`;
         const judul = post.title.rendered;
-        const slug = post.slug;
 
         let deskripsi =
           post.excerpt?.rendered
@@ -178,16 +179,21 @@ document.addEventListener('DOMContentLoaded', async () => {
           deskripsi = deskripsi.slice(0, 150) + '...';
 
         const d = new Date(post.date);
+
         const tanggal =
           `${String(d.getDate()).padStart(2, '0')}/` +
           `${String(d.getMonth() + 1).padStart(2, '0')}/` +
           `${d.getFullYear()}`;
 
-        let finalUrl = `/${kategoriSlug}/${slug}`;
+        /*
+        |--------------------------------------------------------------------------
+        | 🔥 PERMALINK ASLI WORDPRESS
+        |--------------------------------------------------------------------------
+        */
 
-        if (subKategori) {
-          finalUrl = `/${kategoriSlug}/${subKategori}/${slug}`;
-        }
+        let finalUrl =
+          post.link ||
+          '#';
 
         output += `
           <a href="${finalUrl}"
@@ -218,13 +224,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadMoreBtn.style.display = 'block';
 
       posts.forEach(post => {
-        const el = document.getElementById(`post-${post.id}`);
+
+        const el =
+          document.getElementById(`post-${post.id}`);
+
         if (!el) return;
 
-        const img = el.querySelector('.img-microweb');
-        const editorEl = el.querySelector('.editor');
+        const img =
+          el.querySelector('.img-microweb');
 
-        // 🔥 tambahan aman (tidak ubah logic)
+        const editorEl =
+          el.querySelector('.editor');
+
         img.setAttribute('decoding', 'async');
 
         img.onerror = () => {
@@ -238,6 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         getEditor(post).then(name => {
           editorEl.textContent = 'By ' + name;
         });
+
       });
 
       page++;
@@ -248,6 +260,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   loadPosts();
-  loadMoreBtn.addEventListener('click', loadPosts);
+
+  loadMoreBtn.addEventListener(
+    'click',
+    loadPosts
+  );
 
 });
