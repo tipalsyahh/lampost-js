@@ -12,160 +12,177 @@ let currentText = "";
 
 function getDeviceLang() {
 
-  const lang =
-    navigator.language ||
-    navigator.userLanguage ||
-    "id-ID";
+    const lang =
+        navigator.language ||
+        navigator.userLanguage ||
+        "id-ID";
 
-  return lang;
+    return lang;
 }
 
 function getBestVoice() {
 
-  const voices = synth.getVoices();
+    const voices = synth.getVoices();
 
-  if (!voices.length)
-    return null;
+    if (!voices.length)
+        return null;
 
-  let voice =
-    voices.find(v =>
-      v.lang.toLowerCase().includes("id")
-    );
+    let voice =
+        voices.find(v =>
+            v.lang.toLowerCase().includes("id")
+        );
 
-  if (!voice) {
+    if (!voice) {
 
-    const deviceLang =
-      getDeviceLang().toLowerCase();
+        const deviceLang =
+            getDeviceLang().toLowerCase();
 
-    voice =
-      voices.find(v =>
-        v.lang.toLowerCase() === deviceLang
-      );
-  }
+        voice =
+            voices.find(v =>
+                v.lang.toLowerCase() === deviceLang
+            );
+    }
 
-  if (!voice) {
+    if (!voice) {
 
-    const shortLang =
-      getDeviceLang()
-      .split("-")[0]
-      .toLowerCase();
+        const shortLang =
+            getDeviceLang()
+                .split("-")[0]
+                .toLowerCase();
 
-    voice =
-      voices.find(v =>
-        v.lang
-          .toLowerCase()
-          .startsWith(shortLang)
-      );
-  }
+        voice =
+            voices.find(v =>
+                v.lang
+                    .toLowerCase()
+                    .startsWith(shortLang)
+            );
+    }
 
-  if (!voice) {
+    if (!voice) {
 
-    voice =
-      voices.find(v =>
-        v.lang.toLowerCase().includes("en")
-      );
-  }
+        voice =
+            voices.find(v =>
+                v.lang.toLowerCase().includes("en")
+            );
+    }
 
-  if (!voice) {
-    voice = voices[0];
-  }
+    if (!voice) {
+        voice = voices[0];
+    }
 
-  return voice;
+    return voice;
 }
 
 function getText() {
 
-  const beritaEl =
-    document.getElementById("berita");
+    const beritaEl =
+        document.getElementById("berita");
 
-  if (!beritaEl)
-    return "";
+    if (!beritaEl)
+        return "";
 
-  const judul =
-    beritaEl.querySelector(".judul-berita")
-      ?.innerText || "";
+    const judul =
+        beritaEl.querySelector(".judul-berita")
+            ?.innerText || "";
 
-  const editor =
-    beritaEl.querySelector("#editor")
-      ?.innerText || "";
+    const editor =
+        beritaEl.querySelector("#editor")
+            ?.innerText || "";
 
-  const tanggal =
-    beritaEl.querySelector("#tanggal")
-      ?.innerText || "";
+    const tanggal =
+        beritaEl.querySelector("#tanggal")
+            ?.innerText || "";
 
-  const jam =
-    beritaEl.querySelector("#jam")
-      ?.innerText || "";
+    const jam =
+        beritaEl.querySelector("#jam")
+            ?.innerText || "";
 
-  const isiEl =
-    beritaEl.querySelector(".isi-berita");
+    const isiEl =
+        beritaEl.querySelector(".isi-berita");
 
-  if (!isiEl) {
+    if (!isiEl) {
 
-    return `
+        return `
       ${judul}.
       ${editor}.
       ${tanggal}.
       ${jam}.
     `;
-  }
+    }
 
-  const clone = isiEl.cloneNode(true);
+    const clone = isiEl.cloneNode(true);
 
-  clone
-    .querySelectorAll(`
-      img,
-      picture,
-      source,
-      iframe,
-      video,
-      .iklan-beranda,
-      button,
-      figure,
-      figcaption,
-      .baca-berita,
-      #voiceToggle,
-      #aiTags,
-      .home,
-      .load-more
-    `)
-    .forEach(el => el.remove());
+    clone.querySelectorAll(`
+    img,
+    picture,
+    source,
+    iframe,
+    video,
+    button,
+    figure,
+    figcaption,
+    svg,
+    canvas,
+    script,
+    style,
+    noscript,
+    aside,
+    ins,
+    .adsbygoogle,
+    .ads,
+    .google-auto-placed,
+    .google-auto-placed-ap_container,
+    [id*="google"],
+    [class*="google"],
+    [class*="ads"],
+    [class*="advert"],
+    [class*="iklan"],
+    [class*="banner"],
+    [class*="sponsor"],
+    [data-ad],
+    [data-google-query-id],
+    #voiceToggle,
+    #aiTags,
+    .home,
+    .load-more,
+    .baca-berita
+    `).forEach(el => el.remove());
 
-  clone
-    .querySelectorAll("a")
-    .forEach(a => {
+    clone
+        .querySelectorAll("a")
+        .forEach(a => {
 
-      const text = a.innerText;
+            const text = a.innerText;
 
-      a.replaceWith(text);
+            a.replaceWith(text);
 
-    });
+        });
 
-  let isi = "";
+    let isi = "";
 
-  clone
-    .querySelectorAll(
-      "h1,h2,h3,h4,p,li"
-    )
-    .forEach(el => {
+    clone
+        .querySelectorAll(
+            "h1,h2,h3,h4,p,li"
+        )
+        .forEach(el => {
 
-      let text =
-        el.innerText.trim();
+            let text =
+                el.innerText.trim();
 
-      if (!text) return;
+            if (!text) return;
 
-      if (el.tagName === "LI") {
+            if (el.tagName === "LI") {
 
-        isi += `${text}. ... `;
+                isi += `${text}. ... `;
 
-      } else {
+            } else {
 
-        isi += `${text}. `;
-      }
+                isi += `${text}. `;
+            }
 
-    });
+        });
 
-  let finalText = `
+    let finalText = `
     ${judul}.
     ${editor}.
     ${tanggal}.
@@ -173,21 +190,21 @@ function getText() {
     ${isi}
   `;
 
-  finalText = finalText
-    .replace(/BERITA LAINNYA/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+    finalText = finalText
+        .replace(/BERITA LAINNYA/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
 
-  return finalText;
+    return finalText;
 }
 
 function setBtnText(
-  btn,
-  text,
-  icon
+    btn,
+    text,
+    icon
 ) {
 
-  btn.innerHTML = `
+    btn.innerHTML = `
     <span>${text}</span>
     <i class="${icon}"></i>
   `;
@@ -195,333 +212,333 @@ function setBtnText(
 
 function savePosition() {
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    currentCharIndex
-  );
+    localStorage.setItem(
+        STORAGE_KEY,
+        currentCharIndex
+    );
 }
 
 function loadPosition() {
 
-  return parseInt(
-    localStorage.getItem(STORAGE_KEY) || 0
-  );
+    return parseInt(
+        localStorage.getItem(STORAGE_KEY) || 0
+    );
 }
 
 function clearPosition() {
 
-  localStorage.removeItem(
-    STORAGE_KEY
-  );
+    localStorage.removeItem(
+        STORAGE_KEY
+    );
 
-  currentCharIndex = 0;
+    currentCharIndex = 0;
 }
 
 function stopVoice(
-  btn,
-  reset = false
+    btn,
+    reset = false
 ) {
 
-  try {
+    try {
 
-    if (utterance) {
+        if (utterance) {
 
-      if (
-        typeof utterance.text === "string"
-      ) {
+            if (
+                typeof utterance.text === "string"
+            ) {
 
-        const spokenLength =
-          currentText.length -
-          utterance.text.length;
+                const spokenLength =
+                    currentText.length -
+                    utterance.text.length;
 
-        if (
-          spokenLength > currentCharIndex
-        ) {
+                if (
+                    spokenLength > currentCharIndex
+                ) {
 
-          currentCharIndex =
-            spokenLength;
+                    currentCharIndex =
+                        spokenLength;
 
-          savePosition();
+                    savePosition();
+                }
+            }
         }
-      }
-    }
 
-    synth.cancel();
+        synth.cancel();
 
-  } catch(e){}
-
-  clearInterval(
-    resumeInterval
-  );
-
-  isPlaying = false;
-  isMuted = true;
-
-  if (reset) {
-    clearPosition();
-  }
-
-  setBtnText(
-    btn,
-    'Dengarkan Berita',
-    'bi bi-volume-up'
-  );
-}
-
-function playVoice(btn) {
-
-  if (isMuted) return;
-
-  currentText = getText();
-
-  if (!currentText)
-    return;
-
-  if (
-    currentCharIndex >=
-    currentText.length
-  ) {
-
-    currentCharIndex = 0;
-  }
-
-  const savedStartIndex =
-    currentCharIndex;
-
-  const text =
-    currentText.substring(
-      currentCharIndex
-    );
-
-  try {
-
-    synth.cancel();
-
-  } catch(e){}
-
-  utterance =
-    new SpeechSynthesisUtterance(text);
-
-  const selectedVoice =
-    getBestVoice();
-
-  if (selectedVoice) {
-
-    utterance.voice =
-      selectedVoice;
-
-    utterance.lang =
-      selectedVoice.lang;
-
-  } else {
-
-    utterance.lang = "id-ID";
-  }
-
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  utterance.volume = 1;
-
-  utterance.onboundary =
-  function(event){
-
-    if (
-      typeof event.charIndex ===
-      "number"
-    ) {
-
-      currentCharIndex =
-        savedStartIndex +
-        event.charIndex;
-
-      savePosition();
-    }
-  };
-
-  utterance.onstart =
-  () => {
-
-    isPlaying = true;
-  };
-
-  utterance.onend =
-  () => {
-
-    stopVoice(
-      btn,
-      true
-    );
-  };
-
-  utterance.onerror =
-  () => {
+    } catch (e) { }
 
     clearInterval(
-      resumeInterval
+        resumeInterval
     );
 
     isPlaying = false;
     isMuted = true;
 
-    setBtnText(
-      btn,
-      'Dengarkan Berita',
-      'bi bi-volume-up'
-    );
-  };
-
-  setTimeout(() => {
-
-    try {
-
-      synth.speak(
-        utterance
-      );
-
-    } catch(e){}
-
-  }, 100);
-
-  clearInterval(
-    resumeInterval
-  );
-
-  resumeInterval =
-  setInterval(() => {
-
-    if (!isPlaying) {
-
-      clearInterval(
-        resumeInterval
-      );
-
-      return;
+    if (reset) {
+        clearPosition();
     }
 
-    try {
-
-      if (synth.paused) {
-        synth.resume();
-      }
-
-      if (!synth.speaking) {
-
-        synth.pause();
-        synth.resume();
-      }
-
-    } catch(e){}
-
-  }, 1000);
+    setBtnText(
+        btn,
+        'Dengarkan Berita',
+        'bi bi-volume-up'
+    );
 }
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+function playVoice(btn) {
 
-    const btn =
-      document.getElementById(
-        "voiceToggle"
-      );
+    if (isMuted) return;
 
-    if (!btn) return;
+    currentText = getText();
 
-    currentCharIndex =
-      loadPosition();
-
-    stopVoice(btn);
-
-    function initVoices() {
-      synth.getVoices();
-    }
-
-    initVoices();
+    if (!currentText)
+        return;
 
     if (
-      speechSynthesis
-      .onvoiceschanged !==
-      undefined
+        currentCharIndex >=
+        currentText.length
     ) {
 
-      speechSynthesis
-      .onvoiceschanged =
-      initVoices;
+        currentCharIndex = 0;
     }
 
-    btn.addEventListener(
-      "click",
-      () => {
+    const savedStartIndex =
+        currentCharIndex;
 
-        synth.resume();
-
-        if (isMuted) {
-
-          isMuted = false;
-
-          setBtnText(
-            btn,
-            'Berhenti',
-            'bi bi-volume-mute-fill'
-          );
-
-          playVoice(btn);
-
-        } else {
-
-          stopVoice(btn);
-        }
-      }
-    );
-
-  }
-);
-
-window.addEventListener(
-  "beforeunload",
-  () => {
+    const text =
+        currentText.substring(
+            currentCharIndex
+        );
 
     try {
 
-      savePosition();
+        synth.cancel();
 
-      synth.cancel();
+    } catch (e) { }
 
-    } catch(e){}
-  }
-);
+    utterance =
+        new SpeechSynthesisUtterance(text);
 
-document.addEventListener(
-  "visibilitychange",
-  () => {
+    const selectedVoice =
+        getBestVoice();
 
-    if (isPlaying) {
+    if (selectedVoice) {
 
-      setTimeout(() => {
+        utterance.voice =
+            selectedVoice;
+
+        utterance.lang =
+            selectedVoice.lang;
+
+    } else {
+
+        utterance.lang = "id-ID";
+    }
+
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onboundary =
+        function (event) {
+
+            if (
+                typeof event.charIndex ===
+                "number"
+            ) {
+
+                currentCharIndex =
+                    savedStartIndex +
+                    event.charIndex;
+
+                savePosition();
+            }
+        };
+
+    utterance.onstart =
+        () => {
+
+            isPlaying = true;
+        };
+
+    utterance.onend =
+        () => {
+
+            stopVoice(
+                btn,
+                true
+            );
+        };
+
+    utterance.onerror =
+        () => {
+
+            clearInterval(
+                resumeInterval
+            );
+
+            isPlaying = false;
+            isMuted = true;
+
+            setBtnText(
+                btn,
+                'Dengarkan Berita',
+                'bi bi-volume-up'
+            );
+        };
+
+    setTimeout(() => {
 
         try {
 
-          synth.resume();
+            synth.speak(
+                utterance
+            );
 
-        } catch(e){}
+        } catch (e) { }
 
-      }, 300);
+    }, 100);
+
+    clearInterval(
+        resumeInterval
+    );
+
+    resumeInterval =
+        setInterval(() => {
+
+            if (!isPlaying) {
+
+                clearInterval(
+                    resumeInterval
+                );
+
+                return;
+            }
+
+            try {
+
+                if (synth.paused) {
+                    synth.resume();
+                }
+
+                if (!synth.speaking) {
+
+                    synth.pause();
+                    synth.resume();
+                }
+
+            } catch (e) { }
+
+        }, 1000);
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        const btn =
+            document.getElementById(
+                "voiceToggle"
+            );
+
+        if (!btn) return;
+
+        currentCharIndex =
+            loadPosition();
+
+        stopVoice(btn);
+
+        function initVoices() {
+            synth.getVoices();
+        }
+
+        initVoices();
+
+        if (
+            speechSynthesis
+                .onvoiceschanged !==
+            undefined
+        ) {
+
+            speechSynthesis
+                .onvoiceschanged =
+                initVoices;
+        }
+
+        btn.addEventListener(
+            "click",
+            () => {
+
+                synth.resume();
+
+                if (isMuted) {
+
+                    isMuted = false;
+
+                    setBtnText(
+                        btn,
+                        'Berhenti',
+                        'bi bi-volume-mute-fill'
+                    );
+
+                    playVoice(btn);
+
+                } else {
+
+                    stopVoice(btn);
+                }
+            }
+        );
+
     }
-
-  }
 );
 
 window.addEventListener(
-  "focus",
-  () => {
+    "beforeunload",
+    () => {
 
-    if (isPlaying) {
+        try {
 
-      try {
+            savePosition();
 
-        synth.resume();
+            synth.cancel();
 
-      } catch(e){}
+        } catch (e) { }
     }
+);
 
-  }
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (isPlaying) {
+
+            setTimeout(() => {
+
+                try {
+
+                    synth.resume();
+
+                } catch (e) { }
+
+            }, 300);
+        }
+
+    }
+);
+
+window.addEventListener(
+    "focus",
+    () => {
+
+        if (isPlaying) {
+
+            try {
+
+                synth.resume();
+
+            } catch (e) { }
+        }
+
+    }
 );
