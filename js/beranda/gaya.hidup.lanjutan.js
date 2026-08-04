@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     for (const post of posts) {
 
       const rawJudul = post.title.rendered;
-      const judul = rawJudul.length > 100 ? rawJudul.slice(0, 100) + '...' : rawJudul;
+      const judul = rawJudul.length > 50 ? rawJudul.slice(0, 50) + '...' : rawJudul;
 
       const link = new URL(post.link).pathname;
 
