@@ -19,12 +19,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const categoryId = catData[0].id;
     const kategoriNama = catData[0].name || 'Nasional';
 
-    /*
-    |--------------------------------------------------------------------------
-    | POSTS
-    |--------------------------------------------------------------------------
-    */
-
     const res = await fetch(
 
       `https://lampost.co/wp-json/wp/v2/posts?` +
@@ -50,21 +44,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     for (const post of posts) {
 
-      const judul = post.title.rendered;
-
-      /*
-      |--------------------------------------------------------------------------
-      | PERMALINK ASLI WORDPRESS
-      |--------------------------------------------------------------------------
-      */
+      const rawJudul = post.title.rendered;
+      const judul = rawJudul.length > 100 ? rawJudul.slice(0, 100) + '...' : rawJudul;
 
       const link = new URL(post.link).pathname;
-
-      /*
-      |--------------------------------------------------------------------------
-      | TANGGAL
-      |--------------------------------------------------------------------------
-      */
 
       const d = new Date(post.date);
 
@@ -72,12 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         `${String(d.getDate()).padStart(2, '0')}/` +
         `${String(d.getMonth() + 1).padStart(2, '0')}/` +
         `${d.getFullYear()}`;
-
-      /*
-      |--------------------------------------------------------------------------
-      | EDITOR
-      |--------------------------------------------------------------------------
-      */
 
       let editor = 'Redaksi';
 
@@ -117,12 +94,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       }
 
-      /*
-      |--------------------------------------------------------------------------
-      | HTML
-      |--------------------------------------------------------------------------
-      */
-
       htmlArr.push(`
 
         <a href="${link}" class="list-berita">
@@ -144,12 +115,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       `);
 
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | RENDER
-    |--------------------------------------------------------------------------
-    */
 
     container.insertAdjacentHTML(
       'beforeend',
