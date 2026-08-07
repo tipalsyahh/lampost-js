@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const title =
-    document.querySelector('h2.search-title');
+    document.querySelector('.search-title');
 
   const container =
     document.getElementById('search-results');
@@ -108,19 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
           .split('/')
           .filter(Boolean);
 
-      /*
-      |--------------------------------------------------------------------------
-      | HAPUS SLUG POST
-      |--------------------------------------------------------------------------
-      */
-
       segments.pop();
-
-      /*
-      |--------------------------------------------------------------------------
-      | FORMAT CATEGORY
-      |--------------------------------------------------------------------------
-      */
 
       return segments
         .map(slug =>
@@ -254,20 +242,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       + '...';
 
-    /*
-    |--------------------------------------------------------------------------
-    | PERMALINK ASLI WORDPRESS
-    |--------------------------------------------------------------------------
-    */
-
     const finalUrl =
       post.link || '#';
-
-    /*
-    |--------------------------------------------------------------------------
-    | CATEGORY SESUAI PERMALINK WP
-    |--------------------------------------------------------------------------
-    */
 
     const kategori =
       getCategoryFromPermalink(
