@@ -1,4 +1,4 @@
-    document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
 
   const track = document.querySelector('.video-track');
   const next = document.querySelector('.video-next');
@@ -23,7 +23,6 @@
   // =====================================
 
   function formatTanggal(text) {
-
     if (!text) return "";
 
     const date = new Date(text);
@@ -61,22 +60,16 @@
 
       const parser = new DOMParser();
 
-      const xml =
-        parser.parseFromString(
-          text,
-          "text/xml"
-        );
+      const xml = parser.parseFromString(text, "text/xml");
 
       if (xml.querySelector("parsererror")) {
         throw new Error("XML rusak");
       }
 
-      let entries =
-        xml.querySelectorAll("entry");
+      let entries = xml.querySelectorAll("entry");
 
       if (!entries.length) {
-        entries =
-          xml.getElementsByTagName("entry");
+        entries = xml.getElementsByTagName("entry");
       }
 
       if (!entries.length) {
@@ -87,7 +80,12 @@
 
       Array.from(entries).forEach((entry, i) => {
 
-        if (i >= 10) return;
+        // ===================================================
+        // SKIP VIDEO KE-1 (i = 0) KARNA SUDAH DIMUAT DI BANNER
+        // DAN BATASI HINGGA 10 VIDEO BERIKUTNYA (i > 10)
+        // ===================================================
+        if (i === 0) return;
+        if (i > 10) return;
 
         // =====================================
         // TITLE
@@ -100,13 +98,9 @@
 
         // =====================================
         // VIDEO ID
-        // SUPPORT:
-        // <videoId>
-        // <yt:videoId>
         // =====================================
 
         const videoId =
-
           entry.querySelector("videoId")
           ?.textContent
           ?.trim()
@@ -138,8 +132,7 @@
           ?.textContent
           ?.trim() || "";
 
-        const tanggal =
-          formatTanggal(published);
+        const tanggal = formatTanggal(published);
 
         // =====================================
         // VALIDASI
@@ -151,15 +144,13 @@
         // THUMBNAIL
         // =====================================
 
-        const thumb =
-          `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+        const thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
         // =====================================
         // REDIRECT
         // =====================================
 
-        const redirectUrl =
-          `https://lampost.co/play?v=${videoId}`;
+        const redirectUrl = `https://lampost.co/play?v=${videoId}`;
 
         // =====================================
         // OUTPUT
@@ -214,10 +205,7 @@
 
     } catch (err) {
 
-      console.error(
-        "VIDEO ERROR:",
-        err
-      );
+      console.error("VIDEO ERROR:", err);
 
       if (retry < 2) {
 
@@ -243,6 +231,28 @@
   loadVideos();
 
   // =====================================
+  // OPEN TAB (DITARUH DI LUAR UNTUK CEGAH DUPLIKAT)
+  // =====================================
+
+  track.addEventListener(
+    'click',
+    function(e) {
+
+      const link = e.target.closest('.video-card');
+
+      if (!link) return;
+
+      e.preventDefault();
+
+      const newTab = window.open(link.href, '_blank');
+
+      if (newTab) {
+        newTab.opener = null;
+      }
+    }
+  );
+
+  // =====================================
   // SLIDER
   // =====================================
 
@@ -257,7 +267,7 @@
     }
 
     const cards = [
-      ...track.querySelectorAll('.video-card')
+      ...track.querySelectorAll('.video-card:not(.clone)')
     ];
 
     if (!cards.length) return;
@@ -274,8 +284,7 @@
 
     const gap = 15;
 
-    const cardWidth =
-      cards[0].offsetWidth + gap;
+    const cardWidth = cards[0].getBoundingClientRect().width + gap;
 
     let index = visible;
 
@@ -290,8 +299,7 @@
       .slice(0, visible)
       .map(el => {
 
-        const clone =
-          el.cloneNode(true);
+        const clone = el.cloneNode(true);
 
         clone.classList.add('clone');
 
@@ -303,8 +311,7 @@
       .slice(-visible)
       .map(el => {
 
-        const clone =
-          el.cloneNode(true);
+        const clone = el.cloneNode(true);
 
         clone.classList.add('clone');
 
@@ -328,8 +335,7 @@
 
     track.style.transition = 'none';
 
-    track.style.transform =
-      `translateX(-${cardWidth * index}px)`;
+    track.style.transform = `translateX(-${cardWidth * index}px)`;
 
     // =====================================
     // NEXT
@@ -343,11 +349,9 @@
 
       index++;
 
-      track.style.transition =
-        '0.4s ease';
+      track.style.transition = 'transform 0.4s ease';
 
-      track.style.transform =
-        `translateX(-${cardWidth * index}px)`;
+      track.style.transform = `translateX(-${cardWidth * index}px)`;
 
       setTimeout(() => {
 
@@ -356,13 +360,11 @@
           cards.length + visible
         ) {
 
-          track.style.transition =
-            'none';
+          track.style.transition = 'none';
 
           index = visible;
 
-          track.style.transform =
-            `translateX(-${cardWidth * index}px)`;
+          track.style.transform = `translateX(-${cardWidth * index}px)`;
         }
 
         isAnimating = false;
@@ -382,25 +384,19 @@
 
       index--;
 
-      track.style.transition =
-        '0.4s ease';
+      track.style.transition = 'transform 0.4s ease';
 
-      track.style.transform =
-        `translateX(-${cardWidth * index}px)`;
+      track.style.transform = `translateX(-${cardWidth * index}px)`;
 
       setTimeout(() => {
 
         if (index < visible) {
 
-          track.style.transition =
-            'none';
+          track.style.transition = 'none';
 
-          index =
-            cards.length +
-            visible - 1;
+          index = cards.length + visible - 1;
 
-          track.style.transform =
-            `translateX(-${cardWidth * index}px)`;
+          track.style.transform = `translateX(-${cardWidth * index}px)`;
         }
 
         isAnimating = false;
@@ -419,33 +415,10 @@
     if (prev) {
       prev.onclick = slidePrev;
     }
-
-    // =====================================
-    // OPEN TAB
-    // =====================================
-
-    track.addEventListener(
-      'click',
-      function(e) {
-
-        const link =
-          e.target.closest('.video-card');
-
-        if (!link) return;
-
-        e.preventDefault();
-
-        const newTab =
-          window.open(
-            link.href,
-            '_blank'
-          );
-
-        if (newTab) {
-          newTab.opener = null;
-        }
-      }
-    );
   }
+
+  window.addEventListener('resize', () => {
+    initSlider();
+  });
 
 });
