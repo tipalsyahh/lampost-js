@@ -3,7 +3,25 @@
   if (window.__HEAD_GLOBAL_LOADED__) return;
   window.__HEAD_GLOBAL_LOADED__ = true;
 
+  // 1. Blokir Skrip MGID Otomatis (Mencegah pemuatan dari widgets.mgid.com)
+  const observerMGID = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.tagName === 'SCRIPT' && node.src && node.src.includes('widgets.mgid.com')) {
+          node.remove(); // Langsung hapus tag script MGID sebelum sempat dieksekusi
+        }
+      });
+    });
+  });
+
+  observerMGID.observe(document.documentElement, {
+    childList: true,
+    subtree: true
+  });
+
   const addScript = (src, attrs = {}) => {
+    // Abaikan jika ada skrip yang mencoba memanggil MGID
+    if (src.includes('widgets.mgid.com')) return;
     if (document.querySelector(`script[src="${src}"]`)) return;
 
     const s = document.createElement('script');
@@ -28,20 +46,20 @@
 
   addMeta("google-site-verification", "zlGM7NLYfk1kMXT-LlZ7VJX4voGpl-XrS8-7403l2yA");
 
-  // 1. Matikan Auto Ads Otomatis via JS Config sebelum skrip AdSense dimuat
+  // Matikan Auto Ads Google yang agresif
   window.adsbygoogle = window.adsbygoogle || [];
   window.adsbygoogle.push({
     google_ad_client: "ca-pub-3784200952034602",
-    enable_page_level_ads: false // Mematikan Auto Ads (iklan melayang/agresif)
+    enable_page_level_ads: false
   });
 
-  // 2. Muat Skrip AdSense
+  // Load Google AdSense
   addScript(
     "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3784200952034602",
     { crossorigin: "anonymous" }
   );
 
-  // 3. Google Analytics / GTAG
+  // Google Analytics / GTAG
   addScript("https://www.googletagmanager.com/gtag/js?id=G-J2QD4LYXQH");
 
   window.dataLayer = window.dataLayer || [];
@@ -51,39 +69,36 @@
   gtag('js', new Date());
   gtag('config', 'G-J2QD4LYXQH');
 
-  // 4. Pembersihan Iklan Otomatis yang Terpasang Dinamis
-  function removeAutoPlacedAds() {
-    // Hapus iklan otomatis melayang / anchor / vignette
-    document.querySelectorAll(".google-auto-placed, ins.adsbygoogle-noablate, .adsbygoogle-spacer").forEach(el => {
+  // 2. Pembersihan Wadah/Container Iklan MGID & Auto Ads
+  function cleanBlockedAds() {
+    // Hapus wadah/container iklan MGID jika ada di HTML
+    document.querySelectorAll('[id*="mgid"], [class*="mgid"], div[data-mgid]').forEach(el => {
       el.remove();
     });
 
-    // Menghapus dari area berita agar tidak merusak tata letak
-    const isiBerita = document.querySelector(".isi-berita");
-    if (isiBerita) {
-      isiBerita.querySelectorAll(".google-auto-placed").forEach(el => el.remove());
-    }
+    // Hapus iklan otomatis Google yang melayang
+    document.querySelectorAll(".google-auto-placed, ins.adsbygoogle-noablate, .adsbygoogle-spacer").forEach(el => {
+      el.remove();
+    });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    removeAutoPlacedAds();
-
-    // Gunakan MutationObserver yang dibatasi agar tidak memberatkan browser
-    const target = document.body;
-    if (!target) return;
+    cleanBlockedAds();
 
     let timeout;
     const observer = new MutationObserver(() => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        removeAutoPlacedAds();
-      }, 300); // Debounce 300ms agar JS tidak bekerja terlalu agresif/berulang-ulang
+        cleanBlockedAds();
+      }, 300);
     });
 
-    observer.observe(target, {
-      childList: true,
-      subtree: true
-    });
+    if (document.body) {
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
   });
 
 })();
